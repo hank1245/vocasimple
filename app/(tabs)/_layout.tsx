@@ -9,12 +9,11 @@ import { Entypo, FontAwesome } from '@expo/vector-icons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-
   return (
-    <Tabs
+ <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: true,
+        headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: Platform.select({
           ios: {
@@ -44,6 +43,5 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({color}) => <FontAwesome name="user" size={24} color={color} />
         }}/>
-    </Tabs>
-  );
+    </Tabs>)
 }
