@@ -1,13 +1,25 @@
+import AuthButton from '@/components/auth/AuthButton'
 import React from 'react'
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import { Button } from 'react-native'
+import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native'
 
 interface Props {}
 
 const index = () => {
+
+  const onPressSignUp = () => {
+
+  }
+
+  const onPressSignIn = () => {
+
+  }
   return <SafeAreaView style={styles.container}>
     <View style={styles.banner}>
         <Text style={styles.bannerText}>Let's get Started!</Text>
     </View>
+    <Image source={require('../../assets/images/get-started.png')} style={styles.image}/>
+    <AuthButton text='회원 가입하기' />
   </SafeAreaView>
 }
 
@@ -17,14 +29,19 @@ const styles = StyleSheet.create({
         backgroundColor: '#6D60F8'
     },
     banner: {
-        marginTop: 73,
+        marginTop: 33,
         alignItems: 'center',
     },
     bannerText: {
         fontSize: 30,
         fontWeight: '600',
-        fontFamily: 'Lexend'
-    }
+        fontFamily: 'Lexend',
+        color:'white'
+    },
+    image: {
+        width: 393,
+        height: 454,
+    },
 })
 
 export default index
