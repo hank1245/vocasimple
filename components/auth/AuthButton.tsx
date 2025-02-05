@@ -1,15 +1,16 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 interface Props {
   text: string;
+  onPress: () => void
 }
 
-export default function AuthButton({text} : Props) {
+export default function AuthButton({text, onPress} : Props) {
   return (
-        <View style={styles.container}>
+        <Pressable style={styles.container} onPress={onPress}>
             <Text style={styles.text}>{text}</Text>
-        </View>
+        </Pressable>
   )
 }
 
@@ -32,6 +33,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'Lexend',
     width: 115,
-    alignSelf:'center'
+    alignSelf:'center',
   }
 })
