@@ -1,5 +1,6 @@
 import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import AppText from '../AppText';
 
 interface Props {
   text: string;
@@ -9,7 +10,7 @@ interface Props {
 export default function AuthButton({text, onPress} : Props) {
   return (
         <Pressable style={styles.container} onPress={onPress}>
-            <Text style={styles.text}>{text}</Text>
+            <AppText style={styles.text} text={text} />
         </Pressable>
   )
 }
@@ -31,7 +32,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     fontWeight: '700',
-    fontFamily: 'Lexend',
     width: 115,
     alignSelf:'center',
   }

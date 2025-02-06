@@ -5,6 +5,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import React, { useRef } from 'react'
 import { Button } from 'react-native'
 import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import SignupForm from '@/components/auth/SignUpForm'
+import AppText from '@/components/AppText'
 
 const index = () => {
     const bottomSheetRef = useRef<BottomSheet>(null)
@@ -17,26 +19,25 @@ const index = () => {
         <GestureHandlerRootView style={{ flex: 1 }}>
             <SafeAreaView style={styles.container}>
                 <View style={styles.banner}>
-                    <Text style={styles.bannerText}>Let's get Started!</Text>
+                    <AppText style={styles.bannerText} text="Let's get Started!" />
                 </View>
                 <Image 
                     source={require('../../assets/images/get-started.png')} 
                     style={styles.image}
                 />
                 <AuthButton text='회원 가입하기' onPress={onSignUp}/>
-                <Guidance guide="이미 계정이 있으신가요?" link="로그인" />
+                <Guidance guide="이미 계정이 있으신가요?" link="로그인" color='white' />
             </SafeAreaView>
 
             <BottomSheet
                 ref={bottomSheetRef}
-                snapPoints={['70%']}
+                snapPoints={['80%']}
                 index={-1} // Start closed
                 enablePanDownToClose={true}
                 enableDynamicSizing={false}
             >
                 <BottomSheetView style={styles.contentContainer}>
-                    <Text style={styles.sheetTitle}>Sign Up Form</Text>
-                    {/* Add your sign-up form components here */}
+                    <SignupForm />
                 </BottomSheetView>
             </BottomSheet>
         </GestureHandlerRootView>
@@ -55,7 +56,6 @@ const styles = StyleSheet.create({
     bannerText: {
         fontSize: 30,
         fontWeight: '600',
-        fontFamily: 'Lexend',
         color: 'white'
     },
     image: {
