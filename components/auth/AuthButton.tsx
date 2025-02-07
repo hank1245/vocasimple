@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import AppText from "../AppText";
+import AppText from "../common/AppText";
 
 interface Props {
   text: string;
