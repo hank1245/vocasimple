@@ -1,19 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import AuthButton from './AuthButton';
 import Guidance from './Guidance';
 import AppText from '../AppText';
+import { useAuthStore } from '@/stores/useAuthStore';
 
-const SignupForm = () => {
+const Form = () => {
+    const formType = useAuthStore((state) => state.formType)
     const onSubmit = () => {
 
     }
-    return (
-        <View style={styles.container}>
-            <View>
-            <AppText style={styles.label} text='이름' />
-            <TextInput style={styles.input} placeholder="사용할 이름/닉네임" />
+    if(formType === 'SIGNUP') {
+        return (
+            <View style={styles.container}>
+                <View>
+                <AppText style={styles.label} text='이름' />
+                <TextInput style={styles.input} placeholder="사용할 이름/닉네임" />
+                </View>
+                
+                <View>
+                <AppText style={styles.label} text='email 주소'/>
+                <TextInput style={styles.input} placeholder="hello@gmail.com" keyboardType="email-address" />
+                </View>
+                
+                <View>
+                <AppText style={styles.label} text='비밀번호' />
+                <TextInput style={styles.input} secureTextEntry />
+                </View>
+                
+                <View style={{marginBottom: 30}}>
+                <AppText style={styles.label} text='비밀번호 확인' />
+                <TextInput style={styles.input} secureTextEntry />
+                </View>
+                
+                <AuthButton text='회원 가입하기' onPress={onSubmit}/>
+                
+                <AppText style={styles.orText} text='OR'/>
+                
+                <TouchableOpacity style={styles.googleButton}>
+                <Image 
+                    source={require('../../assets/images/google.png')} 
+                    style={styles.googleIcon} 
+                />
+                </TouchableOpacity>
+                <Guidance guide='이미 계정이 있으신가요?' link='로그인' color='black' />
             </View>
+        );
+    }
+    if(formType === 'LOGIN') {
+        return (
+            <View style={styles.container}>
             
             <View>
             <AppText style={styles.label} text='email 주소'/>
@@ -25,12 +61,7 @@ const SignupForm = () => {
             <TextInput style={styles.input} secureTextEntry />
             </View>
             
-            <View style={{marginBottom: 30}}>
-            <AppText style={styles.label} text='비밀번호 확인' />
-            <TextInput style={styles.input} secureTextEntry />
-            </View>
-            
-            <AuthButton text='회원 가입하기' onPress={onSubmit}/>
+            <AuthButton text='로그인' onPress={onSubmit}/>
             
             <AppText style={styles.orText} text='OR'/>
             
@@ -40,9 +71,10 @@ const SignupForm = () => {
                 style={styles.googleIcon} 
             />
             </TouchableOpacity>
-            <Guidance guide='이미 계정이 있으신가요?' link='로그인' color='black'/>
+            <Guidance guide='아직 계정이 없으신가요?' link='회원가입' color='black' />
         </View>
-    );
+        )
+    }
 };
 
 const styles = StyleSheet.create({
@@ -97,4 +129,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SignupForm;
+export default Form;

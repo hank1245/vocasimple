@@ -4,9 +4,9 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import React, { useRef } from 'react'
 import { Button } from 'react-native'
-import { Image, SafeAreaView, StyleSheet, Text, View } from 'react-native'
-import SignupForm from '@/components/auth/SignUpForm'
+import { Image, SafeAreaView, StyleSheet, View } from 'react-native'
 import AppText from '@/components/AppText'
+import Form from '@/components/auth/Form'
 
 const index = () => {
     const bottomSheetRef = useRef<BottomSheet>(null)
@@ -37,7 +37,7 @@ const index = () => {
                 enableDynamicSizing={false}
             >
                 <BottomSheetView style={styles.contentContainer}>
-                    <SignupForm />
+                    <Form />
                 </BottomSheetView>
             </BottomSheet>
         </GestureHandlerRootView>
