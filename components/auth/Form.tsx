@@ -11,12 +11,7 @@ interface FormProps {
 const Form = ({ bottomSheetRef }: FormProps) => {
   const [formType, setFormType] = useState<FormTypeEnum>("SIGNUP");
   if (formType === "SIGNUP") {
-    return (
-      <SignUpForm
-        changeFormType={setFormType}
-        bottomSheetRef={bottomSheetRef}
-      />
-    );
+    return <SignUpForm changeFormType={setFormType} />;
   }
   if (formType === "LOGIN") {
     return (

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TextInput,
@@ -6,11 +6,14 @@ import {
   Image,
   StyleSheet,
   Pressable,
+  Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import AuthButton from "./AuthButton";
 import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
 import BottomSheet from "@gorhom/bottom-sheet";
+import { supabase } from "@/utils/supabase";
 
 interface Props {
   changeFormType: (type: FormType) => void;
@@ -18,20 +21,35 @@ interface Props {
 }
 
 const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
-  const onSubmit = () => {
-    // 예: 로그인 성공 후 bottomSheet 닫기
-    bottomSheetRef.current?.close();
-  };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  // email과 password가 비어있거나 loading중이면 disabled 상태로 처리
+  const isDisabled = loading || !email.trim() || !password.trim();
+
+  async function signInWithEmail() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      Alert.alert(error.message);
+    } else {
+      // 로그인 성공 시 자동으로 탭의 index 페이지로 navigate
+      router.replace("/(tabs)");
+    }
+    setLoading(false);
+  }
 
   const onChangeFormTypeToSignUp = () => {
     changeFormType("SIGNUP");
-    setTimeout(
-      () => {
-        bottomSheetRef.current?.snapToIndex(1);
-      },
-      10,
-      []
-    );
+    setTimeout(() => {
+      bottomSheetRef.current?.snapToIndex(1);
+    }, 10);
   };
 
   useEffect(() => {
@@ -42,24 +60,42 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
     <View style={styles.container}>
       <View>
         <AppText style={styles.label} text="email 주소" />
-        <TextInput style={styles.input} keyboardType="email-address" />
+        <TextInput
+          style={styles.input}
+          keyboardType="email-address"
+          onChangeText={setEmail}
+          value={email}
+        />
       </View>
 
-      <View>
+      <View style={{ marginBottom: 30 }}>
         <AppText style={styles.label} text="비밀번호" />
-        <TextInput style={styles.input} secureTextEntry />
+        <TextInput
+          style={styles.input}
+          secureTextEntry
+          onChangeText={setPassword}
+          value={password}
+        />
       </View>
 
-      <AuthButton text="로그인" onPress={onSubmit} />
+      <AuthButton
+        text="로그인"
+        onPress={signInWithEmail}
+        disabled={isDisabled}
+      />
 
       <AppText style={styles.orText} text="OR" />
 
-      <TouchableOpacity style={styles.googleButton}>
+      <TouchableOpacity
+        style={[styles.googleButton, isDisabled ? styles.disabled : null]}
+        disabled={isDisabled}
+      >
         <Image
           source={require("../../assets/images/google.png")}
           style={styles.googleIcon}
         />
       </TouchableOpacity>
+
       <View style={styles.guidance}>
         <AppText style={styles.guide} text="아직 계정이 없으신가요?" />
         <Pressable onPress={onChangeFormTypeToSignUp}>
@@ -84,7 +120,7 @@ const styles = StyleSheet.create({
     width: 321,
     height: 41,
     padding: 10,
-    marginBottom: 15,
+    marginBottom: 10,
     borderRadius: 10,
     backgroundColor: "#DDDFE2",
   },
@@ -126,6 +162,9 @@ const styles = StyleSheet.create({
     color: "#F5C92B",
     marginLeft: 8,
     fontWeight: "700",
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
 

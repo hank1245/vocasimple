@@ -5,11 +5,16 @@ import AppText from "../common/AppText";
 interface Props {
   text: string;
   onPress: () => void;
+  disabled?: boolean;
 }
 
-export default function AuthButton({ text, onPress }: Props) {
+export default function AuthButton({ text, onPress, disabled }: Props) {
   return (
-    <Pressable style={styles.container} onPress={onPress}>
+    <Pressable
+      style={[styles.container, disabled ? { backgroundColor: "#6d6d6d" } : {}]}
+      onPress={onPress}
+      disabled={disabled}
+    >
       <AppText style={styles.text} text={text} />
     </Pressable>
   );

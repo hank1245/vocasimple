@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   TextInput,
@@ -6,19 +6,59 @@ import {
   Image,
   StyleSheet,
   Pressable,
+  Alert,
 } from "react-native";
 import AuthButton from "./AuthButton";
 import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
-import BottomSheet from "@gorhom/bottom-sheet";
+import { supabase } from "@/utils/supabase";
 
 interface Props {
   changeFormType: (type: FormType) => void;
-  bottomSheetRef: React.RefObject<BottomSheet>;
 }
 
-const SignUpForm = ({ changeFormType, bottomSheetRef }: Props) => {
-  const onSubmit = () => {};
+const SignUpForm = ({ changeFormType }: Props) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const isValidEmail = (email: string) => {
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  };
+
+  // 모든 필드가 채워져있는지 체크, loading 중에도 disabled 처리
+  const isDisabled =
+    loading ||
+    !name.trim() ||
+    !email.trim() ||
+    !password.trim() ||
+    !confirmPassword.trim();
+
+  async function signUpWithEmail() {
+    if (!isValidEmail(email)) {
+      Alert.alert("이메일 형식이 올바르지 않습니다.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+      return;
+    }
+    setLoading(true);
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    });
+
+    if (error) Alert.alert(error.message);
+    if (!session) Alert.alert("이메일 인증을 위해서 메일함을 확인하세요!");
+    setLoading(false);
+  }
 
   const onChangeFormToLogin = () => {
     changeFormType("LOGIN");
@@ -28,34 +68,62 @@ const SignUpForm = ({ changeFormType, bottomSheetRef }: Props) => {
     <View style={styles.container}>
       <View>
         <AppText style={styles.label} text="이름" />
-        <TextInput style={styles.input} />
+        <TextInput style={styles.input} value={name} onChangeText={setName} />
       </View>
 
       <View>
         <AppText style={styles.label} text="email 주소" />
-        <TextInput style={styles.input} keyboardType="email-address" />
+        <TextInput
+          style={styles.input}
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
       </View>
 
       <View>
         <AppText style={styles.label} text="비밀번호" />
-        <TextInput style={styles.input} secureTextEntry />
+        <TextInput
+          style={styles.input}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          placeholder="6자리 이상"
+        />
       </View>
 
       <View style={{ marginBottom: 30 }}>
         <AppText style={styles.label} text="비밀번호 확인" />
-        <TextInput style={styles.input} secureTextEntry />
+        <TextInput
+          style={styles.input}
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="6자리 이상"
+        />
       </View>
 
-      <AuthButton text="회원 가입하기" onPress={onSubmit} />
+      <AuthButton
+        text="회원 가입하기"
+        onPress={signUpWithEmail}
+        disabled={isDisabled || loading}
+      />
 
       <AppText style={styles.orText} text="OR" />
 
-      <TouchableOpacity style={styles.googleButton}>
+      <TouchableOpacity
+        style={[
+          styles.googleButton,
+          isDisabled || loading ? styles.disabled : null,
+        ]}
+        disabled={isDisabled || loading}
+      >
         <Image
           source={require("../../assets/images/google.png")}
           style={styles.googleIcon}
         />
       </TouchableOpacity>
+
       <View style={styles.guidance}>
         <AppText style={styles.guide} text="이미 계정이 있으신가요?" />
         <Pressable onPress={onChangeFormToLogin}>
@@ -83,16 +151,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 10,
     backgroundColor: "#DDDFE2",
-  },
-  signupButton: {
-    backgroundColor: "#fbc02d",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  signupAppText: {
-    color: "black",
-    fontWeight: "bold",
   },
   orText: {
     textAlign: "center",
@@ -132,6 +190,9 @@ const styles = StyleSheet.create({
     color: "#F5C92B",
     marginLeft: 8,
     fontWeight: "700",
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
 
