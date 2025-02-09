@@ -1,4 +1,3 @@
-// QuizTab.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -8,6 +7,7 @@ import {
   Animated,
   FlatList,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const questions = [
   {
@@ -75,39 +75,45 @@ const QuizTab = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.progressBarContainer}>
-        <Animated.View
-          style={[
-            styles.progressBar,
-            {
-              width: progress.interpolate({
-                inputRange: [0, 100],
-                outputRange: ["0%", "100%"],
-              }),
-            },
-          ]}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.progressBarContainer}>
+          <Animated.View
+            style={[
+              styles.progressBar,
+              {
+                width: progress.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ["0%", "100%"],
+                }),
+              },
+            ]}
+          />
+        </View>
+        <FlatList
+          data={questions}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          initialScrollIndex={currentQuestionIndex}
+          getItemLayout={(data, index) => ({
+            length: 360,
+            offset: 360 * index,
+            index,
+          })}
         />
       </View>
-      <FlatList
-        data={questions}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        initialScrollIndex={currentQuestionIndex}
-        getItemLayout={(data, index) => ({
-          length: 360,
-          offset: 360 * index,
-          index,
-        })}
-      />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
   container: {
     flex: 1,
     padding: 16,

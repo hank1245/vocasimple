@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Animated,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface VocabularyCardProps {
   word: string;
@@ -84,7 +85,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
   );
 };
 
-const App = () => {
+const Index = () => {
   const [mode, setMode] = useState<"word" | "meaning" | null>(null);
 
   const vocabularyList = [
@@ -95,41 +96,46 @@ const App = () => {
   ];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.modeButtons}>
-        <TouchableOpacity
-          style={[styles.modeButton, mode === "word" && styles.activeMode]}
-          onPress={() => setMode((m) => (m === "word" ? null : "word"))}
-        >
-          <Text>단어만</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.modeButton, mode === "meaning" && styles.activeMode]}
-          onPress={() => setMode((m) => (m === "meaning" ? null : "meaning"))}
-        >
-          <Text>뜻만</Text>
-        </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.modeButtons}>
+          <TouchableOpacity
+            style={[styles.modeButton, mode === "word" && styles.activeMode]}
+            onPress={() => setMode((m) => (m === "word" ? null : "word"))}
+          >
+            <Text>단어만</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeButton, mode === "meaning" && styles.activeMode]}
+            onPress={() => setMode((m) => (m === "meaning" ? null : "meaning"))}
+          >
+            <Text>뜻만</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView>
+          {vocabularyList.map((item, idx) => (
+            <VocabularyCard
+              key={idx}
+              word={item.word}
+              meaning={item.meaning}
+              subItems={item.subItems}
+              mode={mode}
+            />
+          ))}
+        </ScrollView>
       </View>
-      <ScrollView>
-        {vocabularyList.map((item, idx) => (
-          <VocabularyCard
-            key={idx}
-            word={item.word}
-            meaning={item.meaning}
-            subItems={item.subItems}
-            mode={mode}
-          />
-        ))}
-      </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
   container: {
     flex: 1,
     padding: 16,
-    marginTop: 100,
     backgroundColor: "#f5f5f5",
   },
   modeButtons: {
@@ -174,4 +180,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App;
+export default Index;
