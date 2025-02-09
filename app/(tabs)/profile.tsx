@@ -1,13 +1,7 @@
 import React from "react";
-import {
-  View,
-  Text,
-  Image,
-  Button,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
+import { View, Image, Button, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AppText from "@/components/common/AppText";
 
 const ProfileScreen = () => {
   return (
@@ -20,9 +14,9 @@ const ProfileScreen = () => {
             style={styles.profileImage}
           />
           <View>
-            <Text style={styles.profileName}>김철수</Text>
-            <Text style={styles.username}>#cutehorangi</Text>
-            <Text style={styles.joinDate}>2025년 1월에 가입</Text>
+            <AppText style={styles.profileName} text="김철수" />
+            <AppText style={styles.username} text="#cutehorangi" />
+            <AppText style={styles.joinDate} text="2025년 1월에 가입" />
           </View>
         </View>
 
@@ -32,23 +26,23 @@ const ProfileScreen = () => {
         </View>
 
         {/* Achievements */}
-        <Text style={styles.sectionTitle}>Achievements</Text>
+        <AppText style={styles.sectionTitle} text="Achievements" />
         <View style={styles.achievementsContainer}>
           <View style={styles.achievementBox}>
-            <Text style={styles.achievementNumber}>12일</Text>
-            <Text style={styles.achievementLabel}>연속 공부 기록</Text>
+            <AppText style={styles.achievementNumber} text="12일" />
+            <AppText style={styles.achievementLabel} text="연속 공부 기록" />
           </View>
           <View style={styles.achievementBox}>
-            <Text style={styles.achievementNumber}>243</Text>
-            <Text style={styles.achievementLabel}>외운 단어수</Text>
+            <AppText style={styles.achievementNumber} text="243" />
+            <AppText style={styles.achievementLabel} text="외운 단어수" />
           </View>
         </View>
 
         {/* Tier Section */}
         <View style={styles.tierContainer}>
-          <Text style={styles.tierLabel}>티어</Text>
+          <AppText style={styles.tierLabel} text="티어" />
           <View style={styles.tierBox}>
-            <Text style={styles.tierText}>Sage</Text>
+            <AppText style={styles.tierText} text="Sage" />
             <Image
               source={{ uri: "https://via.placeholder.com/50" }}
               style={styles.tierImage}
@@ -64,9 +58,12 @@ const ProfileScreen = () => {
             { title: "Sage", level: 1 },
           ].map((badge, index) => (
             <View key={index} style={styles.badgeBox}>
-              <Text style={styles.badgeTitle}>{badge.title}</Text>
-              <Text style={styles.badgeLevel}>Level {badge.level}</Text>
-              <Text style={styles.rank}>순위</Text>
+              <AppText style={styles.badgeTitle} text={badge.title} />
+              <AppText
+                style={styles.badgeLevel}
+                text={`Level ${badge.level}`}
+              />
+              <AppText style={styles.rank} text="순위" />
             </View>
           ))}
         </View>
