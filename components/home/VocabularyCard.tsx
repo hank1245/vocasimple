@@ -71,10 +71,10 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "white",
-    padding: 16,
+    backgroundColor: "#F7FAFC",
+    padding: 24,
     borderRadius: 8,
-    marginBottom: 8,
+    marginBottom: 21,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },

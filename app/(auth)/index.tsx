@@ -6,6 +6,7 @@ import { Image, SafeAreaView, StyleSheet, View } from "react-native";
 import AppText from "@/components/common/AppText";
 import { Easing } from "react-native-reanimated";
 import Form from "@/components/auth/Form";
+import { Colors } from "@/constants/Colors";
 
 const Index = () => {
   const snapPoints = useMemo(() => ["60%", "80%"], []);
@@ -16,7 +17,9 @@ const Index = () => {
   };
 
   return (
-    <GestureHandlerRootView style={{ backgroundColor: "#6D60F8", flex: 1 }}>
+    <GestureHandlerRootView
+      style={{ backgroundColor: Colors.primary, flex: 1 }}
+    >
       <SafeAreaView style={styles.container}>
         <View style={styles.banner}>
           <AppText style={styles.bannerText} text="Let's get Started!" />

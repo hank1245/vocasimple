@@ -5,12 +5,17 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 import VocabularyCard from "@/components/home/VocabularyCard";
+import { AntDesign } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { Colors } from "@/constants/Colors";
 
 const Index = () => {
+  const router = useRouter();
   const [mode, setMode] = useState<"word" | "meaning" | null>(null);
 
   const vocabularyList = [
@@ -20,8 +25,15 @@ const Index = () => {
     { word: "tree", meaning: "나무", subItems: [] },
   ];
 
+  const onAdd = () => {
+    router.push("/add");
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      <Pressable style={styles.add} onPress={onAdd}>
+        <AntDesign name="plus" size={32} color="black" />
+      </Pressable>
       <View style={styles.container}>
         <View style={styles.topbar}>
           <AppText style={styles.title} text="Vocabulary" />
@@ -70,12 +82,17 @@ const Index = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+  },
+  add: {
+    height: 50,
+    justifyContent: "center",
+    paddingHorizontal: 36,
+    width: "100%",
+    alignItems: "flex-end",
   },
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#f5f5f5",
   },
   topbar: {
     flexDirection: "row",
@@ -98,7 +115,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   activeMode: {
-    backgroundColor: "#6D60F8",
+    backgroundColor: Colors.primary,
   },
 });
 

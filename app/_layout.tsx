@@ -48,17 +48,15 @@ export default function RootLayout() {
       if ((loaded || error) && sessionLoaded) {
         if (session) {
           router.replace("/(tabs)");
-          await SplashScreen.hideAsync();
         } else {
           router.replace("/(auth)");
-          await SplashScreen.hideAsync();
         }
+        await SplashScreen.hideAsync();
       }
     };
     handleNavigation();
   }, [loaded, error, sessionLoaded, session, router]);
 
-  // 로그인 및 폰트 로딩이 완료되기 전까지는 아무것도 렌더링하지 않음.
   if (!loaded || !sessionLoaded) {
     return null;
   }
