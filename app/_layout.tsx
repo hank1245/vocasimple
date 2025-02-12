@@ -43,25 +43,22 @@ export default function RootLayout() {
     Lexend: require("../assets/fonts/Lexend.ttf"),
   });
 
-  // 폰트나 에러, 세션 로드가 완료되면 스플래시 스크린 숨김
   useEffect(() => {
-    if ((loaded || error) && sessionLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error, sessionLoaded]);
-
-  // 세션 로드가 완료되면 인증 여부에 따라 자동 리디렉션
-  useEffect(() => {
-    if ((loaded || error) && sessionLoaded) {
-      if (session) {
-        // 인증된 경우, (tabs)의 index 페이지로 이동
-        router.replace("/(tabs)");
-      } else {
-        router.replace("/(auth)");
+    const handleNavigation = async () => {
+      if ((loaded || error) && sessionLoaded) {
+        if (session) {
+          router.replace("/(tabs)");
+          await SplashScreen.hideAsync();
+        } else {
+          router.replace("/(auth)");
+          await SplashScreen.hideAsync();
+        }
       }
-    }
+    };
+    handleNavigation();
   }, [loaded, error, sessionLoaded, session, router]);
 
+  // 로그인 및 폰트 로딩이 완료되기 전까지는 아무것도 렌더링하지 않음.
   if (!loaded || !sessionLoaded) {
     return null;
   }
