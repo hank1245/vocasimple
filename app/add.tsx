@@ -30,7 +30,14 @@ const AddScreen = () => {
   };
 
   const onSave = async () => {
-    // supabase를 통해 단어 저장 (테이블 이름과 컬럼명은 실제에 맞게 수정)
+    if (word.trim() === "" || meaning.trim() === "") {
+      Toast.warning("단어 혹은 뜻 칸이 비었어요", {
+        duration: 2000,
+        position: "bottom",
+      });
+      return;
+    }
+
     const { error } = await supabase.from("vocabulary").insert([
       {
         word,
@@ -50,7 +57,6 @@ const AddScreen = () => {
       duration: 2000,
       position: "bottom",
     });
-    // router.back(); 호출하지 않음
   };
 
   return (
@@ -93,10 +99,15 @@ const AddScreen = () => {
             onChangeText={setExample}
             onBlur={() => Keyboard.dismiss()}
           />
-          <TouchableOpacity style={styles.aiButton} onPress={onCreateExample}>
-            <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
-            <AppText style={styles.aiText} text="AI로 예문 생성하기" />
-          </TouchableOpacity>
+          <View style={styles.aiButton}>
+            <TouchableOpacity
+              style={{ flexDirection: "row" }}
+              onPress={onCreateExample}
+            >
+              <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
+              <AppText style={styles.aiText} text="AI로 예문 생성하기" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={[styles.inputContainer, styles.groupContainer]}>

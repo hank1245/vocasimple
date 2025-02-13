@@ -11,7 +11,6 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
-
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
