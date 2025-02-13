@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Pressable,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,21 +14,55 @@ import Entypo from "@expo/vector-icons/Entypo";
 import { Colors } from "@/constants/Colors";
 import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { useRouter } from "expo-router";
+import { supabase } from "@/utils/supabase";
+import Toast from "toastify-react-native"; // toastify-react-native 임포트
 
 const AddScreen = () => {
   const [word, setWord] = useState("");
   const [meaning, setMeaning] = useState("");
   const [example, setExample] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState();
-
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const router = useRouter();
   const onCreateExample = () => {};
+  const onGoBack = () => {
+    router.back();
+  };
+
+  const onSave = async () => {
+    // supabase를 통해 단어 저장 (테이블 이름과 컬럼명은 실제에 맞게 수정)
+    const { error } = await supabase.from("vocabulary").insert([
+      {
+        word,
+        meaning,
+        example,
+        group: selectedGroup,
+      },
+    ]);
+    if (error) {
+      Toast.error("저장 중 오류가 발생했습니다.", {
+        duration: 2000,
+        position: "bottom",
+      });
+      return;
+    }
+    Toast.success("단어가 저장되었습니다.", {
+      duration: 2000,
+      position: "bottom",
+    });
+    // router.back(); 호출하지 않음
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="close" size={34} color="black" />
-          <Entypo name="check" size={30} color={Colors.primary} />
+          <Pressable onPress={onGoBack}>
+            <Ionicons name="close" size={34} color="black" />
+          </Pressable>
+          <Pressable onPress={onSave}>
+            <Entypo name="check" size={30} color={Colors.primary} />
+          </Pressable>
         </View>
 
         <View style={styles.inputContainer}>
@@ -86,12 +121,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 30,
-    paddingTop: 30,
+    paddingTop: 20,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 40,
+    marginBottom: 30,
     paddingRight: 10,
   },
   inputContainer: {
@@ -124,7 +159,7 @@ const styles = StyleSheet.create({
   },
   picker: {
     borderRadius: 10,
-    backgroundColor: "#dcdcde",
+    backgroundColor: "#DDDFE2",
   },
 });
 

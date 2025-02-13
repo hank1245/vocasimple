@@ -31,9 +31,11 @@ const Index = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Pressable style={styles.add} onPress={onAdd}>
-        <AntDesign name="plus" size={32} color="black" />
-      </Pressable>
+      <View style={styles.add}>
+        <Pressable onPress={onAdd}>
+          <AntDesign name="plus" size={32} color="black" />
+        </Pressable>
+      </View>
       <View style={styles.container}>
         <View style={styles.topbar}>
           <AppText style={styles.title} text="Vocabulary" />
@@ -87,7 +89,6 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: "center",
     paddingHorizontal: 20,
-    width: "100%",
     alignItems: "flex-end",
   },
   container: {
