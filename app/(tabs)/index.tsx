@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Animated,
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,17 +12,26 @@ import VocabularyCard from "@/components/home/VocabularyCard";
 import { AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
+import { supabase } from "@/utils/supabase";
 
 const Index = () => {
   const router = useRouter();
   const [mode, setMode] = useState<"word" | "meaning" | null>(null);
+  const [vocabularyList, setVocabularyList] = useState<any[]>([]);
 
-  const vocabularyList = [
-    { word: "run", meaning: "달리다", subItems: [] },
-    { word: "moon", meaning: "달", subItems: [] },
-    { word: "star", meaning: "별, 스타", subItems: [] },
-    { word: "tree", meaning: "나무", subItems: [] },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase
+        .from("vocabulary")
+        .select("word, meaning, group, example");
+      if (error) {
+        console.error("Error fetching vocabulary:", error);
+        return;
+      }
+      setVocabularyList(data);
+    };
+    fetchData();
+  }, []);
 
   const onAdd = () => {
     router.push("/add");
@@ -65,13 +73,17 @@ const Index = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView>
+        <ScrollView
+          contentContainerStyle={{ paddingVertical: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
           {vocabularyList.map((item, idx) => (
             <VocabularyCard
               key={idx}
               word={item.word}
               meaning={item.meaning}
-              subItems={item.subItems}
+              group={item.group}
+              example={item.example}
               mode={mode}
             />
           ))}
