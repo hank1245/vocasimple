@@ -16,7 +16,7 @@ import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter } from "expo-router";
 import { supabase } from "@/utils/supabase";
-import Toast from "toastify-react-native"; // toastify-react-native 임포트
+import Toast from "toastify-react-native";
 
 const AddScreen = () => {
   const [word, setWord] = useState("");
@@ -31,10 +31,7 @@ const AddScreen = () => {
 
   const onSave = async () => {
     if (word.trim() === "" || meaning.trim() === "") {
-      Toast.warning("단어 혹은 뜻 칸이 비었어요", {
-        duration: 2000,
-        position: "bottom",
-      });
+      Toast.warn("단어 혹은 뜻 칸이 비었어요");
       return;
     }
 
@@ -47,16 +44,10 @@ const AddScreen = () => {
       },
     ]);
     if (error) {
-      Toast.error("저장 중 오류가 발생했습니다.", {
-        duration: 2000,
-        position: "bottom",
-      });
+      Toast.error("저장 중 오류가 발생했습니다.");
       return;
     }
-    Toast.success("단어가 저장되었습니다.", {
-      duration: 2000,
-      position: "bottom",
-    });
+    Toast.success("단어가 저장되었습니다.");
   };
 
   return (
@@ -124,6 +115,12 @@ const AddScreen = () => {
           </Picker>
         </View>
       </View>
+      <Toast
+        duration={2000}
+        animationIn="slideInRight"
+        animationOut="slideOutRight"
+        position="bottom"
+      />
     </SafeAreaView>
   );
 };

@@ -11,6 +11,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
+import ToastManager from "toastify-react-native";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -65,6 +66,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         {/* 화면은 라우터에서 자동 리디렉션되므로 빈 Stack을 렌더링 */}
       </Stack>
+      <ToastManager />
     </ThemeProvider>
   );
 }

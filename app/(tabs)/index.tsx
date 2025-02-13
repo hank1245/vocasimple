@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   add: {
     height: 50,
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     alignItems: "flex-end",
   },
   container: {
