@@ -16,7 +16,7 @@ import { supabase } from "@/utils/supabase";
 
 const Index = () => {
   const router = useRouter();
-  const [mode, setMode] = useState<"word" | "meaning" | null>(null);
+  const [mode, setMode] = useState<"word" | "meaning" | null>("word");
   const [vocabularyList, setVocabularyList] = useState<any[]>([]);
 
   useEffect(() => {
@@ -53,7 +53,10 @@ const Index = () => {
               onPress={() => setMode((m) => (m === "word" ? null : "word"))}
             >
               <AppText
-                style={mode === "word" ? { color: "white" } : undefined}
+                style={[
+                  styles.modeText,
+                  mode === "word" ? { color: "white" } : undefined,
+                ]}
                 text="단어만"
               />
             </TouchableOpacity>
@@ -67,7 +70,10 @@ const Index = () => {
               }
             >
               <AppText
-                style={mode === "meaning" ? { color: "white" } : undefined}
+                style={[
+                  styles.modeText,
+                  mode === "meaning" ? { color: "white" } : undefined,
+                ]}
                 text="뜻만"
               />
             </TouchableOpacity>
@@ -120,9 +126,12 @@ const styles = StyleSheet.create({
   modeButtons: {
     flexDirection: "row",
   },
+  modeText: {
+    fontWeight: "800",
+  },
   modeButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
     marginLeft: 16,
     backgroundColor: "#e0e0e0",
     borderRadius: 20,
