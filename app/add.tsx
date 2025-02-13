@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,7 +23,8 @@ const AddScreen = () => {
   const [word, setWord] = useState("");
   const [meaning, setMeaning] = useState("");
   const [example, setExample] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("기본");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const onCreateExample = () => {};
   const onGoBack = () => {
@@ -35,6 +37,7 @@ const AddScreen = () => {
       return;
     }
 
+    setLoading(true);
     const { error } = await supabase.from("vocabulary").insert([
       {
         word,
@@ -43,11 +46,16 @@ const AddScreen = () => {
         group: selectedGroup,
       },
     ]);
+    setLoading(false);
+
     if (error) {
       Toast.error("저장 중 오류가 발생했습니다.");
       return;
     }
     Toast.success("단어가 저장되었습니다.");
+    setWord("");
+    setMeaning("");
+    setExample("");
   };
 
   return (
@@ -57,8 +65,12 @@ const AddScreen = () => {
           <Pressable onPress={onGoBack}>
             <Ionicons name="close" size={34} color="black" />
           </Pressable>
-          <Pressable onPress={onSave}>
-            <Entypo name="check" size={30} color={Colors.primary} />
+          <Pressable onPress={loading ? () => {} : onSave}>
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            ) : (
+              <Entypo name="check" size={30} color={Colors.primary} />
+            )}
           </Pressable>
         </View>
 
