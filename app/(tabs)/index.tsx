@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   add: {
     height: 50,
     justifyContent: "center",
-    paddingHorizontal: 36,
+    paddingHorizontal: 20,
     width: "100%",
     alignItems: "flex-end",
   },
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   modeButton: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    marginRight: 16,
+    marginLeft: 16,
     backgroundColor: "#e0e0e0",
     borderRadius: 20,
   },
