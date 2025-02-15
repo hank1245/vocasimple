@@ -1,23 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   Pressable,
+  LayoutChangeEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 import VocabularyCard from "@/components/home/VocabularyCard";
+import OverlayModal from "@/components/common/OverlayModal";
 import { AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { supabase } from "@/utils/supabase";
 
+interface LayoutInfo {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 const Index = () => {
   const router = useRouter();
-  const [mode, setMode] = useState<"word" | "meaning" | null>("word");
+  const [mode, setMode] = useState<"word" | "meaning" | null>(null);
   const [vocabularyList, setVocabularyList] = useState<any[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
+  const [highlightedLayout, setHighlightedLayout] = useState<LayoutInfo | null>(
+    null
+  );
+
+  // 카드의 ref를 저장할 배열
+  const cardsRefs = useRef<Array<View | null>>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,8 +53,48 @@ const Index = () => {
     router.push("/add");
   };
 
+  // 각 카드의 절대 위치를 측정합니다.
+  const handleCardLongPress = (index: number) => {
+    const cardRef = cardsRefs.current[index];
+    if (cardRef) {
+      cardRef.measureInWindow((x, y, width, height) => {
+        setHighlightedLayout({ x, y, width, height });
+        setHighlightedIndex(index);
+      });
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
+      <OverlayModal
+        visible={highlightedIndex !== null && highlightedLayout !== null}
+        onRequestClose={() => {
+          setHighlightedIndex(null);
+          setHighlightedLayout(null);
+        }}
+      >
+        {highlightedIndex !== null && highlightedLayout !== null && (
+          <View
+            style={[
+              styles.highlightedCardContainer,
+              {
+                top: highlightedLayout.y,
+                left: highlightedLayout.x,
+                width: highlightedLayout.width,
+                height: highlightedLayout.height,
+              },
+            ]}
+          >
+            <VocabularyCard
+              word={vocabularyList[highlightedIndex].word}
+              meaning={vocabularyList[highlightedIndex].meaning}
+              group={vocabularyList[highlightedIndex].group}
+              example={vocabularyList[highlightedIndex].example}
+              mode={mode}
+            />
+          </View>
+        )}
+      </OverlayModal>
       <View style={styles.add}>
         <Pressable onPress={onAdd}>
           <AntDesign name="plus" size={32} color="black" />
@@ -70,10 +126,7 @@ const Index = () => {
               }
             >
               <AppText
-                style={[
-                  styles.modeText,
-                  mode === "meaning" ? { color: "white" } : undefined,
-                ]}
+                style={mode === "meaning" ? { color: "white" } : undefined}
                 text="뜻만"
               />
             </TouchableOpacity>
@@ -84,14 +137,20 @@ const Index = () => {
           showsVerticalScrollIndicator={false}
         >
           {vocabularyList.map((item, idx) => (
-            <VocabularyCard
-              key={idx}
-              word={item.word}
-              meaning={item.meaning}
-              group={item.group}
-              example={item.example}
-              mode={mode}
-            />
+            <View key={idx} ref={(ref) => (cardsRefs.current[idx] = ref)}>
+              <VocabularyCard
+                word={item.word}
+                meaning={item.meaning}
+                group={item.group}
+                example={item.example}
+                mode={mode}
+                onLongPress={() => handleCardLongPress(idx)}
+                onPressOut={() => {
+                  setHighlightedIndex(null);
+                  setHighlightedLayout(null);
+                }}
+              />
+            </View>
           ))}
         </ScrollView>
       </View>
@@ -106,7 +165,7 @@ const styles = StyleSheet.create({
   add: {
     height: 50,
     justifyContent: "center",
-    paddingHorizontal: 30,
+    paddingHorizontal: 24,
     alignItems: "flex-end",
   },
   container: {
@@ -130,7 +189,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   modeButton: {
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 15,
     marginLeft: 16,
     backgroundColor: "#e0e0e0",
@@ -138,6 +197,10 @@ const styles = StyleSheet.create({
   },
   activeMode: {
     backgroundColor: Colors.primary,
+  },
+  highlightedCardContainer: {
+    position: "absolute",
+    zIndex: 10,
   },
 });
 

@@ -7,6 +7,8 @@ interface VocabularyCardProps {
   meaning: string;
   subItems?: string[];
   mode: "word" | "meaning" | null;
+  onLongPress?: () => void;
+  onPressOut?: () => void;
 }
 
 const VocabularyCard: React.FC<VocabularyCardProps> = ({
@@ -14,6 +16,8 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
   meaning,
   subItems,
   mode,
+  onLongPress,
+  onPressOut,
 }) => {
   const wordOpacity = React.useRef(new Animated.Value(1)).current;
   const meaningOpacity = React.useRef(new Animated.Value(1)).current;
@@ -55,13 +59,20 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
   };
 
   return (
-    <TouchableOpacity onPress={handlePress} style={styles.card}>
+    <TouchableOpacity
+      onPress={handlePress}
+      onLongPress={onLongPress}
+      onPressOut={onPressOut}
+      delayLongPress={1000}
+      style={styles.card}
+    >
       <Animated.Text style={[styles.word, { opacity: wordOpacity }]}>
         {word}
       </Animated.Text>
       <Animated.Text style={[styles.meaning, { opacity: meaningOpacity }]}>
         {meaning}
       </Animated.Text>
+
       {subItems?.map((item, idx) => (
         <AppText key={idx} style={styles.subItem} text={item} />
       ))}
