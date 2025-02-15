@@ -63,7 +63,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
       onPress={handlePress}
       onLongPress={onLongPress}
       onPressOut={onPressOut}
-      delayLongPress={1000}
+      delayLongPress={300}
       style={styles.card}
     >
       <Animated.Text style={[styles.word, { opacity: wordOpacity }]}>
