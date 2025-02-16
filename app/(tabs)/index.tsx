@@ -7,6 +7,7 @@ import {
   Pressable,
   LayoutChangeEvent,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 import VocabularyCard from "@/components/home/VocabularyCard";
@@ -32,22 +33,20 @@ const Index = () => {
     null
   );
 
-  // 카드의 ref를 저장할 배열
   const cardsRefs = useRef<Array<View | null>>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data, error } = await supabase
-        .from("vocabulary")
-        .select("word, meaning, group, example");
-      if (error) {
-        console.error("Error fetching vocabulary:", error);
-        return;
-      }
-      setVocabularyList(data);
-    };
+  const fetchData = async () => {
+    const { data, error } = await supabase
+      .from("vocabulary")
+      .select("word, meaning, group, example");
+    if (error) {
+      console.error("Error fetching vocabulary:", error);
+      return;
+    }
+    setVocabularyList(data);
+  };
+  useFocusEffect(() => {
     fetchData();
-  }, []);
+  });
 
   const onAdd = () => {
     router.push("/add");
