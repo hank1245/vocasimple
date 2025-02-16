@@ -11,15 +11,14 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: Colors.tabBarActive,
+        tabBarInactiveTintColor: Colors.tabBarInactive,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: "absolute",
-          },
-          default: {},
-        }),
+        tabBarStyle: {
+          backgroundColor: Colors.tabBarBackground,
+          ...(Platform.OS === "ios" ? { position: "absolute" } : {}),
+        },
       }}
     >
       <Tabs.Screen

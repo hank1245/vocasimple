@@ -26,7 +26,7 @@ interface LayoutInfo {
 
 const Index = () => {
   const router = useRouter();
-  const [mode, setMode] = useState<"word" | "meaning" | null>(null);
+  const [mode, setMode] = useState<"word" | "meaning" | null>("word");
   const [vocabularyList, setVocabularyList] = useState<any[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [highlightedLayout, setHighlightedLayout] = useState<LayoutInfo | null>(
@@ -125,7 +125,10 @@ const Index = () => {
               }
             >
               <AppText
-                style={mode === "meaning" ? { color: "white" } : undefined}
+                style={[
+                  styles.modeText,
+                  mode === "meaning" ? { color: "white" } : undefined,
+                ]}
                 text="뜻만"
               />
             </TouchableOpacity>
