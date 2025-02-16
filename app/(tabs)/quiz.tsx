@@ -10,20 +10,37 @@ import {
 import AppText from "@/components/common/AppText";
 import { Ionicons } from "@expo/vector-icons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useRouter } from "expo-router";
+import { QuizMode } from "@/types/common";
 
 const QuizScreen = () => {
+  const router = useRouter();
+
+  const handleNavigate = (mode: QuizMode) => {
+    router.push({
+      pathname: "/MultipleChoiceQuestions",
+      params: { mode },
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.padding}>
         <AppText style={styles.title} text="Quiz" />
 
         <View style={styles.gridContainer}>
-          <TouchableOpacity style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => handleNavigate("meaning")}
+          >
             <Ionicons name="list" size={34} color="white" />
             <AppText style={styles.cardText} text="뜻 맞추기" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => handleNavigate("word")}
+          >
             <Ionicons name="text" size={34} color="white" />
             <AppText style={styles.cardText} text="단어 맞추기" />
           </TouchableOpacity>
