@@ -1,3 +1,4 @@
+import QuestionItem from "@/components/quiz/QuestionItem";
 import { Colors } from "./../constants/Colors";
 import React, { useState, useRef } from "react";
 import {
@@ -13,75 +14,10 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Dimensions } from "react-native";
+import { wordQuestions, meaningQuestions } from "../constants/questions.ts";
 const windowWidth = Dimensions.get("window").width;
 
-const meaningQuestions = [
-  {
-    id: 1,
-    question: 'What is the Korean word for "star"?',
-    options: ["킥", "스타", "달", "태양"],
-    correctAnswer: "스타",
-  },
-  {
-    id: 2,
-    question: 'What is the Korean word for "moon"?',
-    options: ["킥", "스타", "달", "태양"],
-    correctAnswer: "달",
-  },
-  {
-    id: 3,
-    question: 'What is the Korean word for "sun"?',
-    options: ["킥", "스타", "달", "태양"],
-    correctAnswer: "태양",
-  },
-  {
-    id: 4,
-    question: 'What is the English word for "sdf"?',
-    options: ["star", "moon", "sun", "tree"],
-    correctAnswer: "star",
-  },
-  {
-    id: 5,
-    question: 'What is the English word for "달"?',
-    options: ["star", "moon", "sun", "tree"],
-    correctAnswer: "moon",
-  },
-];
-
-const wordQuestions = [
-  {
-    id: 1,
-    question: "킥",
-    options: ["kick", "star", "mmon", "sun"],
-    correctAnswer: "kick",
-  },
-  {
-    id: 2,
-    question: "킥",
-    options: ["kick", "star", "mmon", "sun"],
-    correctAnswer: "kick",
-  },
-  {
-    id: 3,
-    question: "킥",
-    options: ["kick", "star", "mmon", "sun"],
-    correctAnswer: "kick",
-  },
-  {
-    id: 4,
-    question: "킥",
-    options: ["kick", "star", "mmon", "sun"],
-    correctAnswer: "kick",
-  },
-  {
-    id: 5,
-    question: "킥",
-    options: ["kick", "star", "mmon", "sun"],
-    correctAnswer: "kick",
-  },
-];
-
-const QuizTab = () => {
+const MultipleChoiceQuestionsScreen = () => {
   const router = useRouter();
   const { mode } = useLocalSearchParams<{ mode: "meaning" | "word" }>();
   const questions = mode === "word" ? wordQuestions : meaningQuestions;
@@ -105,37 +41,6 @@ const QuizTab = () => {
       alert("Quiz completed!");
     }
   };
-
-  const renderItem = ({ item }: any) => (
-    <View style={styles.questionContainer}>
-      <Text style={styles.questionText}>{item.question}</Text>
-      {item.options.map((option: any, idx: number) => (
-        <TouchableOpacity
-          key={idx}
-          style={[
-            styles.optionButton,
-            selected === idx && { borderColor: Colors.primary },
-          ]}
-          onPress={() => setSelected(idx)}
-        >
-          <Text style={styles.optionText}>{option}</Text>
-          <View
-            style={[
-              styles.select,
-              selected === idx && { borderColor: Colors.primary },
-            ]}
-          >
-            {selected === idx ? (
-              <View style={styles.selectedDot}></View>
-            ) : undefined}
-          </View>
-        </TouchableOpacity>
-      ))}
-      <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
-        <Text style={styles.continueButtonText}>Continue</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -161,7 +66,14 @@ const QuizTab = () => {
         <FlatList
           ref={flatListRef}
           data={questions}
-          renderItem={renderItem}
+          renderItem={({ item }) => (
+            <QuestionItem
+              item={item}
+              selected={selected}
+              setSelected={setSelected}
+              handleContinue={handleContinue}
+            />
+          )}
           keyExtractor={(item) => item.id.toString()}
           horizontal
           pagingEnabled
@@ -206,65 +118,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRadius: 5,
   },
-  questionContainer: {
-    width: windowWidth - 30,
-    paddingHorizontal: 10,
-  },
-  questionText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 30,
-    color: "black",
-    paddingLeft: 14,
-  },
-  optionButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 15,
-    borderRadius: 20,
-    borderWidth: 1.2,
-    borderColor: "#D1DBE8",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  optionText: {
-    fontSize: 16,
-    color: "black",
-  },
-  select: {
-    width: 26,
-    height: 26,
-    borderWidth: 2,
-    borderColor: "#D1DBE8",
-    borderRadius: "50%",
-    position: "relative",
-  },
-  selectedDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.primary,
-    position: "absolute",
-    top: 6,
-    left: 6,
-  },
-  continueButton: {
-    position: "absolute",
-    bottom: 10,
-    width: "100%",
-    alignSelf: "center",
-    marginTop: 16,
-    padding: 13,
-    backgroundColor: Colors.primary,
-    borderRadius: 15,
-    alignItems: "center",
-  },
-  continueButtonText: {
-    fontSize: 18,
-    color: "white",
-    fontWeight: "bold",
-  },
 });
 
-export default QuizTab;
+export default MultipleChoiceQuestionsScreen;

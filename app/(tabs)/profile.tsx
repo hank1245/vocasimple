@@ -3,7 +3,7 @@ import { View, Image, Button, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 
-const ProfileScreen = () => {
+const ProfileTab = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
@@ -128,4 +128,4 @@ const styles = StyleSheet.create({
   rank: { color: "gray" },
 });
 
-export default ProfileScreen;
+export default ProfileTab;

@@ -13,7 +13,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
 import { QuizMode } from "@/types/common";
 
-const QuizScreen = () => {
+const QuizTab = () => {
   const router = useRouter();
 
   const handleNavigate = (mode: QuizMode) => {
@@ -139,4 +139,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default QuizScreen;
+export default QuizTab;
