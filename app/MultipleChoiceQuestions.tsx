@@ -1,5 +1,5 @@
 import { Colors } from "./../constants/Colors";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -88,15 +88,19 @@ const QuizTab = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [progress, setProgress] = useState(new Animated.Value(0));
   const [selected, setSelected] = useState(null);
+  const flatListRef = useRef<FlatList>(null);
 
   const handleContinue = () => {
     if (currentQuestionIndex < questions.length - 1) {
+      const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       Animated.timing(progress, {
         toValue: ((currentQuestionIndex + 1) / questions.length) * 100,
         duration: 300,
         useNativeDriver: false,
       }).start();
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      setSelected(null);
     } else {
       alert("Quiz completed!");
     }
@@ -155,6 +159,7 @@ const QuizTab = () => {
           />
         </View>
         <FlatList
+          ref={flatListRef}
           data={questions}
           renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
@@ -164,7 +169,7 @@ const QuizTab = () => {
           initialScrollIndex={currentQuestionIndex}
           getItemLayout={(data, index) => ({
             length: windowWidth,
-            offset: windowWidth * index,
+            offset: (windowWidth - 30) * index,
             index,
           })}
         />
@@ -202,7 +207,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   questionContainer: {
-    width: 360,
+    width: windowWidth - 30,
+    paddingHorizontal: 10,
   },
   questionText: {
     fontSize: 24,
