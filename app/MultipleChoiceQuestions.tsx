@@ -8,8 +8,11 @@ import {
   FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
-const questions = [
+const meaningQuestions = [
   {
     id: 1,
     question: 'What is the Korean word for "star"?',
@@ -30,7 +33,7 @@ const questions = [
   },
   {
     id: 4,
-    question: 'What is the English word for "豈"?',
+    question: 'What is the English word for "sdf"?',
     options: ["star", "moon", "sun", "tree"],
     correctAnswer: "star",
   },
@@ -42,7 +45,43 @@ const questions = [
   },
 ];
 
+const wordQuestions = [
+  {
+    id: 1,
+    question: "킥",
+    options: ["kick", "star", "mmon", "sun"],
+    correctAnswer: "kick",
+  },
+  {
+    id: 2,
+    question: "킥",
+    options: ["kick", "star", "mmon", "sun"],
+    correctAnswer: "kick",
+  },
+  {
+    id: 3,
+    question: "킥",
+    options: ["kick", "star", "mmon", "sun"],
+    correctAnswer: "kick",
+  },
+  {
+    id: 4,
+    question: "킥",
+    options: ["kick", "star", "mmon", "sun"],
+    correctAnswer: "kick",
+  },
+  {
+    id: 5,
+    question: "킥",
+    options: ["kick", "star", "mmon", "sun"],
+    correctAnswer: "kick",
+  },
+];
+
 const QuizTab = () => {
+  const router = useRouter();
+  const { mode } = useLocalSearchParams<{ mode: "meaning" | "word" }>();
+  const questions = mode === "word" ? wordQuestions : meaningQuestions;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [progress, setProgress] = useState(new Animated.Value(0));
 
@@ -55,7 +94,6 @@ const QuizTab = () => {
         useNativeDriver: false,
       }).start();
     } else {
-      // Handle quiz completion
       alert("Quiz completed!");
     }
   };
@@ -76,6 +114,11 @@ const QuizTab = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.goBackButton}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <AntDesign name="close" size={30} color="black" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.container}>
         <View style={styles.progressBarContainer}>
           <Animated.View
@@ -114,6 +157,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
+  goBackButton: {
+    marginLeft: 20,
+  },
+  goBackText: {
+    fontSize: 16,
+    marginLeft: 5,
+  },
   container: {
     flex: 1,
     padding: 16,
@@ -132,7 +182,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   questionContainer: {
-    width: 360, // Fixed width in pixels
+    width: 360,
     padding: 16,
     backgroundColor: "white",
     borderRadius: 8,
