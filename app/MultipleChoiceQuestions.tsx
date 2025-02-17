@@ -1,3 +1,4 @@
+import { Colors } from "./../constants/Colors";
 import React, { useState } from "react";
 import {
   View,
@@ -104,6 +105,7 @@ const QuizTab = () => {
       {item.options.map((option: any, idx: number) => (
         <TouchableOpacity key={idx} style={styles.optionButton}>
           <Text style={styles.optionText}>{option}</Text>
+          <View style={styles.select}></View>
         </TouchableOpacity>
       ))}
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
@@ -155,10 +157,10 @@ const QuizTab = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   goBackButton: {
     marginLeft: 20,
+    marginBottom: 20,
   },
   goBackText: {
     fontSize: 16,
@@ -167,56 +169,65 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: "#f5f5f5",
   },
   progressBarContainer: {
     height: 10,
     width: "100%",
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#D1DBE8",
     borderRadius: 5,
     marginBottom: 16,
   },
   progressBar: {
     height: "100%",
-    backgroundColor: "#76c7c0",
+    backgroundColor: Colors.primary,
     borderRadius: 5,
   },
   questionContainer: {
     width: 360,
     padding: 16,
-    backgroundColor: "white",
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
   },
   questionText: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 16,
+    marginBottom: 30,
     color: "black",
   },
   optionButton: {
-    padding: 10,
-    marginBottom: 8,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginBottom: 15,
+    borderRadius: 20,
+    borderWidth: 1.2,
+    borderColor: "#D1DBE8",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   optionText: {
     fontSize: 16,
     color: "black",
   },
+  select: {
+    width: 26,
+    height: 26,
+    borderWidth: 2,
+    borderColor: "#D1DBE8",
+    borderRadius: "50%",
+    position: "relative",
+  },
   continueButton: {
+    position: "absolute",
+    bottom: 10,
+    width: "100%",
+    alignSelf: "center",
     marginTop: 16,
     padding: 10,
-    backgroundColor: "#76c7c0",
-    borderRadius: 5,
+    backgroundColor: Colors.primary,
+    borderRadius: 15,
     alignItems: "center",
   },
   continueButtonText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "white",
     fontWeight: "bold",
   },
