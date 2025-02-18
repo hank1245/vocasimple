@@ -35,38 +35,55 @@ const ProfileTab = () => {
         <AppText style={styles.sectionTitle} text="Achievements" />
         <View style={styles.achievementsContainer}>
           <View style={styles.achievementBox}>
-            <AppText style={styles.achievementNumber} text="12일" />
             <AppText style={styles.achievementLabel} text="연속 공부 기록" />
+            <AppText style={styles.achievementNumber} text="12일" />
           </View>
           <View style={styles.achievementBox}>
-            <AppText style={styles.achievementNumber} text="243" />
             <AppText style={styles.achievementLabel} text="외운 단어수" />
+            <AppText style={styles.achievementNumber} text="243" />
           </View>
         </View>
         <View style={styles.tierContainer}>
-          <AppText style={styles.tierLabel} text="티어" />
           <View style={styles.tierBox}>
+            <AppText style={styles.tierLabel} text="티어" />
             <AppText style={styles.tierText} text="Sage" />
-            <Image
-              source={{ uri: "https://via.placeholder.com/50" }}
-              style={styles.tierImage}
-            />
           </View>
+          <Image
+            style={styles.tierImage}
+            source={require("@/assets/images/sage.png")}
+          />
         </View>
 
         {/* Badges */}
         <View style={styles.badgesContainer}>
           {[
-            { title: "Sage", level: 3 },
-            { title: "Knight", level: 2 },
-            { title: "Appentice", level: 1 },
+            {
+              title: "Sage",
+              level: 3,
+              image: require("@/assets/images/sage.png"),
+            },
+            {
+              title: "Knight",
+              level: 2,
+              image: require("@/assets/images/knight.png"),
+            },
+            {
+              title: "Apprentice",
+              level: 1,
+              image: require("@/assets/images/apprentice.png"),
+            },
           ].map((badge, index) => (
             <View key={index} style={styles.badgeBox}>
-              <AppText style={styles.badgeTitle} text={badge.title} />
-              <AppText
-                style={styles.badgeLevel}
-                text={`Level ${badge.level}`}
-              />
+              <View>
+                <Image source={badge.image} style={styles.badgeImage} />
+                <View>
+                  <AppText style={styles.badgeTitle} text={badge.title} />
+                  <AppText
+                    style={styles.badgeLevel}
+                    text={`Level ${badge.level}`}
+                  />
+                </View>
+              </View>
               <AppText style={styles.rank} text="순위" />
             </View>
           ))}
@@ -108,25 +125,29 @@ const styles = StyleSheet.create({
   },
   achievementBox: {
     flex: 1,
-    padding: 15,
-    backgroundColor: "white",
+    padding: 20,
+    alignItems: "flex-start",
     borderRadius: 10,
-    alignItems: "center",
     marginHorizontal: 5,
+    borderWidth: 1,
+    borderColor: "#D1DBE8",
   },
   achievementNumber: { fontSize: 22, fontWeight: "bold" },
-  achievementLabel: { fontSize: 14, color: "gray" },
-  tierContainer: { marginBottom: 20, backgroundColor: "red" },
-  tierLabel: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
-  tierBox: {
+  achievementLabel: { fontSize: 16, marginBottom: 15 },
+  tierContainer: {
+    marginBottom: 30,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#D1DBE8",
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    padding: 10,
-    borderRadius: 10,
+    alignItems: "center",
+    padding: 15,
   },
-  tierText: { fontSize: 18, fontWeight: "bold" },
-  tierImage: { width: 40, height: 40, borderRadius: 5 },
+  tierLabel: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
+  tierBox: {},
+  tierText: { fontSize: 24, fontWeight: "bold", marginTop: 10 },
+  tierImage: { width: 90, height: 90, borderRadius: 10 },
   badgesContainer: { marginBottom: 20 },
   badgeBox: {
     flexDirection: "row",
@@ -140,6 +161,7 @@ const styles = StyleSheet.create({
   badgeTitle: { fontSize: 16, fontWeight: "bold" },
   badgeLevel: { fontSize: 14, color: "gray" },
   rank: { color: "gray" },
+  badgeImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
 });
 
 export default ProfileTab;
