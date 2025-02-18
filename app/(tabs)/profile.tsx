@@ -1,5 +1,13 @@
+import { Colors } from "./../../constants/Colors";
 import React from "react";
-import { View, Image, Button, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Image,
+  Button,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 
@@ -7,25 +15,23 @@ const ProfileTab = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
-        {/* Profile Header */}
+        <View>
+          <AppText text="My Profile" style={styles.header} />
+        </View>
         <View style={styles.profileHeader}>
-          <Image
-            source={{ uri: "https://via.placeholder.com/50" }}
-            style={styles.profileImage}
-          />
           <View>
             <AppText style={styles.profileName} text="김철수" />
             <AppText style={styles.username} text="#cutehorangi" />
             <AppText style={styles.joinDate} text="2025년 1월에 가입" />
           </View>
         </View>
+        <TouchableOpacity style={styles.buttonContainer}>
+          <AppText
+            text="변경하기"
+            style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+          />
+        </TouchableOpacity>
 
-        {/* Edit Button */}
-        <View style={styles.buttonContainer}>
-          <Button title="변경하기" color="#6C63FF" onPress={() => {}} />
-        </View>
-
-        {/* Achievements */}
         <AppText style={styles.sectionTitle} text="Achievements" />
         <View style={styles.achievementsContainer}>
           <View style={styles.achievementBox}>
@@ -37,8 +43,6 @@ const ProfileTab = () => {
             <AppText style={styles.achievementLabel} text="외운 단어수" />
           </View>
         </View>
-
-        {/* Tier Section */}
         <View style={styles.tierContainer}>
           <AppText style={styles.tierLabel} text="티어" />
           <View style={styles.tierBox}>
@@ -53,9 +57,9 @@ const ProfileTab = () => {
         {/* Badges */}
         <View style={styles.badgesContainer}>
           {[
-            { title: "Champion", level: 3 },
-            { title: "Photogenic", level: 2 },
-            { title: "Sage", level: 1 },
+            { title: "Sage", level: 3 },
+            { title: "Knight", level: 2 },
+            { title: "Appentice", level: 1 },
           ].map((badge, index) => (
             <View key={index} style={styles.badgeBox}>
               <AppText style={styles.badgeTitle} text={badge.title} />
@@ -80,11 +84,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  header: {
+    fontWeight: "bold",
+    fontSize: 18,
+    marginBottom: 20,
+  },
   profileImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
-  profileName: { fontSize: 20, fontWeight: "bold" },
-  username: { color: "gray" },
-  joinDate: { color: "gray", fontSize: 12 },
-  buttonContainer: { alignItems: "center", marginBottom: 20 },
+  profileName: { fontSize: 22, fontWeight: "bold" },
+  username: { color: "gray", fontSize: 15 },
+  joinDate: { color: "gray", fontSize: 15 },
+  buttonContainer: {
+    alignItems: "center",
+    marginBottom: 40,
+    backgroundColor: Colors.primary,
+    padding: 10,
+    borderRadius: 15,
+  },
   sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   achievementsContainer: {
     flexDirection: "row",
@@ -101,14 +116,13 @@ const styles = StyleSheet.create({
   },
   achievementNumber: { fontSize: 22, fontWeight: "bold" },
   achievementLabel: { fontSize: 14, color: "gray" },
-  tierContainer: { marginBottom: 20 },
+  tierContainer: { marginBottom: 20, backgroundColor: "red" },
   tierLabel: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
   tierBox: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
-    backgroundColor: "white",
     borderRadius: 10,
   },
   tierText: { fontSize: 18, fontWeight: "bold" },
