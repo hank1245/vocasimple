@@ -3,7 +3,6 @@ import React from "react";
 import {
   View,
   Image,
-  Button,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -12,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 
 const ProfileTab = () => {
+  const OnPressStreak = () => {};
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container}>
@@ -20,7 +20,7 @@ const ProfileTab = () => {
         </View>
         <View style={styles.profileHeader}>
           <View>
-            <AppText style={styles.profileName} text="김철수" />
+            <AppText style={styles.profileName} text="hank1234@gmail.com" />
             <AppText style={styles.username} text="#cutehorangi" />
             <AppText style={styles.joinDate} text="2025년 1월에 가입" />
           </View>
@@ -34,10 +34,13 @@ const ProfileTab = () => {
 
         <AppText style={styles.sectionTitle} text="Achievements" />
         <View style={styles.achievementsContainer}>
-          <View style={styles.achievementBox}>
+          <TouchableOpacity
+            style={styles.achievementBox}
+            onPress={OnPressStreak}
+          >
             <AppText style={styles.achievementLabel} text="연속 공부 기록" />
             <AppText style={styles.achievementNumber} text="12일" />
-          </View>
+          </TouchableOpacity>
           <View style={styles.achievementBox}>
             <AppText style={styles.achievementLabel} text="외운 단어수" />
             <AppText style={styles.achievementNumber} text="243" />
@@ -107,9 +110,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   profileImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
-  profileName: { fontSize: 22, fontWeight: "bold" },
-  username: { color: "gray", fontSize: 15 },
-  joinDate: { color: "gray", fontSize: 15 },
+  profileName: { fontSize: 20, fontWeight: "bold", marginBottom: 4 },
+  username: { color: "gray", fontSize: 16 },
+  joinDate: { color: "gray", fontSize: 16, marginTop: 4 },
   buttonContainer: {
     alignItems: "center",
     marginBottom: 40,

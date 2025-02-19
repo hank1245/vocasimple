@@ -63,11 +63,11 @@ const QuizTab = () => {
         <View style={styles.progressContainer}>
           <AppText
             style={styles.progressText}
-            text="매일 퀴즈를 달성하고 불꽃을 밝혀세요!"
+            text="매일 퀴즈를 달성하고 불꽃을 밝히세요!"
           />
 
           <Image
-            source={require("../../assets/images/flame.png")}
+            source={require("@/assets/images/flame.png")}
             style={styles.flameIcon}
           />
           <AppText
