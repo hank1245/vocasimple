@@ -14,7 +14,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Dimensions } from "react-native";
-import { wordQuestions, meaningQuestions } from "../constants/questions.ts";
+import { wordQuestions, meaningQuestions } from "../constants/questions";
 const windowWidth = Dimensions.get("window").width;
 
 const MultipleChoiceQuestionsScreen = () => {
@@ -23,7 +23,7 @@ const MultipleChoiceQuestionsScreen = () => {
   const questions = mode === "word" ? wordQuestions : meaningQuestions;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [progress, setProgress] = useState(new Animated.Value(0));
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const handleContinue = () => {

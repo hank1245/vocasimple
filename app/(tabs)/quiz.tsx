@@ -16,7 +16,7 @@ import { QuizMode } from "@/types/common";
 const QuizTab = () => {
   const router = useRouter();
 
-  const handleNavigate = (mode: QuizMode) => {
+  const handleNavigateToMultipleChoiceQuestions = (mode: QuizMode) => {
     router.push({
       pathname: "/MultipleChoiceQuestions",
       params: { mode },
@@ -31,7 +31,7 @@ const QuizTab = () => {
         <View style={styles.gridContainer}>
           <TouchableOpacity
             style={styles.card}
-            onPress={() => handleNavigate("meaning")}
+            onPress={() => handleNavigateToMultipleChoiceQuestions("meaning")}
           >
             <Ionicons name="list" size={34} color="white" />
             <AppText style={styles.cardText} text="뜻 맞추기" />
@@ -39,7 +39,7 @@ const QuizTab = () => {
 
           <TouchableOpacity
             style={styles.card}
-            onPress={() => handleNavigate("word")}
+            onPress={() => handleNavigateToMultipleChoiceQuestions("word")}
           >
             <Ionicons name="text" size={34} color="white" />
             <AppText style={styles.cardText} text="단어 맞추기" />
@@ -60,7 +60,10 @@ const QuizTab = () => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.progressContainer}>
+        <TouchableOpacity
+          style={styles.progressContainer}
+          onPress={() => router.push("/FireCalendar")}
+        >
           <AppText
             style={styles.progressText}
             text="매일 퀴즈를 달성하고 불꽃을 밝히세요!"
@@ -74,7 +77,7 @@ const QuizTab = () => {
             style={styles.progressSubText}
             text={`이번 달 획득한 불꽃: 4/30`}
           />
-        </View>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
