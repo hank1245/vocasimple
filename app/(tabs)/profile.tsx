@@ -9,12 +9,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
+import { useRouter } from "expo-router";
 
 const ProfileTab = () => {
-  const OnPressStreak = () => {};
+  const router = useRouter();
+  const OnPressRecord = () => {
+    router.push("/FireCalendar");
+  };
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 70 }}
+        style={styles.container}
+      >
         <View>
           <AppText text="My Profile" style={styles.header} />
         </View>
@@ -36,7 +43,7 @@ const ProfileTab = () => {
         <View style={styles.achievementsContainer}>
           <TouchableOpacity
             style={styles.achievementBox}
-            onPress={OnPressStreak}
+            onPress={OnPressRecord}
           >
             <AppText style={styles.achievementLabel} text="연속 공부 기록" />
             <AppText style={styles.achievementNumber} text="12일" />
@@ -57,7 +64,6 @@ const ProfileTab = () => {
           />
         </View>
 
-        {/* Badges */}
         <View style={styles.badgesContainer}>
           {[
             {
@@ -77,9 +83,9 @@ const ProfileTab = () => {
             },
           ].map((badge, index) => (
             <View key={index} style={styles.badgeBox}>
-              <View>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Image source={badge.image} style={styles.badgeImage} />
-                <View>
+                <View style={{ marginLeft: 10 }}>
                   <AppText style={styles.badgeTitle} text={badge.title} />
                   <AppText
                     style={styles.badgeLevel}
@@ -87,7 +93,9 @@ const ProfileTab = () => {
                   />
                 </View>
               </View>
-              <AppText style={styles.rank} text="순위" />
+              <View>
+                <AppText style={styles.rank} text="순위" />
+              </View>
             </View>
           ))}
         </View>
@@ -97,8 +105,12 @@ const ProfileTab = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F9F9F9" },
-  container: { flex: 1, padding: 20, backgroundColor: "#F9F9F9" },
+  safeArea: { flex: 1, backgroundColor: "white" },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "white",
+  },
   profileHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -163,7 +175,14 @@ const styles = StyleSheet.create({
   },
   badgeTitle: { fontSize: 16, fontWeight: "bold" },
   badgeLevel: { fontSize: 14, color: "gray" },
-  rank: { color: "gray" },
+  rank: {
+    color: "black",
+    fontWeight: "bold",
+    backgroundColor: "#E8EDF2",
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 15,
+  },
   badgeImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
 });
 

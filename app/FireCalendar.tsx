@@ -11,6 +11,7 @@ import {
 import { Calendar } from "react-native-calendars";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import AppText from "@/components/common/AppText";
 const windowWidth = Dimensions.get("window").width;
 
 const FireCalendar = () => {
@@ -72,6 +73,18 @@ const FireCalendar = () => {
           onPressArrowRight={(addMonth: any) => addMonth()}
         />
       </View>
+      <View style={styles.record}>
+        <View>
+          <AppText text="최대 연속 기록" style={styles.recordText} />
+          <AppText text="획득한 불꽃 수" style={styles.recordText} />
+          <AppText text="현재 연속 기록" style={styles.recordText} />
+        </View>
+        <View>
+          <AppText text="12일" style={styles.recordText} />
+          <AppText text="50개" style={styles.recordText} />
+          <AppText text="3일" style={styles.recordText} />
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
@@ -96,6 +109,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     resizeMode: "contain",
+  },
+  record: {
+    flexDirection: "row",
+    padding: 35,
+    justifyContent: "space-between",
+  },
+  recordText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 20,
   },
 });
 

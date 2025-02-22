@@ -15,8 +15,8 @@
     "android": {
       "package": "com.hank1245.vocasimple",
       "adaptiveIcon": {
-      "foregroundImage": "./assets/images/icon.png",
-      "backgroundColor": "#6D60F8"
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#6D60F8"
       }
     },
     "web": {
@@ -40,6 +40,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "b4816ff4-0d0a-42a1-b969-0c20f3bf78c4"
+      }
     }
   }
 }
