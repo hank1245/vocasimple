@@ -39,7 +39,6 @@ const Index = () => {
       .from("vocabulary")
       .select("word, meaning, group, example");
     if (error) {
-      console.error("Error fetching vocabulary:", error);
       return;
     }
     setVocabularyList(data);
@@ -134,27 +133,36 @@ const Index = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView
-          contentContainerStyle={{ paddingVertical: 40 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {vocabularyList.map((item, idx) => (
-            <View key={idx} ref={(ref) => (cardsRefs.current[idx] = ref)}>
-              <VocabularyCard
-                word={item.word}
-                meaning={item.meaning}
-                group={item.group}
-                example={item.example}
-                mode={mode}
-                onLongPress={() => handleCardLongPress(idx)}
-                onPressOut={() => {
-                  setHighlightedIndex(null);
-                  setHighlightedLayout(null);
-                }}
-              />
-            </View>
-          ))}
-        </ScrollView>
+        {vocabularyList && vocabularyList.length > 0 ? (
+          <ScrollView
+            contentContainerStyle={{ paddingVertical: 40 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {vocabularyList.map((item, idx) => (
+              <View key={idx} ref={(ref) => (cardsRefs.current[idx] = ref)}>
+                <VocabularyCard
+                  word={item.word}
+                  meaning={item.meaning}
+                  group={item.group}
+                  example={item.example}
+                  mode={mode}
+                  onLongPress={() => handleCardLongPress(idx)}
+                  onPressOut={() => {
+                    setHighlightedIndex(null);
+                    setHighlightedLayout(null);
+                  }}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.emptyMessageContainer}>
+            <AppText
+              text="상단의 '+' 버튼을 눌러 단어를 추가해 보세요!"
+              style={styles.emptyMessageText}
+            />
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -203,6 +211,16 @@ const styles = StyleSheet.create({
   highlightedCardContainer: {
     position: "absolute",
     zIndex: 10,
+  },
+  emptyMessageContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyMessageText: {
+    fontSize: 18,
+    color: "gray",
+    textAlign: "center",
   },
 });
 
