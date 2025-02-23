@@ -14,6 +14,7 @@ import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { supabase } from "@/utils/supabase";
+import { signInWithGoogle } from "@/utils/googleAuth";
 
 interface Props {
   changeFormType: (type: FormType) => void;
@@ -26,24 +27,31 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // email과 password가 비어있거나 loading중이면 disabled 상태로 처리
   const isDisabled = loading || !email.trim() || !password.trim();
 
   async function signInWithEmail() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
+      email,
+      password,
     });
 
     if (error) {
-      Alert.alert(error.message);
+      Alert.alert("존재하지 않거나 인증이 완료되지 않은 계정입니다.");
     } else {
-      // 로그인 성공 시 자동으로 탭의 index 페이지로 navigate
       router.replace("/(tabs)");
     }
     setLoading(false);
   }
+
+  const onGoogleSignIn = async () => {
+    const { error } = await signInWithGoogle();
+    if (error) {
+      Alert.alert("Google 로그인 실패", error.message);
+    } else {
+      router.replace("/(tabs)");
+    }
+  };
 
   const onChangeFormTypeToSignUp = () => {
     changeFormType("SIGNUP");
@@ -89,6 +97,7 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
       <TouchableOpacity
         style={[styles.googleButton, isDisabled ? styles.disabled : null]}
         disabled={isDisabled}
+        onPress={onGoogleSignIn}
       >
         <Image
           source={require("../../assets/images/google.png")}
@@ -120,7 +129,7 @@ const styles = StyleSheet.create({
     width: 321,
     height: 41,
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 15,
     borderRadius: 10,
     backgroundColor: "#DDDFE2",
   },

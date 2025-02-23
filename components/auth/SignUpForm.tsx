@@ -12,6 +12,7 @@ import AuthButton from "./AuthButton";
 import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
 import { supabase } from "@/utils/supabase";
+import { signInWithGoogle } from "@/utils/googleAuth";
 
 interface Props {
   changeFormType: (type: FormType) => void;
@@ -56,12 +57,24 @@ const SignUpForm = ({ changeFormType }: Props) => {
     });
 
     if (error) Alert.alert(error.message);
-    if (!session) Alert.alert("이메일 인증을 위해서 메일함을 확인하세요!");
+    if (!session)
+      Alert.alert("계정을 생성했습니다. 이메일 인증 후 로그인해 주세요!");
     setLoading(false);
+    changeFormType("LOGIN");
   }
 
   const onChangeFormToLogin = () => {
     changeFormType("LOGIN");
+  };
+
+  const onGoogleSignIn = async () => {
+    const { error } = await signInWithGoogle();
+    if (error) {
+      Alert.alert("Google 로그인 실패", error.message);
+    } else {
+      // 계정 생성 후에도 동일하게 메인 화면으로 이동
+      changeFormType("LOGIN");
+    }
   };
 
   return (
@@ -117,6 +130,7 @@ const SignUpForm = ({ changeFormType }: Props) => {
           isDisabled || loading ? styles.disabled : null,
         ]}
         disabled={isDisabled || loading}
+        onPress={onGoogleSignIn}
       >
         <Image
           source={require("../../assets/images/google.png")}

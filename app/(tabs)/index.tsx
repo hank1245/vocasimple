@@ -158,7 +158,11 @@ const Index = () => {
         ) : (
           <View style={styles.emptyMessageContainer}>
             <AppText
-              text="상단의 '+' 버튼을 눌러 단어를 추가해 보세요!"
+              text="상단의 + 버튼을 눌러"
+              style={styles.emptyMessageText}
+            />
+            <AppText
+              text="단어를 추가해 보세요!"
               style={styles.emptyMessageText}
             />
           </View>
@@ -218,9 +222,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyMessageText: {
-    fontSize: 18,
+    fontSize: 20,
     color: "gray",
     textAlign: "center",
+    marginBottom: 10,
   },
 });
 

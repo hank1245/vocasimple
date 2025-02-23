@@ -8,7 +8,7 @@ import { Easing } from "react-native-reanimated";
 import Form from "@/components/auth/Form";
 import { Colors } from "@/constants/Colors";
 
-const Index = () => {
+export default function Index() {
   const snapPoints = useMemo(() => ["60%", "80%"], []);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -49,7 +49,7 @@ const Index = () => {
       </BottomSheet>
     </GestureHandlerRootView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -75,5 +75,3 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
 });
-
-export default Index;
