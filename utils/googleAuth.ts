@@ -5,7 +5,7 @@ import {
 import { supabase } from "@/utils/supabase";
 
 GoogleSignin.configure({
-  webClientId: process.env.GOOGLE_CLOUD_CLIENT_ID,
+  iosClientId: process.env.GOOGLE_CLOUD_CLIENT_ID_IOS,
   scopes: ["https://www.googleapis.com/auth/drive.readonly"],
 });
 
