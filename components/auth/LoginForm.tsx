@@ -94,11 +94,7 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
 
       <AppText style={styles.orText} text="OR" />
 
-      <TouchableOpacity
-        style={[styles.googleButton, isDisabled ? styles.disabled : null]}
-        disabled={isDisabled}
-        onPress={onGoogleSignIn}
-      >
+      <TouchableOpacity style={[styles.googleButton]} onPress={onGoogleSignIn}>
         <Image
           source={require("../../assets/images/google.png")}
           style={styles.googleIcon}

@@ -124,14 +124,7 @@ const SignUpForm = ({ changeFormType }: Props) => {
 
       <AppText style={styles.orText} text="OR" />
 
-      <TouchableOpacity
-        style={[
-          styles.googleButton,
-          isDisabled || loading ? styles.disabled : null,
-        ]}
-        disabled={isDisabled || loading}
-        onPress={onGoogleSignIn}
-      >
+      <TouchableOpacity style={[styles.googleButton]} onPress={onGoogleSignIn}>
         <Image
           source={require("../../assets/images/google.png")}
           style={styles.googleIcon}
