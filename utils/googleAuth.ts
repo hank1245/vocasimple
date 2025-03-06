@@ -3,9 +3,11 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { supabase } from "@/utils/supabase";
+import { GOOGLE_CLOUD_CLIENT_ID_IOS, GOOGLE_CLOUD_CLIENT_ID_WEB } from "@env";
 
 GoogleSignin.configure({
-  iosClientId: process.env.GOOGLE_CLOUD_CLIENT_ID_IOS,
+  iosClientId: GOOGLE_CLOUD_CLIENT_ID_IOS,
+  webClientId: GOOGLE_CLOUD_CLIENT_ID_WEB,
   scopes: ["https://www.googleapis.com/auth/drive.readonly"],
 });
 
