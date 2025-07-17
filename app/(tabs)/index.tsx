@@ -1,111 +1,105 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
   Pressable,
-  LayoutChangeEvent,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 import VocabularyCard from "@/components/home/VocabularyCard";
-import OverlayModal from "@/components/common/OverlayModal";
 import { AntDesign } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { supabase } from "@/utils/supabase";
-
-interface LayoutInfo {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import { useAuth, getCurrentUser } from "@/stores/authStore";
 
 const Index = () => {
   const router = useRouter();
   const [mode, setMode] = useState<"word" | "meaning" | null>("word");
   const [vocabularyList, setVocabularyList] = useState<any[]>([]);
-  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
-  const [highlightedLayout, setHighlightedLayout] = useState<LayoutInfo | null>(
-    null
+  const [loading, setLoading] = useState(false);
+  const isLoadingRef = useRef(false);
+
+  // Zustand store에서 사용자 정보 가져오기
+  const { user } = useAuth();
+
+  const fetchData = useCallback(async () => {
+    // 전역 상태에서 사용자 정보 확인
+    const currentUser = getCurrentUser();
+    if (!currentUser || isLoadingRef.current) return;
+
+    isLoadingRef.current = true;
+    setLoading(true);
+    try {
+      console.log("Fetching vocabulary data for user:", currentUser.id);
+
+      const { data, error } = await supabase
+        .from("vocabulary")
+        .select("word, meaning, group, example")
+        .eq("user_id", currentUser.id);
+
+      if (error) {
+        console.error("데이터 가져오기 에러:", error);
+        return;
+      }
+
+      console.log("Vocabulary data fetched:", data?.length || 0, "items");
+      setVocabularyList(data || []);
+    } catch (error) {
+      console.error("fetchData 에러:", error);
+    } finally {
+      setLoading(false);
+      isLoadingRef.current = false;
+    }
+  }, []);
+
+  // 화면 포커스 시 데이터 새로고침
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        fetchData();
+      }
+    }, [fetchData, user])
   );
-
-  const cardsRefs = useRef<Array<View | null>>([]);
-  const fetchData = async () => {
-    // 현재 사용자 정보 가져오기
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      console.log("사용자가 로그인되지 않았습니다.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("vocabulary")
-      .select("word, meaning, group, example")
-      .eq("user_id", user.id);
-
-    if (error) {
-      console.error("데이터 가져오기 에러:", error);
-      return;
-    }
-    setVocabularyList(data || []);
-  };
-  useFocusEffect(() => {
-    fetchData();
-  });
 
   const onAdd = () => {
     router.push("/add");
   };
 
-  // 각 카드의 절대 위치를 측정합니다.
-  const handleCardLongPress = (index: number) => {
-    const cardRef = cardsRefs.current[index];
-    if (cardRef) {
-      cardRef.measureInWindow((x, y, width, height) => {
-        setHighlightedLayout({ x, y, width, height });
-        setHighlightedIndex(index);
-      });
+  const handleDeleteVocabulary = async (index: number) => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      console.log("사용자가 로그인되지 않았습니다.");
+      return;
+    }
+
+    const item = vocabularyList[index];
+
+    try {
+      const { error } = await supabase
+        .from("vocabulary")
+        .delete()
+        .eq("user_id", currentUser.id)
+        .eq("word", item.word)
+        .eq("meaning", item.meaning);
+
+      if (error) {
+        console.error("삭제 에러:", error);
+        return;
+      }
+
+      // 로컬 상태 업데이트
+      setVocabularyList((prev) => prev.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error("handleDeleteVocabulary 에러:", error);
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <OverlayModal
-        visible={highlightedIndex !== null && highlightedLayout !== null}
-        onRequestClose={() => {
-          setHighlightedIndex(null);
-          setHighlightedLayout(null);
-        }}
-      >
-        {highlightedIndex !== null && highlightedLayout !== null && (
-          <View
-            style={[
-              styles.highlightedCardContainer,
-              {
-                top: highlightedLayout.y,
-                left: highlightedLayout.x,
-                width: highlightedLayout.width,
-                height: highlightedLayout.height,
-              },
-            ]}
-          >
-            <VocabularyCard
-              word={vocabularyList[highlightedIndex].word}
-              meaning={vocabularyList[highlightedIndex].meaning}
-              group={vocabularyList[highlightedIndex].group}
-              example={vocabularyList[highlightedIndex].example}
-              mode={mode}
-            />
-          </View>
-        )}
-      </OverlayModal>
       <View style={styles.add}>
         <Pressable onPress={onAdd}>
           <AntDesign name="plus" size={32} color="black" />
@@ -152,20 +146,15 @@ const Index = () => {
             showsVerticalScrollIndicator={false}
           >
             {vocabularyList.map((item, idx) => (
-              <View key={idx} ref={(ref) => (cardsRefs.current[idx] = ref)}>
-                <VocabularyCard
-                  word={item.word}
-                  meaning={item.meaning}
-                  group={item.group}
-                  example={item.example}
-                  mode={mode}
-                  onLongPress={() => handleCardLongPress(idx)}
-                  onPressOut={() => {
-                    setHighlightedIndex(null);
-                    setHighlightedLayout(null);
-                  }}
-                />
-              </View>
+              <VocabularyCard
+                key={idx}
+                word={item.word}
+                meaning={item.meaning}
+                group={item.group}
+                example={item.example}
+                mode={mode}
+                onDelete={() => handleDeleteVocabulary(idx)}
+              />
             ))}
           </ScrollView>
         ) : (
@@ -224,10 +213,6 @@ const styles = StyleSheet.create({
   },
   activeMode: {
     backgroundColor: Colors.primary,
-  },
-  highlightedCardContainer: {
-    position: "absolute",
-    zIndex: 10,
   },
   emptyMessageContainer: {
     flex: 1,

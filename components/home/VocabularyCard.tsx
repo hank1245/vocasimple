@@ -1,5 +1,18 @@
 import React from "react";
-import { TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { TouchableOpacity, StyleSheet, Animated, View } from "react-native";
+import {
+  PanGestureHandler,
+  PanGestureHandlerGestureEvent,
+} from "react-native-gesture-handler";
+import ReAnimated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedGestureHandler,
+  runOnJS,
+  withSpring,
+  interpolate,
+} from "react-native-reanimated";
+import { MaterialIcons } from "@expo/vector-icons";
 import AppText from "@/components/common/AppText";
 
 interface VocabularyCardProps {
@@ -7,8 +20,7 @@ interface VocabularyCardProps {
   meaning: string;
   example?: string; // 문자열로 변경
   mode: "word" | "meaning" | null;
-  onLongPress?: () => void;
-  onPressOut?: () => void;
+  onDelete?: () => void;
   group: string;
 }
 
@@ -17,12 +29,15 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
   meaning,
   example,
   mode,
-  onLongPress,
-  onPressOut,
+  onDelete,
 }) => {
   const wordOpacity = React.useRef(new Animated.Value(1)).current;
   const meaningOpacity = React.useRef(new Animated.Value(1)).current;
   const timeoutId = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Swipe animation values
+  const translateX = useSharedValue(0);
+  const isDeleteVisible = useSharedValue(false);
 
   React.useEffect(() => {
     if (mode === "word") {
@@ -59,39 +74,130 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
     }, 2000);
   };
 
-  return (
-    <TouchableOpacity
-      onPress={handlePress}
-      onLongPress={onLongPress}
-      onPressOut={onPressOut}
-      delayLongPress={300}
-      style={styles.card}
-    >
-      <Animated.Text style={[styles.word, { opacity: wordOpacity }]}>
-        {word}
-      </Animated.Text>
-      <Animated.Text style={[styles.meaning, { opacity: meaningOpacity }]}>
-        {meaning}
-      </Animated.Text>
+  const showDeleteIcon = () => {
+    isDeleteVisible.value = true;
+  };
 
-      {example && example.trim() && (
-        <AppText style={styles.subItem} text={example} />
-      )}
-    </TouchableOpacity>
+  const hideDeleteIcon = () => {
+    isDeleteVisible.value = false;
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete();
+    }
+    // Reset position after delete
+    translateX.value = withSpring(0);
+    hideDeleteIcon();
+  };
+
+  const gestureHandler =
+    useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
+      onStart: () => {
+        // Start gesture
+      },
+      onActive: (event) => {
+        // Only allow left swipe (negative translation)
+        if (event.translationX < 0) {
+          translateX.value = Math.max(event.translationX, -100); // Limit maximum swipe distance
+
+          // Show delete icon when swiped left enough
+          if (event.translationX < -40) {
+            if (!isDeleteVisible.value) {
+              isDeleteVisible.value = true;
+              runOnJS(showDeleteIcon)();
+            }
+          }
+        }
+      },
+      onEnd: (event) => {
+        // If swiped far enough left, keep it open
+        if (event.translationX < -60) {
+          translateX.value = withSpring(-80, {
+            damping: 20,
+            stiffness: 200,
+          });
+          isDeleteVisible.value = true;
+        } else {
+          // Otherwise, snap back to original position
+          translateX.value = withSpring(0, {
+            damping: 20,
+            stiffness: 200,
+          });
+          isDeleteVisible.value = false;
+          runOnJS(hideDeleteIcon)();
+        }
+      },
+    });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+    };
+  });
+
+  const deleteIconStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translateX.value,
+      [-80, -40, 0],
+      [1, 0.7, 0],
+      "clamp"
+    );
+    return {
+      opacity: isDeleteVisible.value ? withSpring(opacity) : withSpring(0),
+    };
+  });
+
+  return (
+    <View style={styles.cardContainer}>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+        <ReAnimated.View style={[styles.card, animatedStyle]}>
+          <TouchableOpacity onPress={handlePress} style={styles.cardContent}>
+            <Animated.Text style={[styles.word, { opacity: wordOpacity }]}>
+              {word}
+            </Animated.Text>
+            <Animated.Text
+              style={[styles.meaning, { opacity: meaningOpacity }]}
+            >
+              {meaning}
+            </Animated.Text>
+
+            {example && example.trim() && (
+              <AppText style={styles.subItem} text={example} />
+            )}
+          </TouchableOpacity>
+        </ReAnimated.View>
+      </PanGestureHandler>
+
+      {/* Delete button */}
+      <ReAnimated.View style={[styles.deleteButton, deleteIconStyle]}>
+        <TouchableOpacity
+          onPress={handleDelete}
+          style={styles.deleteIconContainer}
+        >
+          <MaterialIcons name="delete" size={24} color="white" />
+        </TouchableOpacity>
+      </ReAnimated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  cardContainer: {
+    position: "relative",
+    marginBottom: 21,
+  },
   card: {
     backgroundColor: "#F7FAFC",
-    padding: 24,
     borderRadius: 8,
-    marginBottom: 21,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
+  },
+  cardContent: {
+    padding: 24,
   },
   word: {
     fontSize: 18,
@@ -108,6 +214,22 @@ const styles = StyleSheet.create({
     color: "grey",
     fontSize: 14,
     marginTop: 4,
+  },
+  deleteButton: {
+    position: "absolute",
+    right: 10,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 60,
+  },
+  deleteIconContainer: {
+    backgroundColor: "#ff4444",
+    borderRadius: 20,
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

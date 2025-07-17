@@ -6,16 +6,34 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppText from "@/components/common/AppText";
 import { useRouter } from "expo-router";
+import { useAuth } from "@/stores/authStore";
 
 const ProfileTab = () => {
   const router = useRouter();
+  const { user, signOut } = useAuth();
+
   const OnPressRecord = () => {
     router.push("/FireCalendar");
   };
+
+  const handleSignOut = async () => {
+    Alert.alert("로그아웃", "정말로 로그아웃하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "로그아웃",
+        style: "destructive",
+        onPress: async () => {
+          await signOut();
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -27,14 +45,20 @@ const ProfileTab = () => {
         </View>
         <View style={styles.profileHeader}>
           <View>
-            <AppText style={styles.profileName} text="hank1234@gmail.com" />
+            <AppText
+              style={styles.profileName}
+              text={user?.email || "hank1234@gmail.com"}
+            />
             <AppText style={styles.username} text="#cutehorangi" />
             <AppText style={styles.joinDate} text="2025년 1월에 가입" />
           </View>
         </View>
-        <TouchableOpacity style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={handleSignOut}
+        >
           <AppText
-            text="변경하기"
+            text="로그아웃"
             style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
           />
         </TouchableOpacity>

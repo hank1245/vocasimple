@@ -18,6 +18,7 @@ import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter } from "expo-router";
 import { supabase } from "@/utils/supabase";
+import { getCurrentUser } from "@/stores/authStore";
 import Toast from "toastify-react-native";
 
 const AddScreen = () => {
@@ -27,7 +28,9 @@ const AddScreen = () => {
   const [selectedGroup, setSelectedGroup] = useState("기본");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
   const onCreateExample = () => {};
+
   const onGoBack = () => {
     router.back();
   };
@@ -40,10 +43,8 @@ const AddScreen = () => {
 
     setLoading(true);
 
-    // 현재 사용자 정보 가져오기
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // 전역 상태에서 사용자 정보 가져오기
+    const user = getCurrentUser();
 
     if (!user) {
       Alert.alert("오류", "로그인이 필요합니다.");

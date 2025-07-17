@@ -34,8 +34,10 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
         console.log("로그인 에러:", error);
         Alert.alert("존재하지 않거나 인증이 완료되지 않은 계정입니다.");
       } else {
-        console.log("로그인 성공");
-        // 로그인 성공 시 별도의 네비게이션 없이 세션 상태 변경으로 자동 리디렉션
+        console.log(
+          "로그인 성공 - Zustand store가 자동으로 세션을 업데이트합니다"
+        );
+        // Zustand store의 onAuthStateChange 리스너가 자동으로 세션을 업데이트합니다
         bottomSheetRef.current?.close();
       }
     } catch (err) {

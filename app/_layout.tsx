@@ -10,9 +10,9 @@ import "react-native-reanimated";
 import { useFonts } from "expo-font";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabase";
-import { Session } from "@supabase/supabase-js";
+import { useAuth } from "@/stores/authStore";
 import ToastManager from "toastify-react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // structuredClone polyfill for React Native
 if (!global.structuredClone) {
@@ -24,35 +24,26 @@ if (!global.structuredClone) {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const { session, loading, initialized, initialize, cleanup } = useAuth();
   const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
 
-  // 세션 로드 및 변경 구독
+  // Zustand store 초기화
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("초기 세션 로드:", session);
-      setSession(session);
-      setSessionLoaded(true);
-    });
+    initialize();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth 상태 변경:", event, session);
-        setSession(session);
-
-        // 로그인/로그아웃 시에만 네비게이션 수행
-        if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
-          setIsNavigating(true);
-        }
-      }
-    );
-
+    // 컴포넌트 언마운트 시 정리
     return () => {
-      authListener.subscription.unsubscribe();
+      cleanup();
     };
-  }, []);
+  }, [initialize, cleanup]);
+
+  // 세션 변경 감지
+  useEffect(() => {
+    if (initialized && !loading) {
+      setIsNavigating(true);
+    }
+  }, [session, initialized, loading]);
 
   const colorScheme = useColorScheme();
 
@@ -63,42 +54,49 @@ export default function RootLayout() {
   // 초기 로드 시 네비게이션
   useEffect(() => {
     const handleInitialNavigation = async () => {
-      if ((loaded || error) && sessionLoaded && !isNavigating) {
+      if ((loaded || error) && initialized && !loading && !isNavigating) {
         await SplashScreen.hideAsync();
-        console.log("초기 네비게이션 실행, 세션:", session);
+        // 짧은 딜레이를 추가하여 레이아웃이 완전히 마운트되도록 함
+        setTimeout(() => {
+          if (session) {
+            router.replace("/(tabs)");
+          } else {
+            router.replace("/(auth)");
+          }
+        }, 100);
+      }
+    };
+    handleInitialNavigation();
+  }, [loaded, error, initialized, loading, session, isNavigating]);
+
+  // 세션 변경 시 네비게이션
+  useEffect(() => {
+    if (isNavigating && initialized && !loading) {
+      // 짧은 딜레이를 추가하여 레이아웃이 완전히 마운트되도록 함
+      setTimeout(() => {
         if (session) {
           router.replace("/(tabs)");
         } else {
           router.replace("/(auth)");
         }
-      }
-    };
-    handleInitialNavigation();
-  }, [loaded, error, sessionLoaded, session, router, isNavigating]);
-
-  // 세션 변경 시 네비게이션
-  useEffect(() => {
-    if (isNavigating && sessionLoaded) {
-      console.log("세션 변경 네비게이션 실행, 세션:", session);
-      if (session) {
-        router.replace("/(tabs)");
-      } else {
-        router.replace("/(auth)");
-      }
-      setIsNavigating(false);
+        setIsNavigating(false);
+      }, 100);
     }
-  }, [isNavigating, session, sessionLoaded, router]);
+  }, [isNavigating, session, initialized, loading]);
 
-  if (!loaded || !sessionLoaded) {
+  if (!loaded || !initialized || loading) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        {/* 화면은 라우터에서 자동 리디렉션되므로 빈 Stack을 렌더링 */}
-      </Stack>
-      <ToastManager />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+        <ToastManager />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
