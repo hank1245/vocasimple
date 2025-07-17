@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import AppText from "@/components/common/AppText";
 import { Ionicons } from "@expo/vector-icons";
+import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
 import { QuizMode } from "@/types/common";
@@ -45,7 +46,10 @@ const QuizTab = () => {
             <AppText style={styles.cardText} text="단어 맞추기" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => router.push("/Flashcard")}
+          >
             <MaterialCommunityIcons
               name="cards-outline"
               size={34}
@@ -55,8 +59,8 @@ const QuizTab = () => {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.card}>
-            <Ionicons name="play" size={34} color="white" />
-            <AppText style={styles.cardText} text="자동재생" />
+            <Entypo name="pencil" size={34} color="white" />
+            <AppText style={styles.cardText} text="쓰기" />
           </TouchableOpacity>
         </View>
 
