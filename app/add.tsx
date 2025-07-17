@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,26 +34,40 @@ const AddScreen = () => {
 
   const onSave = async () => {
     if (word.trim() === "" || meaning.trim() === "") {
-      Toast.warn("단어 혹은 뜻 칸이 비었어요");
+      Alert.alert("알림", "단어 혹은 뜻 칸이 비었어요");
       return;
     }
 
     setLoading(true);
+
+    // 현재 사용자 정보 가져오기
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      Alert.alert("오류", "로그인이 필요합니다.");
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.from("vocabulary").insert([
       {
         word,
         meaning,
         example,
         group: selectedGroup,
+        user_id: user.id,
       },
     ]);
     setLoading(false);
 
     if (error) {
-      Toast.error("저장 중 오류가 발생했습니다.");
+      console.error("저장 에러:", error);
+      Alert.alert("오류", "저장 중 오류가 발생했습니다.");
       return;
     }
-    Toast.success("단어가 저장되었습니다.");
+    Alert.alert("성공", "단어가 저장되었습니다.");
     setWord("");
     setMeaning("");
     setExample("");

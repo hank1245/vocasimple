@@ -35,13 +35,26 @@ const Index = () => {
 
   const cardsRefs = useRef<Array<View | null>>([]);
   const fetchData = async () => {
-    const { data, error } = await supabase
-      .from("vocabulary")
-      .select("word, meaning, group, example");
-    if (error) {
+    // 현재 사용자 정보 가져오기
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      console.log("사용자가 로그인되지 않았습니다.");
       return;
     }
-    setVocabularyList(data);
+
+    const { data, error } = await supabase
+      .from("vocabulary")
+      .select("word, meaning, group, example")
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error("데이터 가져오기 에러:", error);
+      return;
+    }
+    setVocabularyList(data || []);
   };
   useFocusEffect(() => {
     fetchData();

@@ -47,11 +47,13 @@ const SignUpForm = ({ changeFormType }: Props) => {
       password: password,
     });
 
-    if (error) Alert.alert(error.message);
-    if (!session)
+    if (error) {
+      Alert.alert(error.message);
+    } else if (!session) {
       Alert.alert("계정을 생성했습니다. 이메일 인증 후 로그인해 주세요!");
+      changeFormType("LOGIN");
+    }
     setLoading(false);
-    changeFormType("LOGIN");
   }
 
   const onChangeFormToLogin = () => {

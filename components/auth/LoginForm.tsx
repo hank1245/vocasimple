@@ -1,14 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Pressable,
-  Alert,
-} from "react-native";
-import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { View, TextInput, StyleSheet, Pressable, Alert } from "react-native";
 import AuthButton from "./AuthButton";
 import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
@@ -24,23 +15,36 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const isDisabled = loading || !email.trim() || !password.trim();
 
   async function signInWithEmail() {
+    console.log("로그인 시작");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
 
-    if (error) {
-      Alert.alert("존재하지 않거나 인증이 완료되지 않은 계정입니다.");
-    } else {
-      router.replace("/(tabs)");
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      console.log("로그인 응답:", { data, error });
+
+      if (error) {
+        console.log("로그인 에러:", error);
+        Alert.alert("존재하지 않거나 인증이 완료되지 않은 계정입니다.");
+      } else {
+        console.log("로그인 성공");
+        // 로그인 성공 시 별도의 네비게이션 없이 세션 상태 변경으로 자동 리디렉션
+        bottomSheetRef.current?.close();
+      }
+    } catch (err) {
+      console.log("로그인 예외:", err);
+      Alert.alert("로그인 중 오류가 발생했습니다.");
+    } finally {
+      console.log("로그인 종료");
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   const onChangeFormTypeToSignUp = () => {
@@ -49,10 +53,6 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
       bottomSheetRef.current?.snapToIndex(1);
     }, 10);
   };
-
-  useEffect(() => {
-    bottomSheetRef.current?.snapToIndex(0);
-  }, []);
 
   return (
     <View style={styles.container}>

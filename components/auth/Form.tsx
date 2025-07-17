@@ -10,12 +10,26 @@ interface FormProps {
 
 const Form = ({ bottomSheetRef }: FormProps) => {
   const [formType, setFormType] = useState<FormTypeEnum>("SIGNUP");
+
+  const changeFormType = (type: FormTypeEnum) => {
+    setFormType(type);
+    if (type === "LOGIN") {
+      // 로그인 폼으로 변경될 때 BottomSheet 높이 조정
+      setTimeout(() => {
+        bottomSheetRef.current?.snapToIndex(0);
+      }, 100);
+    }
+  };
+
   if (formType === "SIGNUP") {
-    return <SignUpForm changeFormType={setFormType} />;
+    return <SignUpForm changeFormType={changeFormType} />;
   }
   if (formType === "LOGIN") {
     return (
-      <LoginForm changeFormType={setFormType} bottomSheetRef={bottomSheetRef} />
+      <LoginForm
+        changeFormType={changeFormType}
+        bottomSheetRef={bottomSheetRef}
+      />
     );
   }
   return null;

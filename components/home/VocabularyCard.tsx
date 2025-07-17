@@ -5,7 +5,7 @@ import AppText from "@/components/common/AppText";
 interface VocabularyCardProps {
   word: string;
   meaning: string;
-  example?: string[];
+  example?: string; // 문자열로 변경
   mode: "word" | "meaning" | null;
   onLongPress?: () => void;
   onPressOut?: () => void;
@@ -74,9 +74,9 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
         {meaning}
       </Animated.Text>
 
-      {example?.map((item, idx) => (
-        <AppText key={idx} style={styles.subItem} text={item} />
-      ))}
+      {example && example.trim() && (
+        <AppText style={styles.subItem} text={example} />
+      )}
     </TouchableOpacity>
   );
 };
