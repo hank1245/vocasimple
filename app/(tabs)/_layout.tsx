@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import React from "react";
 import { Platform } from "react-native";
-import HapticTab from "@/components/common/HapticTab";
+import { HapticTab } from "@/components/common/HapticTab";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { Entypo, FontAwesome } from "@expo/vector-icons";
