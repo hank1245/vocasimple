@@ -1,18 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Pressable,
-  Alert,
-} from "react-native";
+import { View, TextInput, StyleSheet, Pressable, Alert } from "react-native";
 import AuthButton from "./AuthButton";
 import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
 import { supabase } from "@/utils/supabase";
-import { signInWithGoogle } from "@/utils/googleAuth";
 
 interface Props {
   changeFormType: (type: FormType) => void;
@@ -67,16 +58,6 @@ const SignUpForm = ({ changeFormType }: Props) => {
     changeFormType("LOGIN");
   };
 
-  const onGoogleSignIn = async () => {
-    const { error } = await signInWithGoogle();
-    if (error) {
-      Alert.alert("Google 로그인 실패", error.message);
-    } else {
-      // 계정 생성 후에도 동일하게 메인 화면으로 이동
-      changeFormType("LOGIN");
-    }
-  };
-
   return (
     <View style={styles.container}>
       <View>
@@ -122,14 +103,7 @@ const SignUpForm = ({ changeFormType }: Props) => {
         disabled={isDisabled || loading}
       />
 
-      <AppText style={styles.orText} text="OR" />
-
-      <TouchableOpacity style={[styles.googleButton]} onPress={onGoogleSignIn}>
-        <Image
-          source={require("../../assets/images/google.png")}
-          style={styles.googleIcon}
-        />
-      </TouchableOpacity>
+      {/* Google 로그인 버튼 및 관련 코드 제거됨 */}
 
       <View style={styles.guidance}>
         <AppText style={styles.guide} text="이미 계정이 있으신가요?" />
@@ -159,28 +133,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#DDDFE2",
   },
-  orText: {
-    textAlign: "center",
-    color: "#000",
-    marginVertical: 12,
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 12,
-    backgroundColor: "#efecec",
-    width: 321,
-  },
-  googleIcon: {
-    width: 26,
-    height: 26,
-  },
+  // Google OAuth 관련 스타일 제거됨
   guidance: {
     marginTop: 20,
     flexDirection: "row",

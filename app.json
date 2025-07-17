@@ -5,21 +5,19 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.hank1245.vocasimple"
+      "supportsTablet": true
     },
     "android": {
-      "package": "com.hank1245.vocasimple",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#6D60F8"
       }
     },
     "web": {
+      "scheme": "vocasimple",
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -36,12 +34,6 @@
         {
           "fonts": ["./assets/fonts/Lexend.ttf"]
         }
-      ],
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps.866207442820-bv9nvsrn67j8d2q534t2h6i8vahgsi9a"
-        }
       ]
     ],
     "experiments": {
@@ -50,9 +42,6 @@
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": "b4816ff4-0d0a-42a1-b969-0c20f3bf78c4"
       }
     }
   }
