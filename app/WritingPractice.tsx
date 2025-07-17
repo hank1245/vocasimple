@@ -17,6 +17,7 @@ import { VocabularyWord } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
 import { Colors } from "@/constants/Colors";
+import { learningStreakService } from "@/utils/learningStreak";
 
 const WritingPracticeScreen = () => {
   const router = useRouter();
@@ -142,6 +143,12 @@ const WritingPracticeScreen = () => {
       setShowHint(false);
       setShowFeedback(false);
     } else {
+      // Award fire streak when writing practice is completed
+      const user = getCurrentUser();
+      if (user) {
+        learningStreakService.addTodayCompletion(user.id);
+      }
+      
       router.push({
         pathname: "/WritingPracticeResult",
         params: {

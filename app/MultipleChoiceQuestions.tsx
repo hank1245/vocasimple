@@ -14,6 +14,7 @@ import { getCurrentUser } from "@/stores/authStore";
 import { VocabularyWord, QuizQuestion } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
+import { learningStreakService } from "@/utils/learningStreak";
 
 const MultipleChoiceQuestionsScreen = () => {
   const router = useRouter();
@@ -140,6 +141,12 @@ const MultipleChoiceQuestionsScreen = () => {
       setSelectedAnswer(null);
       setShowFeedback(false);
     } else {
+      // Award fire streak when quiz is completed
+      const user = getCurrentUser();
+      if (user) {
+        learningStreakService.addTodayCompletion(user.id);
+      }
+      
       router.push({
         pathname: "/QuizResult",
         params: {

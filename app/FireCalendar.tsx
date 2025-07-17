@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -11,11 +11,50 @@ import {
 import { Calendar } from "react-native-calendars";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
+import { learningStreakService } from "@/utils/learningStreak";
+import { getCurrentUser } from "@/stores/authStore";
 const windowWidth = Dimensions.get("window").width;
 
 const FireCalendar = () => {
   const router = useRouter();
+  const [markedDates, setMarkedDates] = useState<Record<string, any>>({});
+  const [maxStreak, setMaxStreak] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [totalFireCount, setTotalFireCount] = useState(0);
+
+  const fetchStreakData = async () => {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+      const [markedDatesData, maxStreakData, currentStreakData, totalFireCountData] = await Promise.all([
+        learningStreakService.getMarkedDates(user.id),
+        learningStreakService.getMaxStreak(user.id),
+        learningStreakService.getCurrentStreak(user.id),
+        learningStreakService.getTotalFireCount(user.id),
+      ]);
+
+      setMarkedDates(markedDatesData || {});
+      setMaxStreak(maxStreakData || 0);
+      setCurrentStreak(currentStreakData || 0);
+      setTotalFireCount(totalFireCountData || 0);
+    } catch (error) {
+      console.error("Error fetching streak data:", error);
+      // Set default values on error
+      setMarkedDates({});
+      setMaxStreak(0);
+      setCurrentStreak(0);
+      setTotalFireCount(0);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchStreakData();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -35,30 +74,7 @@ const FireCalendar = () => {
         <Calendar
           style={{ width: windowWidth - 30 }}
           markingType={"custom"}
-          markedDates={{
-            "2025-02-17": {
-              customStyles: {
-                container: {
-                  backgroundColor: "#FF7474",
-                },
-                text: {
-                  color: "white",
-                  fontWeight: "bold",
-                },
-              },
-            },
-            "2025-02-18": {
-              customStyles: {
-                container: {
-                  backgroundColor: "#FF7474",
-                },
-                text: {
-                  color: "white",
-                  fontWeight: "bold",
-                },
-              },
-            },
-          }}
+          markedDates={markedDates}
           current={new Date().toISOString().split("T")[0]}
           onDayPress={(day: any) => {
             console.log("selected day", day);
@@ -80,9 +96,9 @@ const FireCalendar = () => {
           <AppText text="현재 연속 기록" style={styles.recordText} />
         </View>
         <View>
-          <AppText text="12일" style={styles.recordText} />
-          <AppText text="50개" style={styles.recordText} />
-          <AppText text="3일" style={styles.recordText} />
+          <AppText text={`${maxStreak}일`} style={styles.recordText} />
+          <AppText text={`${totalFireCount}개`} style={styles.recordText} />
+          <AppText text={`${currentStreak}일`} style={styles.recordText} />
         </View>
       </View>
     </SafeAreaView>

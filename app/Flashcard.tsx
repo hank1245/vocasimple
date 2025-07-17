@@ -16,6 +16,7 @@ import { VocabularyWord } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
 import { Colors } from "@/constants/Colors";
+import { learningStreakService } from "@/utils/learningStreak";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -249,7 +250,14 @@ const FlashcardScreen = () => {
         <View style={styles.completeContainer}>
           <TouchableOpacity 
             style={styles.completeButton}
-            onPress={() => router.push("/(tabs)")}
+            onPress={() => {
+              // Award fire streak when flashcard is completed
+              const user = getCurrentUser();
+              if (user) {
+                learningStreakService.addTodayCompletion(user.id);
+              }
+              router.push("/(tabs)");
+            }}
           >
             <AppText style={styles.completeButtonText} text="완료" />
           </TouchableOpacity>

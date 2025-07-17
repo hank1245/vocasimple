@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import React from "react";
+import React, { useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -7,15 +7,44 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
 import { Ionicons } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
 import { QuizMode } from "@/types/common";
+import { learningStreakService } from "@/utils/learningStreak";
+import { getCurrentUser } from "@/stores/authStore";
 
 const QuizTab = () => {
   const router = useRouter();
+  const [currentMonthCount, setCurrentMonthCount] = useState(0);
+  const [totalDaysInMonth, setTotalDaysInMonth] = useState(0);
+
+  const fetchFireCount = async () => {
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+      const monthCount = await learningStreakService.getCurrentMonthCount(user.id);
+      const totalDays = learningStreakService.getCurrentMonthTotalDays();
+      
+      setCurrentMonthCount(monthCount || 0);
+      setTotalDaysInMonth(totalDays || 0);
+    } catch (error) {
+      console.error("Error fetching fire count:", error);
+      // Set default values on error
+      setCurrentMonthCount(0);
+      setTotalDaysInMonth(learningStreakService.getCurrentMonthTotalDays());
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchFireCount();
+    }, [])
+  );
 
   const handleNavigateToMultipleChoiceQuestions = (mode: QuizMode) => {
     router.push({
@@ -82,7 +111,7 @@ const QuizTab = () => {
           />
           <AppText
             style={styles.progressSubText}
-            text={`이번 달 획득한 불꽃: 4/30`}
+            text={`이번 달 획득한 불꽃: ${currentMonthCount}/${totalDaysInMonth}`}
           />
         </TouchableOpacity>
       </View>
