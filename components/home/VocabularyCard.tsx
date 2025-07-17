@@ -21,6 +21,7 @@ interface VocabularyCardProps {
   example?: string; // 문자열로 변경
   mode: "word" | "meaning" | null;
   onDelete?: () => void;
+  onEdit?: () => void;
   group: string;
 }
 
@@ -30,6 +31,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
   example,
   mode,
   onDelete,
+  onEdit,
 }) => {
   const wordOpacity = React.useRef(new Animated.Value(1)).current;
   const meaningOpacity = React.useRef(new Animated.Value(1)).current;
@@ -38,6 +40,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
   // Swipe animation values
   const translateX = useSharedValue(0);
   const isDeleteVisible = useSharedValue(false);
+  const isEditVisible = useSharedValue(false);
 
   React.useEffect(() => {
     if (mode === "word") {
@@ -82,6 +85,14 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
     isDeleteVisible.value = false;
   };
 
+  const showEditIcon = () => {
+    isEditVisible.value = true;
+  };
+
+  const hideEditIcon = () => {
+    isEditVisible.value = false;
+  };
+
   const handleDelete = () => {
     if (onDelete) {
       onDelete();
@@ -91,41 +102,75 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
     hideDeleteIcon();
   };
 
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit();
+    }
+    // Reset position after edit
+    translateX.value = withSpring(0);
+    hideEditIcon();
+  };
+
   const gestureHandler =
     useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
       onStart: () => {
         // Start gesture
       },
       onActive: (event) => {
-        // Only allow left swipe (negative translation)
+        // Allow both left and right swipes
         if (event.translationX < 0) {
-          translateX.value = Math.max(event.translationX, -100); // Limit maximum swipe distance
+          // Left swipe for delete
+          translateX.value = Math.max(event.translationX, -100);
+          isEditVisible.value = false;
+          runOnJS(hideEditIcon)();
 
-          // Show delete icon when swiped left enough
           if (event.translationX < -40) {
             if (!isDeleteVisible.value) {
               isDeleteVisible.value = true;
               runOnJS(showDeleteIcon)();
             }
           }
+        } else if (event.translationX > 0) {
+          // Right swipe for edit
+          translateX.value = Math.min(event.translationX, 100);
+          isDeleteVisible.value = false;
+          runOnJS(hideDeleteIcon)();
+
+          if (event.translationX > 40) {
+            if (!isEditVisible.value) {
+              isEditVisible.value = true;
+              runOnJS(showEditIcon)();
+            }
+          }
         }
       },
       onEnd: (event) => {
-        // If swiped far enough left, keep it open
         if (event.translationX < -60) {
+          // Left swipe - show delete button
           translateX.value = withSpring(-80, {
             damping: 20,
             stiffness: 200,
           });
           isDeleteVisible.value = true;
+          isEditVisible.value = false;
+        } else if (event.translationX > 60) {
+          // Right swipe - show edit button
+          translateX.value = withSpring(80, {
+            damping: 20,
+            stiffness: 200,
+          });
+          isEditVisible.value = true;
+          isDeleteVisible.value = false;
         } else {
-          // Otherwise, snap back to original position
+          // Snap back to original position
           translateX.value = withSpring(0, {
             damping: 20,
             stiffness: 200,
           });
           isDeleteVisible.value = false;
+          isEditVisible.value = false;
           runOnJS(hideDeleteIcon)();
+          runOnJS(hideEditIcon)();
         }
       },
     });
@@ -145,6 +190,18 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
     );
     return {
       opacity: isDeleteVisible.value ? withSpring(opacity) : withSpring(0),
+    };
+  });
+
+  const editIconStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      translateX.value,
+      [80, 40, 0],
+      [1, 0.7, 0],
+      "clamp"
+    );
+    return {
+      opacity: isEditVisible.value ? withSpring(opacity) : withSpring(0),
     };
   });
 
@@ -168,6 +225,16 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
           </TouchableOpacity>
         </ReAnimated.View>
       </PanGestureHandler>
+
+      {/* Edit button */}
+      <ReAnimated.View style={[styles.editButton, editIconStyle]}>
+        <TouchableOpacity
+          onPress={handleEdit}
+          style={styles.editIconContainer}
+        >
+          <MaterialIcons name="edit" size={24} color="white" />
+        </TouchableOpacity>
+      </ReAnimated.View>
 
       {/* Delete button */}
       <ReAnimated.View style={[styles.deleteButton, deleteIconStyle]}>
@@ -214,6 +281,22 @@ const styles = StyleSheet.create({
     color: "grey",
     fontSize: 14,
     marginTop: 4,
+  },
+  editButton: {
+    position: "absolute",
+    left: 10,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    width: 60,
+  },
+  editIconContainer: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 20,
+    padding: 10,
+    justifyContent: "center",
+    alignItems: "center",
   },
   deleteButton: {
     position: "absolute",

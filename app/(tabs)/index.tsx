@@ -98,6 +98,20 @@ const Index = () => {
     }
   };
 
+  const handleEditVocabulary = (index: number) => {
+    const item = vocabularyList[index];
+    router.push({
+      pathname: "/EditVocabulary",
+      params: {
+        word: item.word,
+        meaning: item.meaning,
+        example: item.example || "",
+        group: item.group,
+        originalWord: item.word, // For database update identification
+      },
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.add}>
@@ -154,6 +168,7 @@ const Index = () => {
                 example={item.example}
                 mode={mode}
                 onDelete={() => handleDeleteVocabulary(idx)}
+                onEdit={() => handleEditVocabulary(idx)}
               />
             ))}
           </ScrollView>
