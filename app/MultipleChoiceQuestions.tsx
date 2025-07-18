@@ -19,7 +19,10 @@ import { memorizedService } from "@/utils/memorizedService";
 
 const MultipleChoiceQuestionsScreen = () => {
   const router = useRouter();
-  const { mode } = useLocalSearchParams<{ mode: "meaning" | "word" }>();
+  const { mode, filter } = useLocalSearchParams<{ 
+    mode: "meaning" | "word";
+    filter: "all" | "unmemorized";
+  }>();
   
   const [vocabularyWords, setVocabularyWords] = useState<VocabularyWord[]>([]);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -31,6 +34,7 @@ const MultipleChoiceQuestionsScreen = () => {
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState<VocabularyWord[]>([]);
   const [correctWordsIds, setCorrectWordsIds] = useState<string[]>([]);
+  const [wrongWordsIds, setWrongWordsIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchVocabularyWords = useCallback(async () => {
@@ -38,10 +42,17 @@ const MultipleChoiceQuestionsScreen = () => {
     if (!currentUser) return;
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("vocabulary")
-        .select("id, word, meaning, group, example")
+        .select("id, word, meaning, group, example, is_memorized")
         .eq("user_id", currentUser.id);
+
+      // Apply filter based on selection
+      if (filter === "unmemorized") {
+        query = query.or("is_memorized.is.null,is_memorized.eq.false");
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error fetching vocabulary:", error);
@@ -127,6 +138,11 @@ const MultipleChoiceQuestionsScreen = () => {
       if (wrongWord) {
         newWrongAnswers = [...wrongAnswers, wrongWord];
         setWrongAnswers(newWrongAnswers);
+        
+        // If this is "All Words" mode and the word was previously memorized, mark it as unmemorized
+        if (filter === "all" && wrongWord.is_memorized && wrongWord.id) {
+          setWrongWordsIds(prev => [...prev, wrongWord.id]);
+        }
       }
     }
 
@@ -164,6 +180,19 @@ const MultipleChoiceQuestionsScreen = () => {
             })
             .catch(error => {
               console.error("Error marking words as memorized:", error);
+            });
+        }
+
+        // Mark wrong words as unmemorized (for "All Words" mode)
+        if (wrongWordsIds.length > 0) {
+          memorizedService.markWordsAsUnmemorized(user.id, wrongWordsIds)
+            .then(success => {
+              if (success) {
+                console.log(`Marked ${wrongWordsIds.length} words as unmemorized`);
+              }
+            })
+            .catch(error => {
+              console.error("Error marking words as unmemorized:", error);
             });
         }
       }

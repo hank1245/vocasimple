@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Modal,
+  Alert,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
@@ -21,6 +23,8 @@ const QuizTab = () => {
   const router = useRouter();
   const [currentMonthCount, setCurrentMonthCount] = useState(0);
   const [totalDaysInMonth, setTotalDaysInMonth] = useState(0);
+  const [showQuizFilterModal, setShowQuizFilterModal] = useState(false);
+  const [selectedQuizMode, setSelectedQuizMode] = useState<QuizMode>("meaning");
 
   const fetchFireCount = async () => {
     const user = getCurrentUser();
@@ -47,9 +51,18 @@ const QuizTab = () => {
   );
 
   const handleNavigateToMultipleChoiceQuestions = (mode: QuizMode) => {
+    setSelectedQuizMode(mode);
+    setShowQuizFilterModal(true);
+  };
+
+  const handleQuizFilterSelect = (filter: "all" | "unmemorized") => {
+    setShowQuizFilterModal(false);
     router.push({
       pathname: "/MultipleChoiceQuestions",
-      params: { mode },
+      params: { 
+        mode: selectedQuizMode,
+        filter: filter
+      },
     });
   };
 
@@ -115,6 +128,51 @@ const QuizTab = () => {
           />
         </TouchableOpacity>
       </View>
+
+      {/* Quiz Filter Modal */}
+      <Modal
+        visible={showQuizFilterModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowQuizFilterModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <AppText style={styles.modalTitle} text="퀴즈 설정" />
+            
+            <AppText style={styles.modalSubtitle} text="어떤 단어로 퀴즈를 진행하시겠습니까?" />
+            
+            <TouchableOpacity
+              style={styles.filterOption}
+              onPress={() => handleQuizFilterSelect("unmemorized")}
+            >
+              <Ionicons name="book-outline" size={24} color={Colors.primary} />
+              <View style={styles.filterOptionText}>
+                <AppText style={styles.filterOptionTitle} text="암기되지 않은 단어만" />
+                <AppText style={styles.filterOptionSubtitle} text="아직 암기하지 못한 단어들로 퀴즈 진행" />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.filterOption}
+              onPress={() => handleQuizFilterSelect("all")}
+            >
+              <Ionicons name="library-outline" size={24} color={Colors.primary} />
+              <View style={styles.filterOptionText}>
+                <AppText style={styles.filterOptionTitle} text="모든 단어" />
+                <AppText style={styles.filterOptionSubtitle} text="저장된 모든 단어들로 퀴즈 진행" />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setShowQuizFilterModal(false)}
+            >
+              <AppText style={styles.modalCancelText} text="취소" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -175,6 +233,75 @@ const styles = StyleSheet.create({
   progressSubText: {
     fontSize: 16,
     fontWeight: "bold",
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 24,
+    margin: 20,
+    minWidth: 300,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  filterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  filterOptionText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  filterOptionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  filterOptionSubtitle: {
+    fontSize: 12,
+    color: "#666",
+  },
+  modalCancelButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  modalCancelText: {
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "600",
   },
 });
 

@@ -19,6 +19,8 @@ import { nicknameService } from "@/utils/nicknameService";
 import { accountService } from "@/utils/accountService";
 import { exportService } from "@/utils/exportService";
 import { memorizedService, TierInfo } from "@/utils/memorizedService";
+import { learningStreakService } from "@/utils/learningStreak";
+import { leaderboardService, TierLeaderboard } from "@/utils/leaderboardService";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const ProfileTab = () => {
@@ -32,6 +34,10 @@ const ProfileTab = () => {
   const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
   const [memorizedCount, setMemorizedCount] = useState(0);
   const [totalWords, setTotalWords] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [currentMonthCount, setCurrentMonthCount] = useState(0);
+  const [selectedTier, setSelectedTier] = useState<"Sage" | "Knight" | "Apprentice">("Sage");
+  const [leaderboardData, setLeaderboardData] = useState<TierLeaderboard | null>(null);
 
   const fetchNickname = async () => {
     if (!user) return;
@@ -114,11 +120,46 @@ const ProfileTab = () => {
     setNewNickname("");
   };
 
+  const fetchStreakData = async () => {
+    if (!user) return;
+
+    try {
+      const streakData = await learningStreakService.getCurrentStreak(user.id);
+      setCurrentStreak(streakData || 0);
+      
+      const monthCount = await learningStreakService.getCurrentMonthCount(user.id);
+      setCurrentMonthCount(monthCount || 0);
+    } catch (error) {
+      console.error("Error fetching streak data:", error);
+      setCurrentStreak(0);
+      setCurrentMonthCount(0);
+    }
+  };
+
+  const fetchLeaderboardData = async (tier: "Sage" | "Knight" | "Apprentice") => {
+    if (!user) return;
+
+    try {
+      const leaderboard = await leaderboardService.getTierLeaderboard(tier, user.id);
+      setLeaderboardData(leaderboard);
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      setLeaderboardData(null);
+    }
+  };
+
+  const handleTierSelect = (tier: "Sage" | "Knight" | "Apprentice") => {
+    setSelectedTier(tier);
+    fetchLeaderboardData(tier);
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       fetchNickname();
       fetchTierInfo();
-    }, [user])
+      fetchStreakData();
+      fetchLeaderboardData(selectedTier);
+    }, [user, selectedTier])
   );
 
   const OnPressRecord = () => {
@@ -317,7 +358,7 @@ const ProfileTab = () => {
             onPress={OnPressRecord}
           >
             <AppText style={styles.achievementLabel} text="연속 공부 기록" />
-            <AppText style={styles.achievementNumber} text="12일" />
+            <AppText style={styles.achievementNumber} text={`${currentStreak}일`} />
           </TouchableOpacity>
           <View style={styles.achievementBox}>
             <AppText style={styles.achievementLabel} text="암기한 단어" />
@@ -355,40 +396,100 @@ const ProfileTab = () => {
           />
         </View>
 
-        <View style={styles.badgesContainer}>
-          {[
-            {
-              title: "Sage",
-              level: 3,
-              image: require("@/assets/images/sage.png"),
-            },
-            {
-              title: "Knight",
-              level: 2,
-              image: require("@/assets/images/knight.png"),
-            },
-            {
-              title: "Apprentice",
-              level: 1,
-              image: require("@/assets/images/apprentice.png"),
-            },
-          ].map((badge, index) => (
-            <View key={index} style={styles.badgeBox}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Image source={badge.image} style={styles.badgeImage} />
-                <View style={{ marginLeft: 10 }}>
-                  <AppText style={styles.badgeTitle} text={badge.title} />
-                  <AppText
-                    style={styles.badgeLevel}
-                    text={`Level ${badge.level}`}
+        <View style={styles.leaderboardContainer}>
+          <AppText style={styles.leaderboardTitle} text="티어별 랭킹" />
+          
+          {/* Tier Selection Buttons */}
+          <View style={styles.tierButtonsContainer}>
+            {["Sage", "Knight", "Apprentice"].map((tier) => (
+              <TouchableOpacity
+                key={tier}
+                style={[
+                  styles.tierButton,
+                  selectedTier === tier && styles.selectedTierButton
+                ]}
+                onPress={() => handleTierSelect(tier as "Sage" | "Knight" | "Apprentice")}
+              >
+                <Image
+                  source={
+                    tier === "Sage" 
+                      ? require("@/assets/images/sage.png")
+                      : tier === "Knight"
+                      ? require("@/assets/images/knight.png")
+                      : require("@/assets/images/apprentice.png")
+                  }
+                  style={styles.tierButtonImage}
+                />
+                <AppText 
+                  style={[
+                    styles.tierButtonText,
+                    selectedTier === tier && styles.selectedTierButtonText
+                  ]} 
+                  text={tier} 
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Leaderboard List */}
+          <View style={styles.leaderboardList}>
+            {leaderboardData?.users.slice(0, 10).map((user, index) => (
+              <View 
+                key={user.user_id} 
+                style={[
+                  styles.leaderboardItem,
+                  user.is_current_user && styles.currentUserItem
+                ]}
+              >
+                <View style={styles.leaderboardRank}>
+                  <AppText 
+                    style={[
+                      styles.rankText,
+                      user.is_current_user && styles.currentUserText
+                    ]} 
+                    text={`#${user.rank}`} 
                   />
                 </View>
+                <View style={styles.leaderboardUserInfo}>
+                  <AppText 
+                    style={[
+                      styles.leaderboardUserName,
+                      user.is_current_user && styles.currentUserText
+                    ]} 
+                    text={user.nickname} 
+                  />
+                  <AppText 
+                    style={[
+                      styles.leaderboardUserScore,
+                      user.is_current_user && styles.currentUserText
+                    ]} 
+                    text={`${user.memorized_count}개 암기`} 
+                  />
+                </View>
+                {user.is_current_user && (
+                  <View style={styles.currentUserBadge}>
+                    <AppText style={styles.currentUserBadgeText} text="나" />
+                  </View>
+                )}
               </View>
-              <View>
-                <AppText style={styles.rank} text="순위" />
+            ))}
+            
+            {leaderboardData?.users.length === 0 && (
+              <View style={styles.emptyLeaderboard}>
+                <AppText style={styles.emptyLeaderboardText} text="아직 이 티어에 사용자가 없습니다." />
               </View>
+            )}
+          </View>
+
+          {/* Current User Stats */}
+          {leaderboardData?.currentUserRank && (
+            <View style={styles.currentUserStats}>
+              <AppText 
+                style={styles.currentUserStatsText} 
+                text={`${selectedTier} 티어에서 ${leaderboardData.currentUserRank}위 (총 ${leaderboardData.totalUsers}명)`} 
+              />
             </View>
-          ))}
+          )}
         </View>
       </ScrollView>
 
@@ -548,27 +649,118 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "right",
   },
-  badgesContainer: { marginBottom: 20 },
-  badgeBox: {
+  // Leaderboard styles
+  leaderboardContainer: {
+    marginBottom: 20,
+  },
+  leaderboardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  tierButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
+  },
+  tierButton: {
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "#f5f5f5",
+    minWidth: 80,
+  },
+  selectedTierButton: {
+    backgroundColor: Colors.primary,
+  },
+  tierButtonImage: {
+    width: 32,
+    height: 32,
+    marginBottom: 6,
+  },
+  tierButtonText: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "600",
+  },
+  selectedTierButtonText: {
+    color: "white",
+  },
+  leaderboardList: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    padding: 8,
+  },
+  leaderboardItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     backgroundColor: "white",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 6,
   },
-  badgeTitle: { fontSize: 16, fontWeight: "bold" },
-  badgeLevel: { fontSize: 14, color: "gray" },
-  rank: {
-    color: "black",
+  currentUserItem: {
+    backgroundColor: Colors.primary + "20",
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  leaderboardRank: {
+    width: 40,
+    alignItems: "center",
+  },
+  rankText: {
+    fontSize: 16,
     fontWeight: "bold",
-    backgroundColor: "#E8EDF2",
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 15,
+    color: "#666",
   },
-  badgeImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
+  leaderboardUserInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  leaderboardUserName: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  leaderboardUserScore: {
+    fontSize: 14,
+    color: "#666",
+  },
+  currentUserText: {
+    color: Colors.primary,
+  },
+  currentUserBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  currentUserBadgeText: {
+    color: "white",
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  emptyLeaderboard: {
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyLeaderboardText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+  },
+  currentUserStats: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  currentUserStatsText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "600",
+  },
 
   // Modal styles
   modalOverlay: {

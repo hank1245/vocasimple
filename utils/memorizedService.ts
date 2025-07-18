@@ -76,6 +76,38 @@ export const memorizedService = {
     }
   },
 
+  // Mark multiple words as unmemorized (for wrong answers in "All Words" mode)
+  async markWordsAsUnmemorized(userId: string, wordIds: string[]): Promise<boolean> {
+    try {
+      if (!wordIds || wordIds.length === 0) {
+        return true;
+      }
+
+      // Update all words in a single transaction
+      const { error } = await supabase
+        .from('vocabulary')
+        .update({ 
+          is_memorized: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+        .in('id', wordIds);
+
+      if (error) {
+        console.error("Error marking words as unmemorized:", error);
+        return false;
+      }
+
+      // Update user's tier after unmarking words
+      await this.updateUserTier(userId);
+
+      return true;
+    } catch (error) {
+      console.error("Error in markWordsAsUnmemorized:", error);
+      return false;
+    }
+  },
+
   // Update user's tier based on memorized count
   async updateUserTier(userId: string): Promise<string | null> {
     try {
