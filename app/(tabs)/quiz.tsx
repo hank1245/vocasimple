@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   Alert,
+  Animated,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
@@ -25,15 +26,18 @@ const QuizTab = () => {
   const [totalDaysInMonth, setTotalDaysInMonth] = useState(0);
   const [showQuizFilterModal, setShowQuizFilterModal] = useState(false);
   const [selectedQuizMode, setSelectedQuizMode] = useState<QuizMode>("meaning");
+  const [scaleAnim] = useState(new Animated.Value(1));
 
   const fetchFireCount = async () => {
     const user = getCurrentUser();
     if (!user) return;
 
     try {
-      const monthCount = await learningStreakService.getCurrentMonthCount(user.id);
+      const monthCount = await learningStreakService.getCurrentMonthCount(
+        user.id
+      );
       const totalDays = learningStreakService.getCurrentMonthTotalDays();
-      
+
       setCurrentMonthCount(monthCount || 0);
       setTotalDaysInMonth(totalDays || 0);
     } catch (error) {
@@ -59,11 +63,29 @@ const QuizTab = () => {
     setShowQuizFilterModal(false);
     router.push({
       pathname: "/MultipleChoiceQuestions",
-      params: { 
+      params: {
         mode: selectedQuizMode,
-        filter: filter
+        filter: filter,
       },
     });
+  };
+
+  const handleFireCalendarPress = () => {
+    // Add scale animation for press feedback
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    router.push("/FireCalendar");
   };
 
   return (
@@ -100,7 +122,7 @@ const QuizTab = () => {
             <AppText style={styles.cardText} text="플래시카드" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.card}
             onPress={() => router.push("/WritingPractice")}
           >
@@ -109,24 +131,40 @@ const QuizTab = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.progressContainer}
-          onPress={() => router.push("/FireCalendar")}
+        <Animated.View
+          style={[
+            styles.progressContainer,
+            {
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
         >
-          <AppText
-            style={styles.progressText}
-            text="매일 퀴즈를 달성하고 불꽃을 밝히세요!"
-          />
+          <TouchableOpacity
+            style={styles.progressTouchable}
+            onPress={handleFireCalendarPress}
+            activeOpacity={0.8}
+          >
+            <View style={styles.progressHeader}>
+              <AppText
+                style={styles.progressText}
+                text="매일 퀴즈를 달성하고 불꽃을 밝히세요!"
+              />
+            </View>
 
-          <Image
-            source={require("@/assets/images/flame.png")}
-            style={styles.flameIcon}
-          />
-          <AppText
-            style={styles.progressSubText}
-            text={`이번 달 획득한 불꽃: ${currentMonthCount}/${totalDaysInMonth}`}
-          />
-        </TouchableOpacity>
+            <Image
+              source={require("@/assets/images/flame.png")}
+              style={styles.flameIcon}
+            />
+            <AppText
+              style={styles.progressSubText}
+              text={`이번 달 획득한 불꽃: ${currentMonthCount}/${totalDaysInMonth}`}
+            />
+
+            <View style={styles.clickHint}>
+              <AppText style={styles.clickHintText} text="캘린더 보기" />
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
 
       {/* Quiz Filter Modal */}
@@ -139,17 +177,26 @@ const QuizTab = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <AppText style={styles.modalTitle} text="퀴즈 설정" />
-            
-            <AppText style={styles.modalSubtitle} text="어떤 단어로 퀴즈를 진행하시겠습니까?" />
-            
+
+            <AppText
+              style={styles.modalSubtitle}
+              text="어떤 단어로 퀴즈를 진행하시겠습니까?"
+            />
+
             <TouchableOpacity
               style={styles.filterOption}
               onPress={() => handleQuizFilterSelect("unmemorized")}
             >
               <Ionicons name="book-outline" size={24} color={Colors.primary} />
               <View style={styles.filterOptionText}>
-                <AppText style={styles.filterOptionTitle} text="암기되지 않은 단어만" />
-                <AppText style={styles.filterOptionSubtitle} text="아직 암기하지 못한 단어들로 퀴즈 진행" />
+                <AppText
+                  style={styles.filterOptionTitle}
+                  text="암기되지 않은 단어만"
+                />
+                <AppText
+                  style={styles.filterOptionSubtitle}
+                  text="아직 암기하지 못한 단어들로 퀴즈 진행"
+                />
               </View>
             </TouchableOpacity>
 
@@ -157,10 +204,17 @@ const QuizTab = () => {
               style={styles.filterOption}
               onPress={() => handleQuizFilterSelect("all")}
             >
-              <Ionicons name="library-outline" size={24} color={Colors.primary} />
+              <Ionicons
+                name="library-outline"
+                size={24}
+                color={Colors.primary}
+              />
               <View style={styles.filterOptionText}>
                 <AppText style={styles.filterOptionTitle} text="모든 단어" />
-                <AppText style={styles.filterOptionSubtitle} text="저장된 모든 단어들로 퀴즈 진행" />
+                <AppText
+                  style={styles.filterOptionSubtitle}
+                  text="저장된 모든 단어들로 퀴즈 진행"
+                />
               </View>
             </TouchableOpacity>
 
@@ -214,27 +268,63 @@ const styles = StyleSheet.create({
   progressContainer: {
     marginTop: 50,
     backgroundColor: "#EDF0F3",
-    paddingHorizontal: 20,
     borderRadius: 20,
+    height: "40%",
+    // Add subtle shadow for depth
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  progressTouchable: {
+    flex: 1,
+    paddingHorizontal: 20,
     alignItems: "center",
     justifyContent: "center",
-    height: "40%",
+    width: "100%",
+  },
+  progressHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 10,
   },
   progressText: {
     fontSize: 16,
     fontWeight: "bold",
+    flex: 1,
+    textAlign: "center",
   },
   flameIcon: {
     width: 82,
     height: 89,
-    marginTop: 30,
-    marginBottom: 25,
+    marginTop: 20,
+    marginBottom: 20,
   },
   progressSubText: {
     fontSize: 16,
     fontWeight: "bold",
+    marginBottom: 10,
   },
-  
+  clickHint: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  clickHintText: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "500",
+  },
+
   // Modal styles
   modalOverlay: {
     flex: 1,

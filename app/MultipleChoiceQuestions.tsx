@@ -123,6 +123,8 @@ const MultipleChoiceQuestionsScreen = () => {
 
     let newCorrectAnswers = correctAnswers;
     let newWrongAnswers = [...wrongAnswers];
+    let newCorrectWordsIds = [...correctWordsIds];
+    let newWrongWordsIds = [...wrongWordsIds];
 
     if (correct) {
       newCorrectAnswers = correctAnswers + 1;
@@ -131,7 +133,8 @@ const MultipleChoiceQuestionsScreen = () => {
       // Add correct word ID to the list for later memorization
       const correctWord = vocabularyWords.find(w => w.word === currentQuestion.correctAnswer);
       if (correctWord && correctWord.id) {
-        setCorrectWordsIds(prev => [...prev, correctWord.id]);
+        newCorrectWordsIds = [...correctWordsIds, correctWord.id];
+        setCorrectWordsIds(newCorrectWordsIds);
       }
     } else {
       const wrongWord = vocabularyWords.find(w => w.word === currentQuestion.correctAnswer);
@@ -141,17 +144,18 @@ const MultipleChoiceQuestionsScreen = () => {
         
         // If this is "All Words" mode and the word was previously memorized, mark it as unmemorized
         if (filter === "all" && wrongWord.is_memorized && wrongWord.id) {
-          setWrongWordsIds(prev => [...prev, wrongWord.id]);
+          newWrongWordsIds = [...wrongWordsIds, wrongWord.id];
+          setWrongWordsIds(newWrongWordsIds);
         }
       }
     }
 
     setTimeout(() => {
-      handleContinue(newCorrectAnswers, newWrongAnswers);
+      handleContinue(newCorrectAnswers, newWrongAnswers, newCorrectWordsIds, newWrongWordsIds);
     }, 1000);
   };
 
-  const handleContinue = (finalCorrectAnswers?: number, finalWrongAnswers?: VocabularyWord[]) => {
+  const handleContinue = (finalCorrectAnswers?: number, finalWrongAnswers?: VocabularyWord[], finalCorrectWordsIds?: string[], finalWrongWordsIds?: string[]) => {
     if (currentQuestionIndex < quizQuestions.length - 1) {
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
@@ -170,12 +174,16 @@ const MultipleChoiceQuestionsScreen = () => {
       if (user) {
         learningStreakService.addTodayCompletion(user.id);
         
+        // Use passed arrays or fallback to component state
+        const correctIds = finalCorrectWordsIds || correctWordsIds;
+        const wrongIds = finalWrongWordsIds || wrongWordsIds;
+
         // Mark correct words as memorized
-        if (correctWordsIds.length > 0) {
-          memorizedService.markWordsAsMemorized(user.id, correctWordsIds)
+        if (correctIds.length > 0) {
+          memorizedService.markWordsAsMemorized(user.id, correctIds)
             .then(success => {
               if (success) {
-                console.log(`Marked ${correctWordsIds.length} words as memorized`);
+                console.log(`Marked ${correctIds.length} words as memorized`);
               }
             })
             .catch(error => {
@@ -184,11 +192,11 @@ const MultipleChoiceQuestionsScreen = () => {
         }
 
         // Mark wrong words as unmemorized (for "All Words" mode)
-        if (wrongWordsIds.length > 0) {
-          memorizedService.markWordsAsUnmemorized(user.id, wrongWordsIds)
+        if (wrongIds.length > 0) {
+          memorizedService.markWordsAsUnmemorized(user.id, wrongIds)
             .then(success => {
               if (success) {
-                console.log(`Marked ${wrongWordsIds.length} words as unmemorized`);
+                console.log(`Marked ${wrongIds.length} words as unmemorized`);
               }
             })
             .catch(error => {

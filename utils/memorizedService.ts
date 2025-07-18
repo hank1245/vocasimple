@@ -24,8 +24,7 @@ export const memorizedService = {
       const { error } = await supabase
         .from('vocabulary')
         .update({ 
-          is_memorized: true,
-          updated_at: new Date().toISOString()
+          is_memorized: true
         })
         .eq('user_id', userId)
         .eq('id', wordId);
@@ -55,8 +54,7 @@ export const memorizedService = {
       const { error } = await supabase
         .from('vocabulary')
         .update({ 
-          is_memorized: true,
-          updated_at: new Date().toISOString()
+          is_memorized: true
         })
         .eq('user_id', userId)
         .in('id', wordIds);
@@ -87,8 +85,7 @@ export const memorizedService = {
       const { error } = await supabase
         .from('vocabulary')
         .update({ 
-          is_memorized: false,
-          updated_at: new Date().toISOString()
+          is_memorized: false
         })
         .eq('user_id', userId)
         .in('id', wordIds);
@@ -138,8 +135,7 @@ export const memorizedService = {
         .from('profiles')
         .update({
           tier,
-          memorized_count: memorizedCount,
-          updated_at: new Date().toISOString()
+          memorized_count: memorizedCount
         })
         .eq('user_id', userId)
         .select();
@@ -152,9 +148,7 @@ export const memorizedService = {
           .insert({
             user_id: userId,
             tier,
-            memorized_count: memorizedCount,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            memorized_count: memorizedCount
           });
 
         if (insertError) {
