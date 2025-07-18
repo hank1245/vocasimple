@@ -23,6 +23,8 @@ interface VocabularyCardProps {
   onDelete?: () => void;
   onEdit?: () => void;
   group: string;
+  isMemorized?: boolean;
+  currentFilter?: "all" | "memorized" | "unmemorized";
 }
 
 const VocabularyCard: React.FC<VocabularyCardProps> = ({
@@ -32,6 +34,8 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
   mode,
   onDelete,
   onEdit,
+  isMemorized = false,
+  currentFilter = "all",
 }) => {
   const wordOpacity = React.useRef(new Animated.Value(1)).current;
   const meaningOpacity = React.useRef(new Animated.Value(1)).current;
@@ -210,9 +214,21 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
       <PanGestureHandler onGestureEvent={gestureHandler}>
         <ReAnimated.View style={[styles.card, animatedStyle]}>
           <TouchableOpacity onPress={handlePress} style={styles.cardContent}>
-            <Animated.Text style={[styles.word, { opacity: wordOpacity }]}>
-              {word}
-            </Animated.Text>
+            <View style={styles.cardHeader}>
+              <Animated.Text style={[styles.word, { opacity: wordOpacity }]}>
+                {word}
+              </Animated.Text>
+              {isMemorized && currentFilter === "all" && (
+                <View style={styles.memorizedBadge}>
+                  <MaterialIcons
+                    name="check-circle"
+                    size={16}
+                    color="#4CAF50"
+                  />
+                  <AppText style={styles.memorizedText} text="암기됨" />
+                </View>
+              )}
+            </View>
             <Animated.Text
               style={[styles.meaning, { opacity: meaningOpacity }]}
             >
@@ -228,10 +244,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
 
       {/* Edit button */}
       <ReAnimated.View style={[styles.editButton, editIconStyle]}>
-        <TouchableOpacity
-          onPress={handleEdit}
-          style={styles.editIconContainer}
-        >
+        <TouchableOpacity onPress={handleEdit} style={styles.editIconContainer}>
           <MaterialIcons name="edit" size={24} color="white" />
         </TouchableOpacity>
       </ReAnimated.View>
@@ -266,11 +279,32 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 24,
   },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   word: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 8,
     color: "black",
+    flex: 1,
+  },
+  memorizedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E8",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  memorizedText: {
+    fontSize: 12,
+    color: "#4CAF50",
+    fontWeight: "600",
+    marginLeft: 4,
   },
   meaning: {
     fontSize: 16,

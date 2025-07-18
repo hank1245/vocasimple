@@ -14,47 +14,32 @@ import VocabularyCard from "@/components/home/VocabularyCard";
 import { AntDesign, Octicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
-import { supabase } from "@/utils/supabase";
 import { useAuth, getCurrentUser } from "@/stores/authStore";
+import { useVocabularyStore } from "@/stores/vocabularyStore";
+import { supabase } from "@/utils/supabase";
 
 const Index = () => {
   const router = useRouter();
   const [mode, setMode] = useState<"word" | "meaning" | null>("word");
-  const [vocabularyList, setVocabularyList] = useState<any[]>([]);
-  const [filteredVocabularyList, setFilteredVocabularyList] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "memorized" | "unmemorized">("all");
   const isLoadingRef = useRef(false);
 
-  // Zustand store에서 사용자 정보 가져오기
+  // Zustand stores
   const { user } = useAuth();
-
-  // Filter vocabulary list based on memorization status
-  const applyFilter = useCallback((data: any[], filter: "all" | "memorized" | "unmemorized") => {
-    let filtered = data;
-    
-    switch (filter) {
-      case "memorized":
-        filtered = data.filter(item => item.is_memorized === true);
-        break;
-      case "unmemorized":
-        filtered = data.filter(item => item.is_memorized !== true);
-        break;
-      case "all":
-      default:
-        filtered = data;
-        break;
-    }
-    
-    setFilteredVocabularyList(filtered);
-  }, []);
+  const {
+    vocabularyList,
+    filteredList,
+    currentFilter,
+    loading,
+    fetchVocabulary,
+    setFilter,
+    shouldRefetch,
+  } = useVocabularyStore();
 
   // Handle filter selection
   const handleFilterSelect = (filter: "all" | "memorized" | "unmemorized") => {
-    setSelectedFilter(filter);
+    setFilter(filter);
     setShowFilterModal(false);
-    applyFilter(vocabularyList, filter);
   };
 
   // Get filter display text
@@ -70,44 +55,13 @@ const Index = () => {
     }
   };
 
-  const fetchData = useCallback(async () => {
-    // 전역 상태에서 사용자 정보 확인
-    const currentUser = getCurrentUser();
-    if (!currentUser || isLoadingRef.current) return;
-
-    isLoadingRef.current = true;
-    setLoading(true);
-    try {
-      console.log("Fetching vocabulary data for user:", currentUser.id);
-
-      const { data, error } = await supabase
-        .from("vocabulary")
-        .select("id, word, meaning, group, example, is_memorized")
-        .eq("user_id", currentUser.id);
-
-      if (error) {
-        console.error("데이터 가져오기 에러:", error);
-        return;
-      }
-
-      console.log("Vocabulary data fetched:", data?.length || 0, "items");
-      setVocabularyList(data || []);
-      applyFilter(data || [], selectedFilter);
-    } catch (error) {
-      console.error("fetchData 에러:", error);
-    } finally {
-      setLoading(false);
-      isLoadingRef.current = false;
-    }
-  }, []);
-
   // 화면 포커스 시 데이터 새로고침
   useFocusEffect(
     useCallback(() => {
-      if (user) {
-        fetchData();
+      if (user && (shouldRefetch() || vocabularyList.length === 0)) {
+        fetchVocabulary();
       }
-    }, [fetchData, user])
+    }, [user, fetchVocabulary, shouldRefetch, vocabularyList.length])
   );
 
   const onAdd = () => {
@@ -121,7 +75,7 @@ const Index = () => {
       return;
     }
 
-    const item = vocabularyList[index];
+    const item = filteredList[index]; // Use filteredList instead of vocabularyList
 
     try {
       const { error } = await supabase
@@ -136,17 +90,15 @@ const Index = () => {
         return;
       }
 
-      // 로컬 상태 업데이트
-      const newList = vocabularyList.filter((_, i) => i !== index);
-      setVocabularyList(newList);
-      applyFilter(newList, selectedFilter);
+      // Refresh vocabulary data after deletion
+      fetchVocabulary(true);
     } catch (error) {
       console.error("handleDeleteVocabulary 에러:", error);
     }
   };
 
   const handleEditVocabulary = (index: number) => {
-    const item = vocabularyList[index];
+    const item = filteredList[index]; // Use filteredList instead of vocabularyList
     router.push({
       pathname: "/EditVocabulary",
       params: {
@@ -179,7 +131,10 @@ const Index = () => {
       </View>
       <View style={styles.container}>
         <View style={styles.topbar}>
-          <AppText style={styles.filterStatusText} text={`${getFilterText(selectedFilter)} (${filteredVocabularyList.length}개)`} />
+          <AppText
+            style={styles.filterStatusText}
+            text={`${getFilterText(currentFilter)} (${filteredList.length}개)`}
+          />
           <View style={styles.modeButtons}>
             <TouchableOpacity
               style={[styles.modeButton, mode === "word" && styles.activeMode]}
@@ -212,12 +167,12 @@ const Index = () => {
             </TouchableOpacity>
           </View>
         </View>
-        {filteredVocabularyList && filteredVocabularyList.length > 0 ? (
+        {filteredList && filteredList.length > 0 ? (
           <ScrollView
             contentContainerStyle={{ paddingVertical: 40 }}
             showsVerticalScrollIndicator={false}
           >
-            {filteredVocabularyList.map((item, idx) => (
+            {filteredList.map((item, idx) => (
               <VocabularyCard
                 key={idx}
                 word={item.word}
@@ -225,6 +180,8 @@ const Index = () => {
                 group={item.group}
                 example={item.example}
                 mode={mode}
+                isMemorized={item.is_memorized}
+                currentFilter={currentFilter}
                 onDelete={() => handleDeleteVocabulary(idx)}
                 onEdit={() => handleEditVocabulary(idx)}
               />
@@ -254,26 +211,53 @@ const Index = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <AppText style={styles.modalTitle} text="필터 선택" />
-            
+
             <TouchableOpacity
-              style={[styles.filterOption, selectedFilter === "all" && styles.selectedFilterOption]}
+              style={[
+                styles.filterOption,
+                currentFilter === "all" && styles.selectedFilterOption,
+              ]}
               onPress={() => handleFilterSelect("all")}
             >
-              <AppText style={[styles.filterOptionText, selectedFilter === "all" && styles.selectedFilterText]} text="전체" />
+              <AppText
+                style={[
+                  styles.filterOptionText,
+                  currentFilter === "all" && styles.selectedFilterText,
+                ]}
+                text="전체"
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.filterOption, selectedFilter === "memorized" && styles.selectedFilterOption]}
+              style={[
+                styles.filterOption,
+                currentFilter === "memorized" && styles.selectedFilterOption,
+              ]}
               onPress={() => handleFilterSelect("memorized")}
             >
-              <AppText style={[styles.filterOptionText, selectedFilter === "memorized" && styles.selectedFilterText]} text="암기됨" />
+              <AppText
+                style={[
+                  styles.filterOptionText,
+                  currentFilter === "memorized" && styles.selectedFilterText,
+                ]}
+                text="암기됨"
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.filterOption, selectedFilter === "unmemorized" && styles.selectedFilterOption]}
+              style={[
+                styles.filterOption,
+                currentFilter === "unmemorized" && styles.selectedFilterOption,
+              ]}
               onPress={() => handleFilterSelect("unmemorized")}
             >
-              <AppText style={[styles.filterOptionText, selectedFilter === "unmemorized" && styles.selectedFilterText]} text="암기 안됨" />
+              <AppText
+                style={[
+                  styles.filterOptionText,
+                  currentFilter === "unmemorized" && styles.selectedFilterText,
+                ]}
+                text="암기 안됨"
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -367,7 +351,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
   },
-  
+
   // Modal styles
   modalOverlay: {
     flex: 1,

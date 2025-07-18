@@ -9,8 +9,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { supabase } from "@/utils/supabase";
 import { getCurrentUser } from "@/stores/authStore";
+import { useVocabularyStore } from "@/stores/vocabularyStore";
 import { VocabularyWord, QuizQuestion } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
@@ -23,6 +23,9 @@ const MultipleChoiceQuestionsScreen = () => {
     mode: "meaning" | "word";
     filter: "all" | "unmemorized";
   }>();
+  
+  // Use vocabulary store
+  const { getFilteredVocabulary, markWordsAsMemorized, markWordsAsUnmemorized } = useVocabularyStore();
   
   const [vocabularyWords, setVocabularyWords] = useState<VocabularyWord[]>([]);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -42,22 +45,9 @@ const MultipleChoiceQuestionsScreen = () => {
     if (!currentUser) return;
 
     try {
-      let query = supabase
-        .from("vocabulary")
-        .select("id, word, meaning, group, example, is_memorized")
-        .eq("user_id", currentUser.id);
-
-      // Apply filter based on selection
-      if (filter === "unmemorized") {
-        query = query.or("is_memorized.is.null,is_memorized.eq.false");
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error fetching vocabulary:", error);
-        return;
-      }
+      // Get filtered vocabulary from store
+      const filterType = filter === "unmemorized" ? "unmemorized" : "all";
+      const data = getFilteredVocabulary(filterType);
 
       if (!data || data.length < 4) {
         Toast.error("저장한 단어가 없어요! 단어를 더 모아보세요!");
@@ -74,7 +64,7 @@ const MultipleChoiceQuestionsScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, filter, getFilteredVocabulary]);
 
   const generateQuizQuestions = (words: VocabularyWord[]) => {
     const questions: QuizQuestion[] = [];
@@ -180,7 +170,7 @@ const MultipleChoiceQuestionsScreen = () => {
 
         // Mark correct words as memorized
         if (correctIds.length > 0) {
-          memorizedService.markWordsAsMemorized(user.id, correctIds)
+          markWordsAsMemorized(correctIds)
             .then(success => {
               if (success) {
                 console.log(`Marked ${correctIds.length} words as memorized`);
@@ -193,7 +183,7 @@ const MultipleChoiceQuestionsScreen = () => {
 
         // Mark wrong words as unmemorized (for "All Words" mode)
         if (wrongIds.length > 0) {
-          memorizedService.markWordsAsUnmemorized(user.id, wrongIds)
+          markWordsAsUnmemorized(wrongIds)
             .then(success => {
               if (success) {
                 console.log(`Marked ${wrongIds.length} words as unmemorized`);

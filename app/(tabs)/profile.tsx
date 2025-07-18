@@ -18,64 +18,34 @@ import { useAuth } from "@/stores/authStore";
 import { nicknameService } from "@/utils/nicknameService";
 import { accountService } from "@/utils/accountService";
 import { exportService } from "@/utils/exportService";
-import { memorizedService, TierInfo } from "@/utils/memorizedService";
-import { learningStreakService } from "@/utils/learningStreak";
-import { leaderboardService, TierLeaderboard } from "@/utils/leaderboardService";
+import { useUserProfileStore } from "@/stores/userProfileStore";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const ProfileTab = () => {
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const [nickname, setNickname] = useState("");
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [newNickname, setNewNickname] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
-  const [memorizedCount, setMemorizedCount] = useState(0);
-  const [totalWords, setTotalWords] = useState(0);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [currentMonthCount, setCurrentMonthCount] = useState(0);
-  const [selectedTier, setSelectedTier] = useState<"Sage" | "Knight" | "Apprentice">("Sage");
-  const [leaderboardData, setLeaderboardData] = useState<TierLeaderboard | null>(null);
+  
+  // Use centralized profile store
+  const {
+    nickname,
+    tierInfo,
+    memorizedCount,
+    totalWords,
+    streakData,
+    leaderboardData,
+    selectedTier,
+    loading: profileLoading,
+    nicknameLoading,
+    fetchAllData,
+    updateNickname,
+    setSelectedTier,
+    shouldRefetch,
+  } = useUserProfileStore();
 
-  const fetchNickname = async () => {
-    if (!user) return;
-
-    try {
-      const userNickname = await nicknameService.getUserNickname(user.id);
-      setNickname(userNickname);
-    } catch (error) {
-      console.error("Error fetching nickname:", error);
-      setNickname(nicknameService.generateDefaultNickname(user.id));
-    }
-  };
-
-  const fetchTierInfo = async () => {
-    if (!user) return;
-
-    try {
-      const tierData = await memorizedService.getUserTierInfo(user.id);
-      setTierInfo(tierData);
-      
-      const memorized = await memorizedService.getMemorizedWordsCount(user.id);
-      setMemorizedCount(memorized);
-      
-      const total = await memorizedService.getTotalWordsCount(user.id);
-      setTotalWords(total);
-    } catch (error) {
-      console.error("Error fetching tier info:", error);
-      // Set default values if there's an error
-      setTierInfo({
-        currentTier: 'Apprentice',
-        memorizedCount: 0,
-        nextTier: 'Knight',
-        nextTierRequirement: 500,
-        progressPercentage: 0
-      });
-      setMemorizedCount(0);
-    }
-  };
 
   const handleEditNickname = () => {
     setNewNickname(nickname.startsWith("#") ? nickname.substring(1) : nickname);
@@ -94,14 +64,8 @@ const ProfileTab = () => {
         return;
       }
 
-      const success = await nicknameService.updateNickname(
-        user.id,
-        newNickname
-      );
+      const success = await updateNickname(newNickname);
       if (success) {
-        const updatedNickname =
-          nicknameService.formatNicknameForDisplay(newNickname);
-        setNickname(updatedNickname);
         setIsEditingNickname(false);
         Alert.alert("성공", "닉네임이 변경되었습니다.");
       } else {
@@ -120,46 +84,17 @@ const ProfileTab = () => {
     setNewNickname("");
   };
 
-  const fetchStreakData = async () => {
-    if (!user) return;
-
-    try {
-      const streakData = await learningStreakService.getCurrentStreak(user.id);
-      setCurrentStreak(streakData || 0);
-      
-      const monthCount = await learningStreakService.getCurrentMonthCount(user.id);
-      setCurrentMonthCount(monthCount || 0);
-    } catch (error) {
-      console.error("Error fetching streak data:", error);
-      setCurrentStreak(0);
-      setCurrentMonthCount(0);
-    }
-  };
-
-  const fetchLeaderboardData = async (tier: "Sage" | "Knight" | "Apprentice") => {
-    if (!user) return;
-
-    try {
-      const leaderboard = await leaderboardService.getTierLeaderboard(tier, user.id);
-      setLeaderboardData(leaderboard);
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-      setLeaderboardData(null);
-    }
-  };
-
   const handleTierSelect = (tier: "Sage" | "Knight" | "Apprentice") => {
     setSelectedTier(tier);
-    fetchLeaderboardData(tier);
   };
 
   useFocusEffect(
     React.useCallback(() => {
-      fetchNickname();
-      fetchTierInfo();
-      fetchStreakData();
-      fetchLeaderboardData(selectedTier);
-    }, [user, selectedTier])
+      // Only fetch if cache is expired or no data exists
+      if (shouldRefetch() || !nickname) {
+        fetchAllData();
+      }
+    }, [user, fetchAllData, shouldRefetch, nickname])
   );
 
   const OnPressRecord = () => {
@@ -358,7 +293,7 @@ const ProfileTab = () => {
             onPress={OnPressRecord}
           >
             <AppText style={styles.achievementLabel} text="연속 공부 기록" />
-            <AppText style={styles.achievementNumber} text={`${currentStreak}일`} />
+            <AppText style={styles.achievementNumber} text={`${streakData.currentStreak}일`} />
           </TouchableOpacity>
           <View style={styles.achievementBox}>
             <AppText style={styles.achievementLabel} text="암기한 단어" />
@@ -535,7 +470,7 @@ const ProfileTab = () => {
               <TouchableOpacity
                 style={[styles.modalButton, styles.saveButton]}
                 onPress={handleSaveNickname}
-                disabled={loading || !newNickname.trim()}
+                disabled={loading || nicknameLoading || !newNickname.trim()}
               >
                 <AppText
                   style={[
@@ -543,7 +478,7 @@ const ProfileTab = () => {
                     (!newNickname.trim() || loading) &&
                       styles.disabledButtonText,
                   ]}
-                  text={loading ? "저장 중..." : "저장"}
+                  text={loading || nicknameLoading ? "저장 중..." : "저장"}
                 />
               </TouchableOpacity>
             </View>
