@@ -31,7 +31,7 @@ const ProfileTab = () => {
 
   const fetchNickname = async () => {
     if (!user) return;
-    
+
     try {
       const userNickname = await nicknameService.getUserNickname(user.id);
       setNickname(userNickname);
@@ -42,7 +42,7 @@ const ProfileTab = () => {
   };
 
   const handleEditNickname = () => {
-    setNewNickname(nickname.startsWith('#') ? nickname.substring(1) : nickname);
+    setNewNickname(nickname.startsWith("#") ? nickname.substring(1) : nickname);
     setIsEditingNickname(true);
   };
 
@@ -58,9 +58,13 @@ const ProfileTab = () => {
         return;
       }
 
-      const success = await nicknameService.updateNickname(user.id, newNickname);
+      const success = await nicknameService.updateNickname(
+        user.id,
+        newNickname
+      );
       if (success) {
-        const updatedNickname = nicknameService.formatNicknameForDisplay(newNickname);
+        const updatedNickname =
+          nicknameService.formatNicknameForDisplay(newNickname);
         setNickname(updatedNickname);
         setIsEditingNickname(false);
         Alert.alert("성공", "닉네임이 변경되었습니다.");
@@ -121,17 +125,26 @@ const ProfileTab = () => {
             try {
               const result = await exportService.exportVocabularyToEmail(
                 user.id,
-                user.email
+                user.email ?? ""
               );
 
               if (result.success) {
-                Alert.alert("완료", result.message || "단어 목록이 성공적으로 공유되었습니다.");
+                Alert.alert(
+                  "완료",
+                  result.message || "단어 목록이 성공적으로 공유되었습니다."
+                );
               } else {
-                Alert.alert("오류", result.error || "단어 내보내기 중 오류가 발생했습니다.");
+                Alert.alert(
+                  "오류",
+                  result.error || "단어 내보내기 중 오류가 발생했습니다."
+                );
               }
             } catch (error) {
               console.error("Export vocabulary error:", error);
-              Alert.alert("오류", "단어 내보내기 중 예상치 못한 오류가 발생했습니다.");
+              Alert.alert(
+                "오류",
+                "단어 내보내기 중 예상치 못한 오류가 발생했습니다."
+              );
             } finally {
               setIsExporting(false);
             }
@@ -165,14 +178,23 @@ const ProfileTab = () => {
                     try {
                       const result = await accountService.deleteAccount();
                       if (result.success) {
-                        Alert.alert("완료", "계정이 성공적으로 삭제되었습니다.");
+                        Alert.alert(
+                          "완료",
+                          "계정이 성공적으로 삭제되었습니다."
+                        );
                         // 계정 삭제 후 로그아웃은 자동으로 처리됨
                       } else {
-                        Alert.alert("오류", result.error || "계정 삭제 중 오류가 발생했습니다.");
+                        Alert.alert(
+                          "오류",
+                          result.error || "계정 삭제 중 오류가 발생했습니다."
+                        );
                       }
                     } catch (error) {
                       console.error("Delete account error:", error);
-                      Alert.alert("오류", "계정 삭제 중 예상치 못한 오류가 발생했습니다.");
+                      Alert.alert(
+                        "오류",
+                        "계정 삭제 중 예상치 못한 오류가 발생했습니다."
+                      );
                     } finally {
                       setLoading(false);
                     }
@@ -202,8 +224,11 @@ const ProfileTab = () => {
               text={user?.email || "hank1234@gmail.com"}
             />
             <View style={styles.nicknameContainer}>
-              <AppText style={styles.username} text={nickname || "#loading..."} />
-              <TouchableOpacity 
+              <AppText
+                style={styles.username}
+                text={nickname || "#loading..."}
+              />
+              <TouchableOpacity
                 style={styles.editButton}
                 onPress={handleEditNickname}
               >
@@ -228,15 +253,18 @@ const ProfileTab = () => {
           onPress={handleExportVocabulary}
           disabled={isExporting}
         >
-          <MaterialIcons 
-            name="download" 
-            size={20} 
-            color="white" 
+          <MaterialIcons
+            name="download"
+            size={20}
+            color="white"
             style={{ marginRight: 8 }}
           />
           <AppText
             text={isExporting ? "내보내는 중..." : "단어 저장하기"}
-            style={[styles.exportButtonText, isExporting && styles.disabledText]}
+            style={[
+              styles.exportButtonText,
+              isExporting && styles.disabledText,
+            ]}
           />
         </TouchableOpacity>
 
@@ -323,7 +351,7 @@ const ProfileTab = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <AppText style={styles.modalTitle} text="닉네임 변경" />
-            
+
             <View style={styles.inputContainer}>
               <AppText style={styles.inputLabel} text="새 닉네임" />
               <View style={styles.nicknameInputContainer}>
@@ -338,28 +366,32 @@ const ProfileTab = () => {
                   autoFocus={true}
                 />
               </View>
-              <AppText style={styles.inputHint} text="영문, 숫자, 한글, 밑줄(_) 사용 가능 (3-20자)" />
+              <AppText
+                style={styles.inputHint}
+                text="영문, 숫자, 한글, 밑줄(_) 사용 가능 (3-20자)"
+              />
             </View>
 
             <View style={styles.modalButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={handleCancelEdit}
               >
                 <AppText style={styles.cancelButtonText} text="취소" />
               </TouchableOpacity>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={[styles.modalButton, styles.saveButton]}
                 onPress={handleSaveNickname}
                 disabled={loading || !newNickname.trim()}
               >
-                <AppText 
+                <AppText
                   style={[
                     styles.saveButtonText,
-                    (!newNickname.trim() || loading) && styles.disabledButtonText
-                  ]} 
-                  text={loading ? "저장 중..." : "저장"} 
+                    (!newNickname.trim() || loading) &&
+                      styles.disabledButtonText,
+                  ]}
+                  text={loading ? "저장 중..." : "저장"}
                 />
               </TouchableOpacity>
             </View>
@@ -461,7 +493,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   badgeImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
-  
+
   // Modal styles
   modalOverlay: {
     flex: 1,
@@ -553,7 +585,7 @@ const styles = StyleSheet.create({
   disabledButtonText: {
     color: "#ccc",
   },
-  
+
   // Export Button styles
   exportButton: {
     flexDirection: "row",
@@ -569,7 +601,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  
+
   // Delete Account Button styles
   deleteAccountButton: {
     alignItems: "center",

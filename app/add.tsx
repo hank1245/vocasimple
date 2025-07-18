@@ -128,20 +128,6 @@ const AddScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-
-        <View style={[styles.inputContainer, styles.groupContainer]}>
-          <AppText style={styles.label} text="그룹(선택)" />
-          <Picker
-            selectedValue={selectedGroup}
-            onValueChange={(itemValue, itemIndex) =>
-              setSelectedGroup(itemValue)
-            }
-            style={styles.picker}
-          >
-            <Picker.Item label="기본" value="기본" />
-            <Picker.Item label="내 단어장" value="내 단어장" />
-          </Picker>
-        </View>
       </View>
       <Toast
         duration={2000}
