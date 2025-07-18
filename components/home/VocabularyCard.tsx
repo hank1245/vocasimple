@@ -236,7 +236,9 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
             </Animated.Text>
 
             {example && example.trim() && (
-              <AppText style={styles.subItem} text={example} />
+              <Animated.View style={{ opacity: meaningOpacity }}>
+                <AppText style={styles.subItem} text={example} />
+              </Animated.View>
             )}
           </TouchableOpacity>
         </ReAnimated.View>

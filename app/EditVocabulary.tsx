@@ -17,10 +17,10 @@ import { Colors } from "@/constants/Colors";
 import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { supabase } from "@/utils/supabase";
 import { getCurrentUser } from "@/stores/authStore";
 import Toast from "toastify-react-native";
 import { aiExampleService } from "@/utils/aiExampleService";
+import { useUpdateWord } from "@/hooks/useVocabularyQuery";
 
 const EditVocabularyScreen = () => {
   const router = useRouter();
@@ -31,14 +31,15 @@ const EditVocabularyScreen = () => {
   const initialMeaning = params.meaning as string;
   const initialExample = params.example as string;
   const initialGroup = params.group as string;
-  const originalWord = params.originalWord as string; // For database update identification
 
   const [word, setWord] = useState(initialWord || "");
   const [meaning, setMeaning] = useState(initialMeaning || "");
   const [example, setExample] = useState(initialExample || "");
   const [selectedGroup, setSelectedGroup] = useState(initialGroup || "기본");
-  const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+
+  // TanStack Query hook for updating words
+  const updateWordMutation = useUpdateWord();
 
   const onCreateExample = async () => {
     if (!word.trim() || !meaning.trim()) {
@@ -48,8 +49,11 @@ const EditVocabularyScreen = () => {
 
     setAiLoading(true);
     try {
-      const result = await aiExampleService.generateExample(word.trim(), meaning.trim());
-      
+      const result = await aiExampleService.generateExample(
+        word.trim(),
+        meaning.trim()
+      );
+
       if (result.success && result.example) {
         setExample(result.example);
         console.log("AI 예시가 생성되었습니다!");
@@ -74,33 +78,23 @@ const EditVocabularyScreen = () => {
       return;
     }
 
-    setLoading(true);
-
     const user = getCurrentUser();
 
     if (!user) {
       Alert.alert("오류", "로그인이 필요합니다.");
-      setLoading(false);
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from("vocabulary")
-        .update({
+      await updateWordMutation.mutateAsync({
+        wordId: params.id as string,
+        updates: {
           word: word.trim(),
           meaning: meaning.trim(),
           example: example.trim(),
           group: selectedGroup,
-        })
-        .eq("user_id", user.id)
-        .eq("word", originalWord); // Use original word for identification
-
-      if (error) {
-        console.error("업데이트 에러:", error);
-        Alert.alert("오류", "업데이트 중 오류가 발생했습니다.");
-        return;
-      }
+        },
+      });
 
       Alert.alert("성공", "단어가 수정되었습니다.", [
         {
@@ -113,8 +107,6 @@ const EditVocabularyScreen = () => {
     } catch (error) {
       console.error("Error:", error);
       Alert.alert("오류", "업데이트 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -126,8 +118,8 @@ const EditVocabularyScreen = () => {
             <Ionicons name="close" size={34} color="black" />
           </Pressable>
           <AppText style={styles.headerTitle} text="단어 수정" />
-          <Pressable onPress={loading ? () => {} : onSave}>
-            {loading ? (
+          <Pressable onPress={updateWordMutation.isPending ? () => {} : onSave}>
+            {updateWordMutation.isPending ? (
               <ActivityIndicator size="small" color={Colors.primary} />
             ) : (
               <Entypo name="check" size={30} color={Colors.primary} />
@@ -168,7 +160,10 @@ const EditVocabularyScreen = () => {
           />
           <View style={styles.aiButton}>
             <TouchableOpacity
-              style={[styles.aiButtonContainer, aiLoading && styles.aiButtonDisabled]}
+              style={[
+                styles.aiButtonContainer,
+                aiLoading && styles.aiButtonDisabled,
+              ]}
               onPress={onCreateExample}
               disabled={aiLoading}
             >
@@ -177,9 +172,9 @@ const EditVocabularyScreen = () => {
               ) : (
                 <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
               )}
-              <AppText 
-                style={[styles.aiText, aiLoading && styles.aiTextDisabled]} 
-                text={aiLoading ? "AI로 예문 생성중..." : "AI로 예문 생성하기"} 
+              <AppText
+                style={[styles.aiText, aiLoading && styles.aiTextDisabled]}
+                text={aiLoading ? "AI로 예문 생성중..." : "AI로 예문 생성하기"}
               />
             </TouchableOpacity>
           </View>

@@ -10,13 +10,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Ionicons } from "@expo/vector-icons";
-import { supabase } from "@/utils/supabase";
 import { getCurrentUser } from "@/stores/authStore";
 import { VocabularyWord } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
 import { Colors } from "@/constants/Colors";
 import { learningStreakService } from "@/utils/learningStreak";
+import { useVocabulary } from "@/hooks/useVocabularyQuery";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -29,31 +29,32 @@ const FlashcardScreen = () => {
   const [flipAnimation] = useState(new Animated.Value(0));
   const [progress] = useState(new Animated.Value(0));
 
+  // Use TanStack Query instead of direct API call
+  const { data: vocabularyData = [], isLoading: vocabularyLoading } =
+    useVocabulary("all");
+
   const fetchVocabularyWords = useCallback(async () => {
     const currentUser = getCurrentUser();
     if (!currentUser) return;
 
     try {
-      const { data, error } = await supabase
-        .from("vocabulary")
-        .select("word, meaning, group, example")
-        .eq("user_id", currentUser.id);
-
-      if (error) {
-        console.error("Error fetching vocabulary:", error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
+      // Use TanStack Query data instead of direct API call
+      if (!vocabularyData || vocabularyData.length === 0) {
+        console.log("No vocabulary words found for flashcard, showing toast");
         Toast.error("저장한 단어가 없어요! 단어를 더 모아보세요!");
-        router.back();
+        setTimeout(() => {
+          router.back();
+        }, 1500);
         return;
       }
 
-      const shuffledWords = data.sort(() => Math.random() - 0.5);
-      const selectedWords = shuffledWords.slice(0, Math.min(10, shuffledWords.length));
+      const shuffledWords = vocabularyData.sort(() => Math.random() - 0.5);
+      const selectedWords = shuffledWords.slice(
+        0,
+        Math.min(10, shuffledWords.length)
+      );
       setVocabularyWords(selectedWords);
-      
+
       Animated.timing(progress, {
         toValue: (1 / selectedWords.length) * 100,
         duration: 300,
@@ -61,13 +62,14 @@ const FlashcardScreen = () => {
       }).start();
     } catch (error) {
       console.error("Error:", error);
-      Toast.error("단어를 불러오는 중 오류가 발생했습니다.");
-      router.back();
+      Toast.error("플래시카드를 생성하는 중 오류가 발생했습니다.");
+      setTimeout(() => {
+        router.back();
+      }, 1500);
     } finally {
       setIsLoading(false);
     }
-  }, [router, progress]);
-
+  }, [vocabularyData, router, progress]);
   const handleCardFlip = () => {
     setIsFlipped(!isFlipped);
     Animated.timing(flipAnimation, {
@@ -82,9 +84,9 @@ const FlashcardScreen = () => {
       setCurrentCardIndex(currentCardIndex - 1);
       setIsFlipped(false);
       flipAnimation.setValue(0);
-      
+
       Animated.timing(progress, {
-        toValue: ((currentCardIndex) / vocabularyWords.length) * 100,
+        toValue: (currentCardIndex / vocabularyWords.length) * 100,
         duration: 300,
         useNativeDriver: false,
       }).start();
@@ -96,7 +98,7 @@ const FlashcardScreen = () => {
       setCurrentCardIndex(currentCardIndex + 1);
       setIsFlipped(false);
       flipAnimation.setValue(0);
-      
+
       Animated.timing(progress, {
         toValue: ((currentCardIndex + 2) / vocabularyWords.length) * 100,
         duration: 300,
@@ -111,7 +113,7 @@ const FlashcardScreen = () => {
     setCurrentCardIndex(0);
     setIsFlipped(false);
     flipAnimation.setValue(0);
-    
+
     Animated.timing(progress, {
       toValue: (1 / shuffledWords.length) * 100,
       duration: 300,
@@ -123,7 +125,7 @@ const FlashcardScreen = () => {
     setCurrentCardIndex(0);
     setIsFlipped(false);
     flipAnimation.setValue(0);
-    
+
     Animated.timing(progress, {
       toValue: (1 / vocabularyWords.length) * 100,
       duration: 300,
@@ -132,14 +134,20 @@ const FlashcardScreen = () => {
   };
 
   useEffect(() => {
-    fetchVocabularyWords();
-  }, [fetchVocabularyWords]);
+    // Only call fetchVocabularyWords when vocabulary data is loaded
+    if (!vocabularyLoading && vocabularyData) {
+      fetchVocabularyWords();
+    }
+  }, [fetchVocabularyWords, vocabularyLoading, vocabularyData]);
 
-  if (isLoading) {
+  if (vocabularyLoading || isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <AppText style={styles.loadingText} text="플래시카드를 준비하고 있어요..." />
+          <AppText
+            style={styles.loadingText}
+            text="플래시카드를 준비하고 있어요..."
+          />
         </View>
       </SafeAreaView>
     );
@@ -149,7 +157,10 @@ const FlashcardScreen = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <AppText style={styles.loadingText} text="플래시카드를 생성할 수 없습니다." />
+          <AppText
+            style={styles.loadingText}
+            text="플래시카드를 생성할 수 없습니다."
+          />
         </View>
       </SafeAreaView>
     );
@@ -189,14 +200,14 @@ const FlashcardScreen = () => {
             ]}
           />
         </View>
-        <AppText 
-          style={styles.cardCounter} 
-          text={`${currentCardIndex + 1}/${vocabularyWords.length}`} 
+        <AppText
+          style={styles.cardCounter}
+          text={`${currentCardIndex + 1}/${vocabularyWords.length}`}
         />
       </View>
 
       <View style={styles.cardContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.card}
           onPress={handleCardFlip}
           activeOpacity={0.8}
@@ -205,8 +216,10 @@ const FlashcardScreen = () => {
             <AppText style={styles.cardText} text={currentWord.word} />
             <AppText style={styles.cardHint} text="탭하여 뜻 보기" />
           </Animated.View>
-          
-          <Animated.View style={[styles.cardFace, styles.cardBack, { opacity: backOpacity }]}>
+
+          <Animated.View
+            style={[styles.cardFace, styles.cardBack, { opacity: backOpacity }]}
+          >
             <AppText style={styles.cardText} text={currentWord.meaning} />
             {currentWord.example && (
               <AppText style={styles.exampleText} text={currentWord.example} />
@@ -217,12 +230,19 @@ const FlashcardScreen = () => {
       </View>
 
       <View style={styles.navigationContainer}>
-        <TouchableOpacity 
-          style={[styles.navButton, currentCardIndex === 0 && styles.navButtonDisabled]}
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            currentCardIndex === 0 && styles.navButtonDisabled,
+          ]}
           onPress={handlePrevious}
           disabled={currentCardIndex === 0}
         >
-          <Ionicons name="chevron-back" size={24} color={currentCardIndex === 0 ? "#ccc" : Colors.primary} />
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color={currentCardIndex === 0 ? "#ccc" : Colors.primary}
+          />
         </TouchableOpacity>
 
         <View style={styles.actionButtons}>
@@ -230,25 +250,37 @@ const FlashcardScreen = () => {
             <Ionicons name="shuffle" size={20} color={Colors.primary} />
             <AppText style={styles.actionButtonText} text="셔플" />
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.actionButton} onPress={handleReset}>
             <Ionicons name="refresh" size={20} color={Colors.primary} />
             <AppText style={styles.actionButtonText} text="처음으로" />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.navButton, currentCardIndex === vocabularyWords.length - 1 && styles.navButtonDisabled]}
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            currentCardIndex === vocabularyWords.length - 1 &&
+              styles.navButtonDisabled,
+          ]}
           onPress={handleNext}
           disabled={currentCardIndex === vocabularyWords.length - 1}
         >
-          <Ionicons name="chevron-forward" size={24} color={currentCardIndex === vocabularyWords.length - 1 ? "#ccc" : Colors.primary} />
+          <Ionicons
+            name="chevron-forward"
+            size={24}
+            color={
+              currentCardIndex === vocabularyWords.length - 1
+                ? "#ccc"
+                : Colors.primary
+            }
+          />
         </TouchableOpacity>
       </View>
 
       {currentCardIndex === vocabularyWords.length - 1 && (
         <View style={styles.completeContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.completeButton}
             onPress={() => {
               // Award fire streak when flashcard is completed

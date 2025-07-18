@@ -15,7 +15,7 @@ export const aiExampleService = {
       // Access environment variables through Expo Constants
       const apiKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_CLAUDE_API_KEY;
 
-      if (!apiKey || apiKey === "YOUR_CLAUDE_API_KEY_HERE") {
+      if (!apiKey) {
         return {
           success: false,
           error:
@@ -27,15 +27,15 @@ export const aiExampleService = {
         Constants.expoConfig?.extra?.EXPO_PUBLIC_CLAUDE_API_URL ||
         "https://api.anthropic.com/v1/messages";
 
-      const prompt = `주어진 영어 단어와 한국어 뜻을 사용하여 실용적이고 자연스러운 영어 예문을 하나만 생성해주세요.
+      const prompt = `주어진 영어 단어와 한국어 뜻을 사용하여 짧고 간단한 영어 예문을 하나만 생성해주세요.
 
 단어: ${word}
 뜻: ${meaning}
 
 요구사항:
-1. 일상생활에서 자주 사용되는 자연스러운 문장
-2. 단어의 의미를 명확하게 보여주는 문맥
-3. 너무 복잡하지 않고 이해하기 쉬운 문장
+1. 5-8단어 정도의 매우 짧은 문장
+2. 단어의 의미를 명확하게 보여주는 간단한 문맥
+3. 복잡한 구문 없이 기본적인 문장 구조 사용
 4. 예문만 응답하고 다른 설명은 포함하지 마세요
 
 예문:`;
@@ -49,7 +49,7 @@ export const aiExampleService = {
         },
         body: JSON.stringify({
           model: "claude-3-haiku-20240307",
-          max_tokens: 150,
+          max_tokens: 50,
           messages: [
             {
               role: "user",

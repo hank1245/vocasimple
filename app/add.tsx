@@ -17,19 +17,21 @@ import { Colors } from "@/constants/Colors";
 import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter } from "expo-router";
-import { supabase } from "@/utils/supabase";
 import { getCurrentUser } from "@/stores/authStore";
 import Toast from "toastify-react-native";
 import { aiExampleService } from "@/utils/aiExampleService";
+import { useCreateWord } from "@/hooks/useVocabularyQuery";
 
 const AddScreen = () => {
   const [word, setWord] = useState("");
   const [meaning, setMeaning] = useState("");
   const [example, setExample] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("기본");
-  const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const router = useRouter();
+
+  // TanStack Query hook for creating words
+  const createWordMutation = useCreateWord();
 
   const onCreateExample = async () => {
     if (!word.trim() || !meaning.trim()) {
@@ -39,8 +41,11 @@ const AddScreen = () => {
 
     setAiLoading(true);
     try {
-      const result = await aiExampleService.generateExample(word.trim(), meaning.trim());
-      
+      const result = await aiExampleService.generateExample(
+        word.trim(),
+        meaning.trim()
+      );
+
       if (result.success && result.example) {
         setExample(result.example);
         console.log("AI 예시가 생성되었습니다!");
@@ -65,37 +70,30 @@ const AddScreen = () => {
       return;
     }
 
-    setLoading(true);
-
     // 전역 상태에서 사용자 정보 가져오기
     const user = getCurrentUser();
 
     if (!user) {
       Alert.alert("오류", "로그인이 필요합니다.");
-      setLoading(false);
       return;
     }
 
-    const { error } = await supabase.from("vocabulary").insert([
-      {
-        word,
-        meaning,
-        example,
+    try {
+      await createWordMutation.mutateAsync({
+        word: word.trim(),
+        meaning: meaning.trim(),
+        example: example.trim(),
         group: selectedGroup,
-        user_id: user.id,
-      },
-    ]);
-    setLoading(false);
+      });
 
-    if (error) {
+      Alert.alert("성공", "단어가 저장되었습니다.");
+      setWord("");
+      setMeaning("");
+      setExample("");
+    } catch (error) {
       console.error("저장 에러:", error);
       Alert.alert("오류", "저장 중 오류가 발생했습니다.");
-      return;
     }
-    Alert.alert("성공", "단어가 저장되었습니다.");
-    setWord("");
-    setMeaning("");
-    setExample("");
   };
 
   return (
@@ -105,8 +103,8 @@ const AddScreen = () => {
           <Pressable onPress={onGoBack}>
             <Ionicons name="close" size={34} color="black" />
           </Pressable>
-          <Pressable onPress={loading ? () => {} : onSave}>
-            {loading ? (
+          <Pressable onPress={createWordMutation.isPending ? () => {} : onSave}>
+            {createWordMutation.isPending ? (
               <ActivityIndicator size="small" color={Colors.primary} />
             ) : (
               <Entypo name="check" size={30} color={Colors.primary} />
@@ -144,7 +142,10 @@ const AddScreen = () => {
           />
           <View style={styles.aiButton}>
             <TouchableOpacity
-              style={[styles.aiButtonContainer, aiLoading && styles.aiButtonDisabled]}
+              style={[
+                styles.aiButtonContainer,
+                aiLoading && styles.aiButtonDisabled,
+              ]}
               onPress={onCreateExample}
               disabled={aiLoading}
             >
@@ -153,9 +154,9 @@ const AddScreen = () => {
               ) : (
                 <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
               )}
-              <AppText 
-                style={[styles.aiText, aiLoading && styles.aiTextDisabled]} 
-                text={aiLoading ? "AI로 예문 생성중..." : "AI로 예문 생성하기"} 
+              <AppText
+                style={[styles.aiText, aiLoading && styles.aiTextDisabled]}
+                text={aiLoading ? "AI로 예문 생성중..." : "AI로 예문 생성하기"}
               />
             </TouchableOpacity>
           </View>

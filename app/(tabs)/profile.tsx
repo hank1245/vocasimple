@@ -28,7 +28,7 @@ const ProfileTab = () => {
   const [newNickname, setNewNickname] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  
+
   // Use centralized profile store
   const {
     nickname,
@@ -45,7 +45,6 @@ const ProfileTab = () => {
     setSelectedTier,
     shouldRefetch,
   } = useUserProfileStore();
-
 
   const handleEditNickname = () => {
     setNewNickname(nickname.startsWith("#") ? nickname.substring(1) : nickname);
@@ -90,11 +89,13 @@ const ProfileTab = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      // Only fetch if cache is expired or no data exists
-      if (shouldRefetch() || !nickname) {
+      // Always fetch fresh data when screen comes into focus to ensure accuracy
+      // This prevents stale data from showing after quiz completion
+      if (user) {
+        console.log("Profile screen focused, refreshing data");
         fetchAllData();
       }
-    }, [user, fetchAllData, shouldRefetch, nickname])
+    }, [user, fetchAllData])
   );
 
   const OnPressRecord = () => {
@@ -293,38 +294,55 @@ const ProfileTab = () => {
             onPress={OnPressRecord}
           >
             <AppText style={styles.achievementLabel} text="연속 공부 기록" />
-            <AppText style={styles.achievementNumber} text={`${streakData.currentStreak}일`} />
+            <AppText
+              style={styles.achievementNumber}
+              text={`${streakData.currentStreak}일`}
+            />
           </TouchableOpacity>
           <View style={styles.achievementBox}>
             <AppText style={styles.achievementLabel} text="암기한 단어" />
-            <AppText style={styles.achievementNumber} text={`${memorizedCount}개`} />
+            <AppText
+              style={styles.achievementNumber}
+              text={`${memorizedCount}개`}
+            />
           </View>
         </View>
         <View style={styles.tierContainer}>
           <View style={styles.tierBox}>
             <AppText style={styles.tierLabel} text="현재 티어" />
-            <AppText style={styles.tierText} text={tierInfo?.currentTier || "Apprentice"} />
-            {tierInfo && tierInfo.nextTier !== 'Max' && (
+            <AppText
+              style={styles.tierText}
+              text={tierInfo?.currentTier || "Apprentice"}
+            />
+            {tierInfo && tierInfo.nextTier !== "Max" && (
               <View style={styles.tierProgressContainer}>
-                <AppText style={styles.tierProgressText} text={`${tierInfo.nextTier}까지 ${tierInfo.nextTierRequirement - tierInfo.memorizedCount}개 남음`} />
+                <AppText
+                  style={styles.tierProgressText}
+                  text={`${tierInfo.nextTier}까지 ${
+                    tierInfo.nextTierRequirement - tierInfo.memorizedCount
+                  }개 남음`}
+                />
                 <View style={styles.progressBar}>
-                  <View 
+                  <View
                     style={[
-                      styles.progressBarFill, 
-                      { width: `${tierInfo.progressPercentage}%` }
-                    ]} 
+                      styles.progressBarFill,
+                      { width: `${tierInfo.progressPercentage}%` },
+                    ]}
                   />
                 </View>
-                <AppText style={styles.tierProgressPercentage} text={`${tierInfo.progressPercentage}%`} />
+                <AppText
+                  style={styles.tierProgressPercentage}
+                  text={`${tierInfo.progressPercentage}%`}
+                />
               </View>
             )}
           </View>
           <Image
             style={styles.tierImage}
             source={
-              tierInfo?.currentTier === 'Sage' 
+              tierInfo?.currentTier === "Sage"
                 ? require("@/assets/images/sage.png")
-                : tierInfo?.currentTier === 'Knight'
+                : tierInfo?.currentTier === "Knight"
                 ? require("@/assets/images/knight.png")
                 : require("@/assets/images/apprentice.png")
             }
@@ -333,7 +351,7 @@ const ProfileTab = () => {
 
         <View style={styles.leaderboardContainer}>
           <AppText style={styles.leaderboardTitle} text="티어별 랭킹" />
-          
+
           {/* Tier Selection Buttons */}
           <View style={styles.tierButtonsContainer}>
             {["Sage", "Knight", "Apprentice"].map((tier) => (
@@ -341,13 +359,15 @@ const ProfileTab = () => {
                 key={tier}
                 style={[
                   styles.tierButton,
-                  selectedTier === tier && styles.selectedTierButton
+                  selectedTier === tier && styles.selectedTierButton,
                 ]}
-                onPress={() => handleTierSelect(tier as "Sage" | "Knight" | "Apprentice")}
+                onPress={() =>
+                  handleTierSelect(tier as "Sage" | "Knight" | "Apprentice")
+                }
               >
                 <Image
                   source={
-                    tier === "Sage" 
+                    tier === "Sage"
                       ? require("@/assets/images/sage.png")
                       : tier === "Knight"
                       ? require("@/assets/images/knight.png")
@@ -355,12 +375,12 @@ const ProfileTab = () => {
                   }
                   style={styles.tierButtonImage}
                 />
-                <AppText 
+                <AppText
                   style={[
                     styles.tierButtonText,
-                    selectedTier === tier && styles.selectedTierButtonText
-                  ]} 
-                  text={tier} 
+                    selectedTier === tier && styles.selectedTierButtonText,
+                  ]}
+                  text={tier}
                 />
               </TouchableOpacity>
             ))}
@@ -369,36 +389,36 @@ const ProfileTab = () => {
           {/* Leaderboard List */}
           <View style={styles.leaderboardList}>
             {leaderboardData?.users.slice(0, 10).map((user, index) => (
-              <View 
-                key={user.user_id} 
+              <View
+                key={user.user_id}
                 style={[
                   styles.leaderboardItem,
-                  user.is_current_user && styles.currentUserItem
+                  user.is_current_user && styles.currentUserItem,
                 ]}
               >
                 <View style={styles.leaderboardRank}>
-                  <AppText 
+                  <AppText
                     style={[
                       styles.rankText,
-                      user.is_current_user && styles.currentUserText
-                    ]} 
-                    text={`#${user.rank}`} 
+                      user.is_current_user && styles.currentUserText,
+                    ]}
+                    text={`#${user.rank}`}
                   />
                 </View>
                 <View style={styles.leaderboardUserInfo}>
-                  <AppText 
+                  <AppText
                     style={[
                       styles.leaderboardUserName,
-                      user.is_current_user && styles.currentUserText
-                    ]} 
-                    text={user.nickname} 
+                      user.is_current_user && styles.currentUserText,
+                    ]}
+                    text={user.nickname}
                   />
-                  <AppText 
+                  <AppText
                     style={[
                       styles.leaderboardUserScore,
-                      user.is_current_user && styles.currentUserText
-                    ]} 
-                    text={`${user.memorized_count}개 암기`} 
+                      user.is_current_user && styles.currentUserText,
+                    ]}
+                    text={`${user.memorized_count}개 암기`}
                   />
                 </View>
                 {user.is_current_user && (
@@ -408,10 +428,13 @@ const ProfileTab = () => {
                 )}
               </View>
             ))}
-            
+
             {leaderboardData?.users.length === 0 && (
               <View style={styles.emptyLeaderboard}>
-                <AppText style={styles.emptyLeaderboardText} text="아직 이 티어에 사용자가 없습니다." />
+                <AppText
+                  style={styles.emptyLeaderboardText}
+                  text="아직 이 티어에 사용자가 없습니다."
+                />
               </View>
             )}
           </View>
@@ -419,9 +442,9 @@ const ProfileTab = () => {
           {/* Current User Stats */}
           {leaderboardData?.currentUserRank && (
             <View style={styles.currentUserStats}>
-              <AppText 
-                style={styles.currentUserStatsText} 
-                text={`${selectedTier} 티어에서 ${leaderboardData.currentUserRank}위 (총 ${leaderboardData.totalUsers}명)`} 
+              <AppText
+                style={styles.currentUserStatsText}
+                text={`${selectedTier} 티어에서 ${leaderboardData.currentUserRank}위 (총 ${leaderboardData.totalUsers}명)`}
               />
             </View>
           )}

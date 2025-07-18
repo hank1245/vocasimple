@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   TouchableOpacity,
@@ -14,33 +14,54 @@ import VocabularyCard from "@/components/home/VocabularyCard";
 import { AntDesign, Octicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
-import { useAuth, getCurrentUser } from "@/stores/authStore";
-import { useVocabularyStore } from "@/stores/vocabularyStore";
-import { supabase } from "@/utils/supabase";
+import { useAuth } from "@/stores/authStore";
+import {
+  useVocabulary,
+  useDeleteWord,
+  usePrefetchVocabulary,
+} from "@/hooks/useVocabularyQuery";
+import { VocabularyWord } from "@/types/common";
 
 const Index = () => {
   const router = useRouter();
   const [mode, setMode] = useState<"word" | "meaning" | null>("word");
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const isLoadingRef = useRef(false);
+  const [currentFilter, setCurrentFilter] = useState<
+    "all" | "memorized" | "unmemorized"
+  >("all");
 
   // Zustand stores
   const { user } = useAuth();
+
+  // TanStack Query hooks
   const {
-    vocabularyList,
-    filteredList,
-    currentFilter,
-    loading,
-    fetchVocabulary,
-    setFilter,
-    shouldRefetch,
-  } = useVocabularyStore();
+    data: vocabularyList = [],
+    isLoading: loading,
+    refetch: refetchVocabulary,
+    error,
+  } = useVocabulary(currentFilter);
+
+  const deleteWordMutation = useDeleteWord();
+  const { prefetchVocabulary } = usePrefetchVocabulary();
 
   // Handle filter selection
   const handleFilterSelect = (filter: "all" | "memorized" | "unmemorized") => {
-    setFilter(filter);
+    setCurrentFilter(filter);
     setShowFilterModal(false);
   };
+
+  // Prefetch other filter data when component mounts (only once)
+  useFocusEffect(
+    useCallback(() => {
+      // Only prefetch if not already cached and user is logged in
+      if (user) {
+        // Prefetch only the filters that are likely to be used
+        if (currentFilter !== "all") prefetchVocabulary("all");
+        if (currentFilter !== "memorized") prefetchVocabulary("memorized");
+        if (currentFilter !== "unmemorized") prefetchVocabulary("unmemorized");
+      }
+    }, [prefetchVocabulary, user, currentFilter])
+  );
 
   // Get filter display text
   const getFilterText = (filter: "all" | "memorized" | "unmemorized") => {
@@ -55,53 +76,35 @@ const Index = () => {
     }
   };
 
-  // 화면 포커스 시 데이터 새로고침
-  useFocusEffect(
-    useCallback(() => {
-      if (user && (shouldRefetch() || vocabularyList.length === 0)) {
-        fetchVocabulary();
-      }
-    }, [user, fetchVocabulary, shouldRefetch, vocabularyList.length])
-  );
-
   const onAdd = () => {
     router.push("/add");
   };
 
   const handleDeleteVocabulary = async (index: number) => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
+    if (!user) {
       console.log("사용자가 로그인되지 않았습니다.");
       return;
     }
 
-    const item = filteredList[index]; // Use filteredList instead of vocabularyList
+    const item = vocabularyList[index];
+    if (!item?.id) {
+      console.error("삭제할 단어 ID가 없습니다.");
+      return;
+    }
 
     try {
-      const { error } = await supabase
-        .from("vocabulary")
-        .delete()
-        .eq("user_id", currentUser.id)
-        .eq("word", item.word)
-        .eq("meaning", item.meaning);
-
-      if (error) {
-        console.error("삭제 에러:", error);
-        return;
-      }
-
-      // Refresh vocabulary data after deletion
-      fetchVocabulary(true);
+      await deleteWordMutation.mutateAsync(item.id);
     } catch (error) {
       console.error("handleDeleteVocabulary 에러:", error);
     }
   };
 
   const handleEditVocabulary = (index: number) => {
-    const item = filteredList[index]; // Use filteredList instead of vocabularyList
+    const item = vocabularyList[index];
     router.push({
       pathname: "/EditVocabulary",
       params: {
+        id: item.id,
         word: item.word,
         meaning: item.meaning,
         example: item.example || "",
@@ -133,7 +136,9 @@ const Index = () => {
         <View style={styles.topbar}>
           <AppText
             style={styles.filterStatusText}
-            text={`${getFilterText(currentFilter)} (${filteredList.length}개)`}
+            text={`${getFilterText(currentFilter)} (${
+              vocabularyList.length
+            }개)`}
           />
           <View style={styles.modeButtons}>
             <TouchableOpacity
@@ -167,12 +172,12 @@ const Index = () => {
             </TouchableOpacity>
           </View>
         </View>
-        {filteredList && filteredList.length > 0 ? (
+        {vocabularyList && vocabularyList.length > 0 ? (
           <ScrollView
             contentContainerStyle={{ paddingVertical: 40 }}
             showsVerticalScrollIndicator={false}
           >
-            {filteredList.map((item, idx) => (
+            {vocabularyList.map((item: VocabularyWord, idx: number) => (
               <VocabularyCard
                 key={idx}
                 word={item.word}
