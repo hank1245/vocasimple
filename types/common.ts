@@ -1,11 +1,13 @@
 export type QuizMode = "meaning" | "word";
 
 export interface VocabularyWord {
+  id: string;
   word: string;
   meaning: string;
   group: string;
   example?: string;
   user_id?: string;
+  is_memorized?: boolean;
 }
 
 export interface QuizQuestion {

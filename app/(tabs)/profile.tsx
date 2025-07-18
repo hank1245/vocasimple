@@ -18,6 +18,7 @@ import { useAuth } from "@/stores/authStore";
 import { nicknameService } from "@/utils/nicknameService";
 import { accountService } from "@/utils/accountService";
 import { exportService } from "@/utils/exportService";
+import { memorizedService, TierInfo } from "@/utils/memorizedService";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const ProfileTab = () => {
@@ -28,6 +29,9 @@ const ProfileTab = () => {
   const [newNickname, setNewNickname] = useState("");
   const [loading, setLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [tierInfo, setTierInfo] = useState<TierInfo | null>(null);
+  const [memorizedCount, setMemorizedCount] = useState(0);
+  const [totalWords, setTotalWords] = useState(0);
 
   const fetchNickname = async () => {
     if (!user) return;
@@ -38,6 +42,32 @@ const ProfileTab = () => {
     } catch (error) {
       console.error("Error fetching nickname:", error);
       setNickname(nicknameService.generateDefaultNickname(user.id));
+    }
+  };
+
+  const fetchTierInfo = async () => {
+    if (!user) return;
+
+    try {
+      const tierData = await memorizedService.getUserTierInfo(user.id);
+      setTierInfo(tierData);
+      
+      const memorized = await memorizedService.getMemorizedWordsCount(user.id);
+      setMemorizedCount(memorized);
+      
+      const total = await memorizedService.getTotalWordsCount(user.id);
+      setTotalWords(total);
+    } catch (error) {
+      console.error("Error fetching tier info:", error);
+      // Set default values if there's an error
+      setTierInfo({
+        currentTier: 'Apprentice',
+        memorizedCount: 0,
+        nextTier: 'Knight',
+        nextTierRequirement: 500,
+        progressPercentage: 0
+      });
+      setMemorizedCount(0);
     }
   };
 
@@ -87,6 +117,7 @@ const ProfileTab = () => {
   useFocusEffect(
     React.useCallback(() => {
       fetchNickname();
+      fetchTierInfo();
     }, [user])
   );
 
@@ -289,18 +320,38 @@ const ProfileTab = () => {
             <AppText style={styles.achievementNumber} text="12일" />
           </TouchableOpacity>
           <View style={styles.achievementBox}>
-            <AppText style={styles.achievementLabel} text="외운 단어수" />
-            <AppText style={styles.achievementNumber} text="243" />
+            <AppText style={styles.achievementLabel} text="암기한 단어" />
+            <AppText style={styles.achievementNumber} text={`${memorizedCount}개`} />
           </View>
         </View>
         <View style={styles.tierContainer}>
           <View style={styles.tierBox}>
-            <AppText style={styles.tierLabel} text="티어" />
-            <AppText style={styles.tierText} text="Sage" />
+            <AppText style={styles.tierLabel} text="현재 티어" />
+            <AppText style={styles.tierText} text={tierInfo?.currentTier || "Apprentice"} />
+            {tierInfo && tierInfo.nextTier !== 'Max' && (
+              <View style={styles.tierProgressContainer}>
+                <AppText style={styles.tierProgressText} text={`${tierInfo.nextTier}까지 ${tierInfo.nextTierRequirement - tierInfo.memorizedCount}개 남음`} />
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressBarFill, 
+                      { width: `${tierInfo.progressPercentage}%` }
+                    ]} 
+                  />
+                </View>
+                <AppText style={styles.tierProgressPercentage} text={`${tierInfo.progressPercentage}%`} />
+              </View>
+            )}
           </View>
           <Image
             style={styles.tierImage}
-            source={require("@/assets/images/sage.png")}
+            source={
+              tierInfo?.currentTier === 'Sage' 
+                ? require("@/assets/images/sage.png")
+                : tierInfo?.currentTier === 'Knight'
+                ? require("@/assets/images/knight.png")
+                : require("@/assets/images/apprentice.png")
+            }
           />
         </View>
 
@@ -469,9 +520,34 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   tierLabel: { fontSize: 16, fontWeight: "bold", marginBottom: 5 },
-  tierBox: {},
+  tierBox: { flex: 1 },
   tierText: { fontSize: 24, fontWeight: "bold", marginTop: 10 },
   tierImage: { width: 90, height: 90, borderRadius: 10 },
+  tierProgressContainer: {
+    marginTop: 15,
+  },
+  tierProgressText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 4,
+    marginBottom: 5,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: Colors.primary,
+    borderRadius: 4,
+  },
+  tierProgressPercentage: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "right",
+  },
   badgesContainer: { marginBottom: 20 },
   badgeBox: {
     flexDirection: "row",

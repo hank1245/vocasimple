@@ -18,6 +18,7 @@ import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
 import { Colors } from "@/constants/Colors";
 import { learningStreakService } from "@/utils/learningStreak";
+import { memorizedService } from "@/utils/memorizedService";
 
 const WritingPracticeScreen = () => {
   const router = useRouter();
@@ -29,6 +30,7 @@ const WritingPracticeScreen = () => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState<VocabularyWord[]>([]);
+  const [correctWordsIds, setCorrectWordsIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [progress] = useState(new Animated.Value(0));
 
@@ -39,7 +41,7 @@ const WritingPracticeScreen = () => {
     try {
       const { data, error } = await supabase
         .from("vocabulary")
-        .select("word, meaning, group, example")
+        .select("id, word, meaning, group, example")
         .eq("user_id", currentUser.id);
 
       if (error) {
@@ -117,6 +119,11 @@ const WritingPracticeScreen = () => {
     if (correct) {
       newCorrectAnswers = correctAnswers + 1;
       setCorrectAnswers(newCorrectAnswers);
+      
+      // Add correct word ID to the list for later memorization
+      if (currentWord.id) {
+        setCorrectWordsIds(prev => [...prev, currentWord.id]);
+      }
     } else {
       newWrongAnswers = [...wrongAnswers, currentWord];
       setWrongAnswers(newWrongAnswers);
@@ -147,6 +154,19 @@ const WritingPracticeScreen = () => {
       const user = getCurrentUser();
       if (user) {
         learningStreakService.addTodayCompletion(user.id);
+        
+        // Mark correct words as memorized
+        if (correctWordsIds.length > 0) {
+          memorizedService.markWordsAsMemorized(user.id, correctWordsIds)
+            .then(success => {
+              if (success) {
+                console.log(`Marked ${correctWordsIds.length} words as memorized`);
+              }
+            })
+            .catch(error => {
+              console.error("Error marking words as memorized:", error);
+            });
+        }
       }
       
       router.push({
