@@ -16,6 +16,8 @@ import AppText from "@/components/common/AppText";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/stores/authStore";
 import { nicknameService } from "@/utils/nicknameService";
+import { accountService } from "@/utils/accountService";
+import { exportService } from "@/utils/exportService";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const ProfileTab = () => {
@@ -25,6 +27,7 @@ const ProfileTab = () => {
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [newNickname, setNewNickname] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const fetchNickname = async () => {
     if (!user) return;
@@ -100,6 +103,89 @@ const ProfileTab = () => {
     ]);
   };
 
+  const handleExportVocabulary = async () => {
+    if (!user) {
+      Alert.alert("오류", "로그인이 필요합니다.");
+      return;
+    }
+
+    Alert.alert(
+      "단어 내보내기",
+      `저장된 단어들을 CSV 파일로 내보내시겠습니까?\n\n파일 공유 화면에서 이메일이나 다른 앱으로 전송할 수 있습니다.`,
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "내보내기",
+          onPress: async () => {
+            setIsExporting(true);
+            try {
+              const result = await exportService.exportVocabularyToEmail(
+                user.id,
+                user.email
+              );
+
+              if (result.success) {
+                Alert.alert("완료", result.message || "단어 목록이 성공적으로 공유되었습니다.");
+              } else {
+                Alert.alert("오류", result.error || "단어 내보내기 중 오류가 발생했습니다.");
+              }
+            } catch (error) {
+              console.error("Export vocabulary error:", error);
+              Alert.alert("오류", "단어 내보내기 중 예상치 못한 오류가 발생했습니다.");
+            } finally {
+              setIsExporting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "회원탈퇴",
+      "정말 탈퇴하시겠습니까?\n\n계정이 삭제된 이후에는 복구할 수 없습니다.\n\n• 저장된 모든 단어\n• 학습 기록\n• 프로필 정보\n\n위 모든 데이터가 영구적으로 삭제됩니다.",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "탈퇴하기",
+          style: "destructive",
+          onPress: async () => {
+            // 한 번 더 확인
+            Alert.alert(
+              "최종 확인",
+              "정말로 계정을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.",
+              [
+                { text: "취소", style: "cancel" },
+                {
+                  text: "삭제",
+                  style: "destructive",
+                  onPress: async () => {
+                    setLoading(true);
+                    try {
+                      const result = await accountService.deleteAccount();
+                      if (result.success) {
+                        Alert.alert("완료", "계정이 성공적으로 삭제되었습니다.");
+                        // 계정 삭제 후 로그아웃은 자동으로 처리됨
+                      } else {
+                        Alert.alert("오류", result.error || "계정 삭제 중 오류가 발생했습니다.");
+                      }
+                    } catch (error) {
+                      console.error("Delete account error:", error);
+                      Alert.alert("오류", "계정 삭제 중 예상치 못한 오류가 발생했습니다.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -134,6 +220,34 @@ const ProfileTab = () => {
           <AppText
             text="로그아웃"
             style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.exportButton}
+          onPress={handleExportVocabulary}
+          disabled={isExporting}
+        >
+          <MaterialIcons 
+            name="download" 
+            size={20} 
+            color="white" 
+            style={{ marginRight: 8 }}
+          />
+          <AppText
+            text={isExporting ? "내보내는 중..." : "단어 저장하기"}
+            style={[styles.exportButtonText, isExporting && styles.disabledText]}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteAccountButton}
+          onPress={handleDeleteAccount}
+          disabled={loading}
+        >
+          <AppText
+            text={loading ? "처리 중..." : "회원탈퇴"}
+            style={[styles.deleteAccountText, loading && styles.disabledText]}
           />
         </TouchableOpacity>
 
@@ -437,6 +551,40 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   disabledButtonText: {
+    color: "#ccc",
+  },
+  
+  // Export Button styles
+  exportButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 15,
+  },
+  exportButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  
+  // Delete Account Button styles
+  deleteAccountButton: {
+    alignItems: "center",
+    marginBottom: 20,
+    backgroundColor: "#ff6b6b",
+    padding: 10,
+    borderRadius: 15,
+    opacity: 1,
+  },
+  deleteAccountText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  disabledText: {
     color: "#ccc",
   },
 });

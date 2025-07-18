@@ -4,7 +4,10 @@
       "Bash(npx tsc:*)",
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npx expo install expo-file-system expo-sharing)"
     ],
     "deny": []
   }
