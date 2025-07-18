@@ -1,5 +1,5 @@
 import { Colors } from "./../../constants/Colors";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Image,
@@ -7,15 +7,81 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  TextInput,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/stores/authStore";
+import { nicknameService } from "@/utils/nicknameService";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const ProfileTab = () => {
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const [nickname, setNickname] = useState("");
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [newNickname, setNewNickname] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const fetchNickname = async () => {
+    if (!user) return;
+    
+    try {
+      const userNickname = await nicknameService.getUserNickname(user.id);
+      setNickname(userNickname);
+    } catch (error) {
+      console.error("Error fetching nickname:", error);
+      setNickname(nicknameService.generateDefaultNickname(user.id));
+    }
+  };
+
+  const handleEditNickname = () => {
+    setNewNickname(nickname.startsWith('#') ? nickname.substring(1) : nickname);
+    setIsEditingNickname(true);
+  };
+
+  const handleSaveNickname = async () => {
+    if (!user || !newNickname.trim()) return;
+
+    setLoading(true);
+    try {
+      const validation = nicknameService.validateNickname(newNickname);
+      if (!validation.isValid) {
+        Alert.alert("오류", validation.error);
+        setLoading(false);
+        return;
+      }
+
+      const success = await nicknameService.updateNickname(user.id, newNickname);
+      if (success) {
+        const updatedNickname = nicknameService.formatNicknameForDisplay(newNickname);
+        setNickname(updatedNickname);
+        setIsEditingNickname(false);
+        Alert.alert("성공", "닉네임이 변경되었습니다.");
+      } else {
+        Alert.alert("오류", "닉네임 변경에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Error updating nickname:", error);
+      Alert.alert("오류", "닉네임 변경 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingNickname(false);
+    setNewNickname("");
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchNickname();
+    }, [user])
+  );
 
   const OnPressRecord = () => {
     router.push("/FireCalendar");
@@ -44,12 +110,20 @@ const ProfileTab = () => {
           <AppText text="My Profile" style={styles.header} />
         </View>
         <View style={styles.profileHeader}>
-          <View>
+          <View style={styles.profileInfo}>
             <AppText
               style={styles.profileName}
               text={user?.email || "hank1234@gmail.com"}
             />
-            <AppText style={styles.username} text="#cutehorangi" />
+            <View style={styles.nicknameContainer}>
+              <AppText style={styles.username} text={nickname || "#loading..."} />
+              <TouchableOpacity 
+                style={styles.editButton}
+                onPress={handleEditNickname}
+              >
+                <MaterialIcons name="edit" size={16} color="#666" />
+              </TouchableOpacity>
+            </View>
             <AppText style={styles.joinDate} text="2025년 1월에 가입" />
           </View>
         </View>
@@ -124,6 +198,60 @@ const ProfileTab = () => {
           ))}
         </View>
       </ScrollView>
+
+      {/* Nickname Edit Modal */}
+      <Modal
+        visible={isEditingNickname}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelEdit}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <AppText style={styles.modalTitle} text="닉네임 변경" />
+            
+            <View style={styles.inputContainer}>
+              <AppText style={styles.inputLabel} text="새 닉네임" />
+              <View style={styles.nicknameInputContainer}>
+                <AppText style={styles.hashSymbol} text="#" />
+                <TextInput
+                  style={styles.nicknameInput}
+                  value={newNickname}
+                  onChangeText={setNewNickname}
+                  placeholder="닉네임을 입력하세요"
+                  placeholderTextColor="#999"
+                  maxLength={20}
+                  autoFocus={true}
+                />
+              </View>
+              <AppText style={styles.inputHint} text="영문, 숫자, 한글, 밑줄(_) 사용 가능 (3-20자)" />
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={handleCancelEdit}
+              >
+                <AppText style={styles.cancelButtonText} text="취소" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleSaveNickname}
+                disabled={loading || !newNickname.trim()}
+              >
+                <AppText 
+                  style={[
+                    styles.saveButtonText,
+                    (!newNickname.trim() || loading) && styles.disabledButtonText
+                  ]} 
+                  text={loading ? "저장 중..." : "저장"} 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -139,6 +267,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  nicknameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  editButton: {
+    padding: 4,
   },
   header: {
     fontWeight: "bold",
@@ -208,6 +347,98 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   badgeImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 24,
+    margin: 20,
+    minWidth: 300,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+    color: "#333",
+  },
+  nicknameInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#f9f9f9",
+  },
+  hashSymbol: {
+    fontSize: 16,
+    color: "#666",
+    marginRight: 4,
+  },
+  nicknameInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#333",
+  },
+  inputHint: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 6,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#f0f0f0",
+  },
+  saveButton: {
+    backgroundColor: Colors.primary,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "600",
+  },
+  saveButtonText: {
+    fontSize: 16,
+    color: "white",
+    fontWeight: "600",
+  },
+  disabledButtonText: {
+    color: "#ccc",
+  },
 });
 
 export default ProfileTab;
