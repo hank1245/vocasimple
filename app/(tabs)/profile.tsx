@@ -246,47 +246,6 @@ const ProfileTab = () => {
             <AppText style={styles.joinDate} text="2025년 1월에 가입" />
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={handleSignOut}
-        >
-          <AppText
-            text="로그아웃"
-            style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.exportButton}
-          onPress={handleExportVocabulary}
-          disabled={isExporting}
-        >
-          <MaterialIcons
-            name="download"
-            size={20}
-            color="white"
-            style={{ marginRight: 8 }}
-          />
-          <AppText
-            text={isExporting ? "내보내는 중..." : "단어 저장하기"}
-            style={[
-              styles.exportButtonText,
-              isExporting && styles.disabledText,
-            ]}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.deleteAccountButton}
-          onPress={handleDeleteAccount}
-          disabled={loading}
-        >
-          <AppText
-            text={loading ? "처리 중..." : "회원탈퇴"}
-            style={[styles.deleteAccountText, loading && styles.disabledText]}
-          />
-        </TouchableOpacity>
-
         <AppText style={styles.sectionTitle} text="Achievements" />
         <View style={styles.achievementsContainer}>
           <TouchableOpacity
@@ -449,6 +408,47 @@ const ProfileTab = () => {
             </View>
           )}
         </View>
+        <AppText style={styles.sectionTitle} text="설정" />
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={handleSignOut}
+        >
+          <AppText
+            text="로그아웃"
+            style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.exportButton}
+          onPress={handleExportVocabulary}
+          disabled={isExporting}
+        >
+          <MaterialIcons
+            name="download"
+            size={20}
+            color="white"
+            style={{ marginRight: 8 }}
+          />
+          <AppText
+            text={isExporting ? "내보내는 중..." : "단어 저장하기"}
+            style={[
+              styles.exportButtonText,
+              isExporting && styles.disabledText,
+            ]}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteAccountButton}
+          onPress={handleDeleteAccount}
+          disabled={loading}
+        >
+          <AppText
+            text={loading ? "처리 중..." : "회원탈퇴"}
+            style={[styles.deleteAccountText, loading && styles.disabledText]}
+          />
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Nickname Edit Modal */}
@@ -546,12 +546,17 @@ const styles = StyleSheet.create({
   joinDate: { color: "gray", fontSize: 16, marginTop: 4 },
   buttonContainer: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 20,
     backgroundColor: Colors.primary,
-    padding: 10,
+    padding: 20,
     borderRadius: 15,
   },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    paddingLeft: 6,
+  },
   achievementsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -615,6 +620,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 16,
+    paddingLeft: 6,
   },
   tierButtonsContainer: {
     flexDirection: "row",
@@ -819,7 +825,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 20,
     backgroundColor: "#4CAF50",
-    padding: 10,
+    padding: 20,
     borderRadius: 15,
   },
   exportButtonText: {
@@ -833,7 +839,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     backgroundColor: "#ff6b6b",
-    padding: 10,
+    padding: 20,
     borderRadius: 15,
     opacity: 1,
   },

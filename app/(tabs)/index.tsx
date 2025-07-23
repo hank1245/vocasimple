@@ -67,9 +67,9 @@ const Index = () => {
   const getFilterText = (filter: "all" | "memorized" | "unmemorized") => {
     switch (filter) {
       case "memorized":
-        return "암기됨";
+        return "외운 단어";
       case "unmemorized":
-        return "암기 안됨";
+        return "미암기";
       case "all":
       default:
         return "전체";
@@ -245,7 +245,7 @@ const Index = () => {
                   styles.filterOptionText,
                   currentFilter === "memorized" && styles.selectedFilterText,
                 ]}
-                text="암기됨"
+                text="외운 단어"
               />
             </TouchableOpacity>
 
@@ -261,7 +261,7 @@ const Index = () => {
                   styles.filterOptionText,
                   currentFilter === "unmemorized" && styles.selectedFilterText,
                 ]}
-                text="암기 안됨"
+                text="미암기"
               />
             </TouchableOpacity>
 

@@ -225,7 +225,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
                     size={16}
                     color="#4CAF50"
                   />
-                  <AppText style={styles.memorizedText} text="암기됨" />
+                  <AppText style={styles.memorizedText} text="외운 단어" />
                 </View>
               )}
             </View>
@@ -313,10 +313,9 @@ const styles = StyleSheet.create({
     color: "grey",
   },
   subItem: {
-    marginLeft: 16,
     color: "grey",
     fontSize: 14,
-    marginTop: 4,
+    marginTop: 6,
   },
   editButton: {
     position: "absolute",

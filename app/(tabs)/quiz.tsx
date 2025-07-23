@@ -292,7 +292,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
-    marginBottom: 10,
   },
   progressText: {
     fontSize: 16,
@@ -302,7 +301,7 @@ const styles = StyleSheet.create({
   },
   flameIcon: {
     width: 82,
-    height: 89,
+    height: 85,
     marginTop: 20,
     marginBottom: 20,
   },
@@ -318,11 +317,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#ddd",
+    marginTop: 2,
   },
   clickHintText: {
-    fontSize: 12,
+    fontSize: 15,
     color: "#666",
-    fontWeight: "500",
+    fontWeight: "700",
   },
 
   // Modal styles
