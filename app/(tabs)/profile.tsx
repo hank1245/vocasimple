@@ -227,10 +227,7 @@ const ProfileTab = () => {
         </View>
         <View style={styles.profileHeader}>
           <View style={styles.profileInfo}>
-            <AppText
-              style={styles.profileName}
-              text={user?.email || "hank1234@gmail.com"}
-            />
+            <AppText style={styles.profileName} text={user?.email || ""} />
             <View style={styles.nicknameContainer}>
               <AppText
                 style={styles.username}
@@ -243,7 +240,16 @@ const ProfileTab = () => {
                 <MaterialIcons name="edit" size={16} color="#666" />
               </TouchableOpacity>
             </View>
-            <AppText style={styles.joinDate} text="2025년 1월에 가입" />
+            <AppText
+              style={styles.joinDate}
+              text={
+                user?.created_at
+                  ? `${new Date(user.created_at).getFullYear()}년 ${
+                      new Date(user.created_at).getMonth() + 1
+                    }월에 가입`
+                  : "가입일 정보 없음"
+              }
+            />
           </View>
         </View>
         <AppText style={styles.sectionTitle} text="Achievements" />

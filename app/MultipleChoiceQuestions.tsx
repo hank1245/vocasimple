@@ -46,16 +46,18 @@ const MultipleChoiceQuestionsScreen = () => {
 
   const generateQuizQuestions = (words: VocabularyWord[]) => {
     const questions: QuizQuestion[] = [];
-    const totalQuestions = Math.min(5, words.length);
-    const usedWords = new Set<string>();
+
+    // Get unique words to avoid infinite loop
+    const uniqueWords = words.filter(
+      (word, index, self) =>
+        index === self.findIndex((w) => w.word === word.word)
+    );
+
+    const totalQuestions = Math.min(5, uniqueWords.length);
+    const shuffledWords = [...uniqueWords].sort(() => Math.random() - 0.5);
 
     for (let i = 0; i < totalQuestions; i++) {
-      let correctWord: VocabularyWord;
-      do {
-        correctWord = words[Math.floor(Math.random() * words.length)];
-      } while (usedWords.has(correctWord.word));
-
-      usedWords.add(correctWord.word);
+      const correctWord = shuffledWords[i];
 
       const wrongOptions = words
         .filter((w) => w.word !== correctWord.word)
@@ -209,10 +211,8 @@ const MultipleChoiceQuestionsScreen = () => {
       } else {
         // Not enough words for quiz
         console.log("Not enough words for quiz, showing toast");
+        router.back();
         Toast.error("저장한 단어가 없어요! 단어를 더 모아보세요!");
-        setTimeout(() => {
-          router.back();
-        }, 1500); // Give time for toast to show
       }
     }
   }, [vocabularyLoading, vocabularyData, router]);

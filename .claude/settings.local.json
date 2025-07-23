@@ -7,7 +7,9 @@
       "Bash(npx eslint:*)",
       "Bash(mkdir:*)",
       "Bash(npm install:*)",
-      "Bash(npx expo install expo-file-system expo-sharing)"
+      "Bash(npx expo install expo-file-system expo-sharing)",
+      "Bash(find:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

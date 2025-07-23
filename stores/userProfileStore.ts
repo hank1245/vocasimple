@@ -117,16 +117,18 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
         learningStreakService.getMarkedDates(user.id).catch(() => ({})),
       ]);
 
+      const finalTierInfo = tierInfoResult || {
+        currentTier: 'Apprentice',
+        memorizedCount: memorizedCountResult,
+        nextTier: 'Knight',
+        nextTierRequirement: 500,
+        progressPercentage: 0,
+      };
+
       // Update all state at once
       set({
         nickname: nicknameResult,
-        tierInfo: tierInfoResult || {
-          currentTier: 'Apprentice',
-          memorizedCount: memorizedCountResult,
-          nextTier: 'Knight',
-          nextTierRequirement: 500,
-          progressPercentage: 0,
-        },
+        tierInfo: finalTierInfo,
         memorizedCount: memorizedCountResult,
         totalWords: totalWordsResult,
         streakData: {
@@ -136,6 +138,7 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
           maxStreak: maxStreakResult,
           markedDates: markedDatesResult,
         },
+        selectedTier: finalTierInfo.currentTier as "Sage" | "Knight" | "Apprentice",
         lastFetch: Date.now(),
         loading: false,
       });
@@ -156,6 +159,7 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
           nextTierRequirement: 500,
           progressPercentage: 0,
         },
+        selectedTier: 'Apprentice',
         memorizedCount: 0,
         totalWords: 0,
         streakData: {
@@ -200,14 +204,17 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
         memorizedService.getTotalWordsCount(user.id),
       ]);
 
+      const finalTierInfo = tierInfo || {
+        currentTier: 'Apprentice',
+        memorizedCount: memorizedCount || 0,
+        nextTier: 'Knight',
+        nextTierRequirement: 500,
+        progressPercentage: 0,
+      };
+
       set({
-        tierInfo: tierInfo || {
-          currentTier: 'Apprentice',
-          memorizedCount: memorizedCount || 0,
-          nextTier: 'Knight',
-          nextTierRequirement: 500,
-          progressPercentage: 0,
-        },
+        tierInfo: finalTierInfo,
+        selectedTier: finalTierInfo.currentTier as "Sage" | "Knight" | "Apprentice",
         memorizedCount: memorizedCount || 0,
         totalWords: totalWords || 0,
       });
