@@ -595,6 +595,7 @@ const styles = StyleSheet.create({
   tierImage: { width: 90, height: 90, borderRadius: 10 },
   tierProgressContainer: {
     marginTop: 15,
+    paddingRight: 20,
   },
   tierProgressText: {
     fontSize: 14,
@@ -602,7 +603,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressBar: {
-    height: 8,
+    height: 10,
     backgroundColor: "#f0f0f0",
     borderRadius: 4,
     marginBottom: 5,
