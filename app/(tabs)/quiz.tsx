@@ -127,7 +127,7 @@ const QuizTab = () => {
             onPress={() => router.push("/WritingPractice")}
           >
             <Entypo name="pencil" size={34} color="white" />
-            <AppText style={styles.cardText} text="Writing Practice" />
+            <AppText style={styles.cardText} text="쓰기 연습" />
           </TouchableOpacity>
         </View>
 

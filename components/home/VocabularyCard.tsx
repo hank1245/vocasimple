@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   },
   editIconContainer: {
     backgroundColor: "#4CAF50",
-    borderRadius: 20,
+    borderRadius: 30,
     padding: 10,
     justifyContent: "center",
     alignItems: "center",
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   },
   deleteIconContainer: {
     backgroundColor: "#ff4444",
-    borderRadius: 20,
+    borderRadius: 30,
     padding: 10,
     justifyContent: "center",
     alignItems: "center",

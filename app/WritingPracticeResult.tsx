@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/Colors";
@@ -13,14 +8,15 @@ import { VocabularyWord } from "@/types/common";
 
 const WritingPracticeResultScreen = () => {
   const router = useRouter();
-  const { totalQuestions, correctAnswers, wrongAnswers } = useLocalSearchParams<{
-    totalQuestions: string;
-    correctAnswers: string;
-    wrongAnswers: string;
-  }>();
+  const { totalQuestions, correctAnswers, wrongAnswers } =
+    useLocalSearchParams<{
+      totalQuestions: string;
+      correctAnswers: string;
+      wrongAnswers: string;
+    }>();
 
-  const wrongAnswersList: VocabularyWord[] = wrongAnswers 
-    ? JSON.parse(wrongAnswers) 
+  const wrongAnswersList: VocabularyWord[] = wrongAnswers
+    ? JSON.parse(wrongAnswers)
     : [];
 
   const handleDone = () => {
@@ -29,12 +25,15 @@ const WritingPracticeResultScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <View style={styles.header}>
-          <AppText style={styles.title} text="Writing Practice Result" />
-          <AppText 
-            style={styles.score} 
-            text={`Result: ${correctAnswers}/${totalQuestions}`} 
+          <AppText style={styles.title} text="Writing Practice" />
+          <AppText
+            style={styles.score}
+            text={`Result: ${correctAnswers}/${totalQuestions}`}
           />
         </View>
 
@@ -52,7 +51,10 @@ const WritingPracticeResultScreen = () => {
 
         {wrongAnswersList.length === 0 && (
           <View style={styles.perfectSection}>
-            <AppText style={styles.perfectText} text="완벽해요! 모든 문제를 맞혔습니다!" />
+            <AppText
+              style={styles.perfectText}
+              text="완벽해요! 모든 문제를 맞혔습니다!"
+            />
           </View>
         )}
       </ScrollView>
@@ -72,9 +74,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
   header: {
     alignItems: "center",
-    paddingVertical: 30,
+    paddingTop: 30,
     paddingHorizontal: 20,
   },
   title: {
@@ -84,17 +90,20 @@ const styles = StyleSheet.create({
   },
   score: {
     fontSize: 48,
+    marginTop: 10,
     fontWeight: "bold",
     color: Colors.primary,
   },
   wrongSection: {
     paddingHorizontal: 20,
     paddingTop: 20,
+    alignItems: "center",
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
+    textAlign: "center",
   },
   wrongItem: {
     backgroundColor: "#f5f5f5",
@@ -113,12 +122,13 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   perfectSection: {
-    paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingHorizontal: 10,
     alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
   },
   perfectText: {
-    fontSize: 18,
+    fontSize: 22,
     textAlign: "center",
     color: Colors.primary,
   },

@@ -118,12 +118,11 @@ const Index = () => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerContainer}>
         <View style={styles.filterButtonContainer}>
-          <AppText style={styles.filterLabel} text="Vocabulary" />
           <TouchableOpacity
             style={styles.filterButton}
             onPress={() => setShowFilterModal(true)}
           >
-            <Octicons name="stack" size={24} color="black" />
+            <Octicons name="stack" size={24} color="white" />
           </TouchableOpacity>
         </View>
         <View style={styles.add}>
@@ -133,6 +132,7 @@ const Index = () => {
         </View>
       </View>
       <View style={styles.container}>
+        <AppText style={styles.title} text="Vocabulary" />
         <View style={styles.topbar}>
           <AppText
             style={styles.filterStatusText}
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingVertical: 10,
+    paddingVertical: 3,
   },
   filterButtonContainer: {
     alignItems: "center",
@@ -298,8 +298,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   filterButton: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     borderRadius: 25,
     backgroundColor: Colors.primary,
     justifyContent: "center",
@@ -312,17 +312,17 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 16,
+    padding: 14,
   },
   topbar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
   },
   title: {
-    fontSize: 30,
+    fontSize: 25,
     fontWeight: "700",
+    paddingLeft: 2,
   },
   modeButtons: {
     flexDirection: "row",
