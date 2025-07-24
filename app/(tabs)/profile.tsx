@@ -1,5 +1,5 @@
 import { Colors } from "./../../constants/Colors";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Image,
@@ -34,16 +34,13 @@ const ProfileTab = () => {
     nickname,
     tierInfo,
     memorizedCount,
-    totalWords,
     streakData,
     leaderboardData,
     selectedTier,
-    loading: profileLoading,
     nicknameLoading,
     fetchAllData,
     updateNickname,
     setSelectedTier,
-    shouldRefetch,
   } = useUserProfileStore();
 
   const handleEditNickname = () => {
@@ -86,6 +83,10 @@ const ProfileTab = () => {
   const handleTierSelect = (tier: "Sage" | "Knight" | "Apprentice") => {
     setSelectedTier(tier);
   };
+
+
+
+
 
   useFocusEffect(
     React.useCallback(() => {
@@ -353,7 +354,7 @@ const ProfileTab = () => {
 
           {/* Leaderboard List */}
           <View style={styles.leaderboardList}>
-            {leaderboardData?.users.slice(0, 10).map((user, index) => (
+            {leaderboardData?.users.slice(0, 10).map((user) => (
               <View
                 key={user.user_id}
                 style={[
@@ -414,7 +415,7 @@ const ProfileTab = () => {
             </View>
           )}
         </View>
-        <AppText style={styles.sectionTitle} text="설정" />
+
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={handleSignOut}
@@ -858,6 +859,7 @@ const styles = StyleSheet.create({
   disabledText: {
     color: "#ccc",
   },
+
 });
 
 export default ProfileTab;

@@ -37,7 +37,6 @@ const Index = () => {
   const {
     data: vocabularyList = [],
     isLoading: loading,
-    refetch: refetchVocabulary,
     error,
   } = useVocabulary(currentFilter);
 
@@ -113,6 +112,36 @@ const Index = () => {
       },
     });
   };
+
+  // 에러 상태 처리
+  if (error) {
+    console.error("Vocabulary query error:", error);
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.errorContainer}>
+          <AppText
+            text="데이터를 불러오는 중 오류가 발생했습니다"
+            style={styles.errorText}
+          />
+          <AppText
+            text={error.message || "알 수 없는 오류"}
+            style={styles.errorDetailText}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // 로딩 상태 처리
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <AppText text="로딩 중..." style={styles.loadingText} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -411,6 +440,35 @@ const styles = StyleSheet.create({
   },
   modalCancelText: {
     fontSize: 16,
+    color: "#666",
+  },
+  
+  // Error and loading styles
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#e74c3c",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  errorDetailText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 18,
     color: "#666",
   },
 });

@@ -19,7 +19,6 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
   const isDisabled = loading || !email.trim() || !password.trim();
 
   async function signInWithEmail() {
-    console.log("로그인 시작");
     setLoading(true);
 
     try {
@@ -28,23 +27,16 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
         password,
       });
 
-      console.log("로그인 응답:", { data, error });
-
       if (error) {
-        console.log("로그인 에러:", error);
+        console.error("Login error:", error);
         Alert.alert("존재하지 않거나 인증이 완료되지 않은 계정입니다.");
       } else {
-        console.log(
-          "로그인 성공 - Zustand store가 자동으로 세션을 업데이트합니다"
-        );
-        // Zustand store의 onAuthStateChange 리스너가 자동으로 세션을 업데이트합니다
         bottomSheetRef.current?.close();
       }
     } catch (err) {
-      console.log("로그인 예외:", err);
+      console.error("Login exception:", err);
       Alert.alert("로그인 중 오류가 발생했습니다.");
     } finally {
-      console.log("로그인 종료");
       setLoading(false);
     }
   }

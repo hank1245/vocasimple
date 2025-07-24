@@ -2,6 +2,7 @@ import "dotenv/config";
 
 export default {
   expo: {
+    owner: "hank1245",
     name: "vocasimple",
     slug: "vocasimple",
     version: "1.0.0",
@@ -10,13 +11,21 @@ export default {
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
-      supportsTablet: true,
+      bundleIdentifier: "com.hank1245.vocasimple",
     },
     android: {
+      package: "com.hank1245.vocasimple",
       adaptiveIcon: {
         foregroundImage: "./assets/images/icon.png",
         backgroundColor: "#6D60F8",
       },
+      jsEngine: "hermes",
+      enableProguardInReleaseBuilds: false,
+      usesCleartextTraffic: true,
+      networkSecurityConfig: {
+        domain: ["krxessvmecpbjsqyrqgw.supabase.co", "api.anthropic.com"],
+        includeSubdomains: true
+      }
     },
     web: {
       scheme: "vocasimple",
@@ -42,13 +51,16 @@ export default {
       typedRoutes: true,
     },
     extra: {
+      eas: {
+        projectId: "993c9bc0-ed27-47ab-bc0a-5959a0e33d19",
+      },
       router: {
         origin: false,
       },
-      EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-      EXPO_PUBLIC_CLAUDE_API_KEY: process.env.EXPO_PUBLIC_CLAUDE_API_KEY,
-      EXPO_PUBLIC_CLAUDE_API_URL: process.env.EXPO_PUBLIC_CLAUDE_API_URL,
+      EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || "https://krxessvmecpbjsqyrqgw.supabase.co",
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyeGVzc3ZtZWNwYmpzcXlycWd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzEwNTIsImV4cCI6MjA2ODMwNzA1Mn0.PwCrfVkrBxJMcl6C74j9NJT8lM7wF0eShjBvakMRATY",
+      EXPO_PUBLIC_CLAUDE_API_KEY: process.env.EXPO_PUBLIC_CLAUDE_API_KEY || "",
+      EXPO_PUBLIC_CLAUDE_API_URL: process.env.EXPO_PUBLIC_CLAUDE_API_URL || "https://api.anthropic.com/v1/messages",
     },
   },
 };

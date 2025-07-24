@@ -38,22 +38,31 @@ const SignUpForm = ({ changeFormType }: Props) => {
       Alert.alert("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
       return;
     }
+    
     setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
+    
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      });
 
-    if (error) {
-      Alert.alert(error.message);
-    } else if (!session) {
-      Alert.alert("계정을 생성했습니다. 이메일 인증 후 로그인해 주세요!");
-      changeFormType("LOGIN");
+      if (error) {
+        console.error("Signup error:", error);
+        Alert.alert("회원가입 실패", error.message);
+      } else if (!session) {
+        Alert.alert("계정을 생성했습니다. 이메일 인증 후 로그인해 주세요!");
+        changeFormType("LOGIN");
+      }
+    } catch (err) {
+      console.error("Signup exception:", err);
+      Alert.alert("네트워크 오류", "인터넷 연결을 확인해주세요.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   const onChangeFormToLogin = () => {

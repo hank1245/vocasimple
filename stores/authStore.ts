@@ -25,26 +25,29 @@ export const useAuthStore = create<AuthStore>()(
     initialize: async () => {
       const state = get();
       if (state.initialized) {
-        console.log("Auth already initialized, skipping...");
         return;
       }
 
-      console.log("Initializing auth store...");
+      // 타임아웃 설정 (10초)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Auth initialization timeout")), 10000);
+      });
 
       try {
-        // 초기 세션 가져오기 (한 번만)
+        // 초기 세션 가져오기 (타임아웃과 함께)
+        const sessionPromise = supabase.auth.getSession();
+        const result = await Promise.race([sessionPromise, timeoutPromise]);
+        
         const {
           data: { session },
           error,
-        } = await supabase.auth.getSession();
+        } = result as any;
 
         if (error) {
           console.error("Session fetch error:", error);
           set({ loading: false, initialized: true });
           return;
         }
-
-        console.log("Initial session:", session?.user?.id ? "Found" : "None");
 
         set({
           session,
@@ -53,15 +56,12 @@ export const useAuthStore = create<AuthStore>()(
           initialized: true,
         });
 
-        // 세션 변경 리스너 설정 (한 번만)
+        // 세션 변경 리스너 설정
         const { data: authListener } = supabase.auth.onAuthStateChange(
           (event: AuthChangeEvent, session: Session | null) => {
-            console.log("Auth state changed:", event, session?.user?.id);
-
             // 불필요한 리렌더링 방지
             const currentState = get();
             if (currentState.session?.user?.id === session?.user?.id) {
-              console.log("Session unchanged, skipping update");
               return;
             }
 
@@ -76,14 +76,19 @@ export const useAuthStore = create<AuthStore>()(
         set({ authListener });
       } catch (error) {
         console.error("Auth initialization error:", error);
-        set({ loading: false, initialized: true });
+        // 에러가 발생해도 앱이 계속 실행되도록 함
+        set({ 
+          loading: false, 
+          initialized: true,
+          session: null,
+          user: null 
+        });
       }
     },
 
     cleanup: () => {
       const state = get();
       if (state.authListener) {
-        console.log("Cleaning up auth listener");
         state.authListener.subscription.unsubscribe();
         set({ authListener: null });
       }
