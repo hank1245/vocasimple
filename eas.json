@@ -23,6 +23,13 @@
       "android": {
         "buildType": "app-bundle"
       }
+    },
+    "internal": {
+      "distribution": "internal",
+      "developmentClient": true,
+      "ios": {
+        "enterpriseProvisioning": "adhoc"
+      }
     }
   },
   "submit": {
