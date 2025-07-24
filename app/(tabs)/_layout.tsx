@@ -7,7 +7,6 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { Entypo, FontAwesome } from "@expo/vector-icons";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   return (
     <Tabs
       screenOptions={{
@@ -17,6 +16,7 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarStyle: {
           backgroundColor: Colors.tabBarBackground,
+          paddingTop: 6,
           ...(Platform.OS === "ios" ? { position: "absolute" } : {}),
         },
       }}

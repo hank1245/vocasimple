@@ -9,6 +9,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
@@ -97,78 +98,80 @@ const AddScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Pressable onPress={onGoBack}>
-            <Ionicons name="close" size={34} color="black" />
-          </Pressable>
-          <Pressable onPress={createWordMutation.isPending ? () => {} : onSave}>
-            {createWordMutation.isPending ? (
-              <ActivityIndicator size="small" color={Colors.primary} />
-            ) : (
-              <Entypo name="check" size={30} color={Colors.primary} />
-            )}
-          </Pressable>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <AppText style={styles.label} text="단어" />
-          <TextInput
-            style={styles.input}
-            value={word}
-            onChangeText={setWord}
-            onBlur={() => Keyboard.dismiss()}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <AppText style={styles.label} text="뜻" />
-          <TextInput
-            style={styles.input}
-            value={meaning}
-            onChangeText={setMeaning}
-            onBlur={() => Keyboard.dismiss()}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <AppText style={styles.label} text="예문(선택)" />
-          <TextInput
-            style={styles.input}
-            value={example}
-            onChangeText={setExample}
-            onBlur={() => Keyboard.dismiss()}
-          />
-          <View style={styles.aiButton}>
-            <TouchableOpacity
-              style={[
-                styles.aiButtonContainer,
-                aiLoading && styles.aiButtonDisabled,
-              ]}
-              onPress={onCreateExample}
-              disabled={aiLoading}
-            >
-              {aiLoading ? (
-                <ActivityIndicator size="small" color="#6D60F8" />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Pressable onPress={onGoBack}>
+              <Ionicons name="close" size={34} color="black" />
+            </Pressable>
+            <Pressable onPress={createWordMutation.isPending ? () => {} : onSave}>
+              {createWordMutation.isPending ? (
+                <ActivityIndicator size="small" color={Colors.primary} />
               ) : (
-                <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
+                <Entypo name="check" size={30} color={Colors.primary} />
               )}
-              <AppText
-                style={[styles.aiText, aiLoading && styles.aiTextDisabled]}
-                text={aiLoading ? "AI로 예문 생성중..." : "AI로 예문 생성하기"}
-              />
-            </TouchableOpacity>
+            </Pressable>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <AppText style={styles.label} text="단어" />
+            <TextInput
+              style={styles.input}
+              value={word}
+              onChangeText={setWord}
+              onBlur={() => Keyboard.dismiss()}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <AppText style={styles.label} text="뜻" />
+            <TextInput
+              style={styles.input}
+              value={meaning}
+              onChangeText={setMeaning}
+              onBlur={() => Keyboard.dismiss()}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <AppText style={styles.label} text="예문(선택)" />
+            <TextInput
+              style={styles.input}
+              value={example}
+              onChangeText={setExample}
+              onBlur={() => Keyboard.dismiss()}
+            />
+            <View style={styles.aiButton}>
+              <TouchableOpacity
+                style={[
+                  styles.aiButtonContainer,
+                  aiLoading && styles.aiButtonDisabled,
+                ]}
+                onPress={onCreateExample}
+                disabled={aiLoading}
+              >
+                {aiLoading ? (
+                  <ActivityIndicator size="small" color="#6D60F8" />
+                ) : (
+                  <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
+                )}
+                <AppText
+                  style={[styles.aiText, aiLoading && styles.aiTextDisabled]}
+                  text={aiLoading ? "AI로 예문 생성중..." : "AI로 예문 생성하기"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-      <Toast
-        duration={2000}
-        animationIn="slideInRight"
-        animationOut="slideOutRight"
-        position="bottom"
-      />
-    </SafeAreaView>
+        <Toast
+          duration={2000}
+          animationIn="slideInRight"
+          animationOut="slideOutRight"
+          position="bottom"
+        />
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 

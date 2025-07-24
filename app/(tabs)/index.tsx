@@ -310,6 +310,7 @@ const Index = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: 'white',
   },
   headerContainer: {
     flexDirection: "row",
