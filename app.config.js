@@ -51,6 +51,7 @@ export default {
       resizeMode: "contain",
       backgroundColor: "#6D60F8",
     },
+    scheme: "vocasimple",
     plugins: [
       "expo-router",
       [
