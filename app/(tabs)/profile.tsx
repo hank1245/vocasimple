@@ -84,10 +84,6 @@ const ProfileTab = () => {
     setSelectedTier(tier);
   };
 
-
-
-
-
   useFocusEffect(
     React.useCallback(() => {
       // Always fetch fresh data when screen comes into focus to ensure accuracy
@@ -544,7 +540,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontWeight: "bold",
-    fontSize: 18,
+    fontSize: 24,
     marginBottom: 20,
   },
   profileImage: { width: 50, height: 50, borderRadius: 25, marginRight: 10 },
@@ -859,7 +855,6 @@ const styles = StyleSheet.create({
   disabledText: {
     color: "#ccc",
   },
-
 });
 
 export default ProfileTab;

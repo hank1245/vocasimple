@@ -200,7 +200,8 @@ const MultipleChoiceQuestionsScreen = () => {
 
   useEffect(() => {
     // Process vocabulary data when it's loaded
-    if (!vocabularyLoading && vocabularyData !== undefined) {
+    // Only check on initial load, not when quiz is already in progress
+    if (!vocabularyLoading && vocabularyData !== undefined && quizQuestions.length === 0) {
       console.log("Vocabulary data loaded:", vocabularyData.length, "words");
 
       if (vocabularyData.length >= 4) {
@@ -222,7 +223,7 @@ const MultipleChoiceQuestionsScreen = () => {
         );
       }
     }
-  }, [vocabularyLoading, vocabularyData, router]);
+  }, [vocabularyLoading, vocabularyData, router, quizQuestions.length]);
 
   if (vocabularyLoading || isLoading) {
     return (

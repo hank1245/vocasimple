@@ -97,8 +97,15 @@ const AddScreen = () => {
     }
   };
 
+  const handleBackgroundPress = (event: any) => {
+    // Only dismiss keyboard if user taps on the background, not on input fields
+    if (event.target === event.currentTarget) {
+      Keyboard.dismiss();
+    }
+  };
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={handleBackgroundPress}>
       <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
         <View style={styles.container}>
           <View style={styles.header}>
@@ -120,7 +127,6 @@ const AddScreen = () => {
               style={styles.input}
               value={word}
               onChangeText={setWord}
-              onBlur={() => Keyboard.dismiss()}
             />
           </View>
 
@@ -130,7 +136,6 @@ const AddScreen = () => {
               style={styles.input}
               value={meaning}
               onChangeText={setMeaning}
-              onBlur={() => Keyboard.dismiss()}
             />
           </View>
 
@@ -140,7 +145,6 @@ const AddScreen = () => {
               style={styles.input}
               value={example}
               onChangeText={setExample}
-              onBlur={() => Keyboard.dismiss()}
             />
             <View style={styles.aiButton}>
               <TouchableOpacity

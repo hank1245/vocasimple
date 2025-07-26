@@ -62,8 +62,15 @@ export default function Index() {
     },
   });
 
+  const handleBackgroundPress = (event: any) => {
+    // Only dismiss keyboard if user taps on the background, not on input fields
+    if (event.target === event.currentTarget) {
+      Keyboard.dismiss();
+    }
+  };
+
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={handleBackgroundPress}>
       <GestureHandlerRootView
         style={{ backgroundColor: Colors.primary, flex: 1 }}
       >
@@ -98,7 +105,7 @@ export default function Index() {
           }}
         >
           <BottomSheetView style={styles.contentContainer}>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <TouchableWithoutFeedback onPress={handleBackgroundPress}>
               <View style={{ flex: 1 }}>
                 <Form bottomSheetRef={bottomSheetRef} />
               </View>

@@ -111,7 +111,7 @@ const EditVocabularyScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable onPress={onGoBack}>
