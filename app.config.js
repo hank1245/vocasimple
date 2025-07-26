@@ -1,5 +1,7 @@
 import "dotenv/config";
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 export default {
   expo: {
     owner: "hank1245",
@@ -21,9 +23,7 @@ export default {
       config: {
         usesNonExemptEncryption: false
       },
-      runtimeVersion: {
-        policy: "appVersion"
-      }
+      runtimeVersion: IS_PRODUCTION ? { policy: "appVersion" } : "1.0.0"
     },
     android: {
       package: "com.hank1245.vocasimple",
