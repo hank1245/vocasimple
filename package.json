@@ -57,7 +57,8 @@
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
     "toastify-react-native": "^7.2.1",
-    "zustand": "^4.5.7"
+    "zustand": "^4.5.7",
+    "expo-updates": "~0.27.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

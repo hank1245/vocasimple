@@ -7,11 +7,23 @@ export default {
     slug: "vocasimple",
     version: "1.0.0",
     orientation: "portrait",
+    updates: {
+      url: "https://u.expo.dev/993c9bc0-ed27-47ab-bc0a-5959a0e33d19"
+    },
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
       bundleIdentifier: "com.hank1245.vocasimple",
+      buildNumber: "1",
+      supportsTablet: true,
+      requireFullScreen: false,
+      config: {
+        usesNonExemptEncryption: false
+      },
+      runtimeVersion: {
+        policy: "appVersion"
+      }
     },
     android: {
       package: "com.hank1245.vocasimple",
@@ -25,7 +37,8 @@ export default {
       networkSecurityConfig: {
         domain: ["krxessvmecpbjsqyrqgw.supabase.co", "api.anthropic.com"],
         includeSubdomains: true
-      }
+      },
+      runtimeVersion: "1.0.0"
     },
     web: {
       scheme: "vocasimple",
