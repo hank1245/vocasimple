@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -13,7 +14,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { getCurrentUser } from "@/stores/authStore";
 import { VocabularyWord } from "@/types/common";
 import AppText from "@/components/common/AppText";
-import { Toast } from "toastify-react-native";
 import { Colors } from "@/constants/Colors";
 import { learningStreakService } from "@/utils/learningStreak";
 import { useVocabulary } from "@/hooks/useVocabularyQuery";
@@ -40,11 +40,17 @@ const FlashcardScreen = () => {
     try {
       // Use TanStack Query data instead of direct API call
       if (!vocabularyData || vocabularyData.length === 0) {
-        console.log("No vocabulary words found for flashcard, showing toast");
-        Toast.error("저장한 단어가 없어요! 단어를 더 모아보세요!");
-        setTimeout(() => {
-          router.back();
-        }, 1500);
+        console.log("No vocabulary words found for flashcard, showing alert");
+        Alert.alert(
+          "단어 없음",
+          "저장한 단어가 없어요! 단어를 더 모아보세요!",
+          [
+            {
+              text: "확인",
+              onPress: () => router.back(),
+            },
+          ]
+        );
         return;
       }
 
@@ -62,10 +68,16 @@ const FlashcardScreen = () => {
       }).start();
     } catch (error) {
       console.error("Error:", error);
-      Toast.error("플래시카드를 생성하는 중 오류가 발생했습니다.");
-      setTimeout(() => {
-        router.back();
-      }, 1500);
+      Alert.alert(
+        "오류",
+        "플래시카드를 생성하는 중 오류가 발생했습니다.",
+        [
+          {
+            text: "확인",
+            onPress: () => router.back(),
+          },
+        ]
+      );
     } finally {
       setIsLoading(false);
     }

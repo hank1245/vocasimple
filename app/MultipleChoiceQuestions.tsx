@@ -1,13 +1,12 @@
 import { Colors } from "./../constants/Colors";
 import React, { useState, useEffect } from "react";
-import { View, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Animated, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { getCurrentUser } from "@/stores/authStore";
 import { VocabularyWord, QuizQuestion } from "@/types/common";
 import AppText from "@/components/common/AppText";
-import { Toast } from "toastify-react-native";
 import { learningStreakService } from "@/utils/learningStreak";
 import {
   useVocabulary,
@@ -160,8 +159,8 @@ const MultipleChoiceQuestionsScreen = () => {
         learningStreakService.addTodayCompletion(user.id);
 
         // Use passed arrays or fallback to component state
-        const correctIds = finalCorrectWordsIds || correctWordsIds;
-        const wrongIds = finalWrongWordsIds || wrongWordsIds;
+        const correctIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
+        const wrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
 
         // Mark correct words as memorized
         if (correctIds.length > 0) {
@@ -210,9 +209,17 @@ const MultipleChoiceQuestionsScreen = () => {
         setIsLoading(false);
       } else {
         // Not enough words for quiz
-        console.log("Not enough words for quiz, showing toast");
-        router.back();
-        Toast.error("저장한 단어가 없어요! 단어를 더 모아보세요!");
+        console.log("Not enough words for quiz, showing alert");
+        Alert.alert(
+          "단어 부족",
+          "퀴즈를 진행하려면 최소 4개의 단어가 필요해요! 단어를 더 모아보세요!",
+          [
+            {
+              text: "확인",
+              onPress: () => router.back(),
+            },
+          ]
+        );
       }
     }
   }, [vocabularyLoading, vocabularyData, router]);

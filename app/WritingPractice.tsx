@@ -6,6 +6,7 @@ import {
   Animated,
   TextInput,
   Text,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -17,9 +18,11 @@ import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
 import { Colors } from "@/constants/Colors";
 import { learningStreakService } from "@/utils/learningStreak";
+import ToastManager from "toastify-react-native";
 import {
   useVocabulary,
   useMarkWordsAsMemorized,
+  useMarkWordsAsUnmemorized,
 } from "@/hooks/useVocabularyQuery";
 
 const WritingPracticeScreen = () => {
@@ -33,6 +36,7 @@ const WritingPracticeScreen = () => {
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState<VocabularyWord[]>([]);
   const [correctWordsIds, setCorrectWordsIds] = useState<string[]>([]);
+  const [wrongWordsIds, setWrongWordsIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [progress] = useState(new Animated.Value(0));
 
@@ -40,10 +44,13 @@ const WritingPracticeScreen = () => {
   const { data: vocabularyData = [], isLoading: vocabularyLoading } =
     useVocabulary("all");
   const markWordsAsMemorizedMutation = useMarkWordsAsMemorized();
+  const markWordsAsUnmemorizedMutation = useMarkWordsAsUnmemorized();
 
   const getTypedLetterColor = (letter: string, index: number) => {
-    const correctWord =
-      vocabularyWords[currentQuestionIndex]?.word.toLowerCase();
+    const currentWord = vocabularyWords[currentQuestionIndex];
+    if (!currentWord) return "#000"; // Default color if word is undefined
+    
+    const correctWord = currentWord.word.toLowerCase();
     const userLetter = letter.toLowerCase();
     const correctLetter = correctWord?.charAt(index)?.toLowerCase();
 
@@ -55,8 +62,9 @@ const WritingPracticeScreen = () => {
   };
 
   const renderTypedText = () => {
-    const correctWord =
-      vocabularyWords[currentQuestionIndex]?.word.toLowerCase();
+    const currentWord = vocabularyWords[currentQuestionIndex];
+    if (!currentWord) return null; // Return null if word is undefined
+    
     return userInput.split("").map((letter, index) => (
       <Text
         key={index}
@@ -78,6 +86,8 @@ const WritingPracticeScreen = () => {
     if (showFeedback || userInput.trim() === "") return;
 
     const currentWord = vocabularyWords[currentQuestionIndex];
+    if (!currentWord) return; // Early return if word is undefined
+    
     const correct =
       userInput.toLowerCase().trim() === currentWord.word.toLowerCase();
 
@@ -98,17 +108,28 @@ const WritingPracticeScreen = () => {
     } else {
       newWrongAnswers = [...wrongAnswers, currentWord];
       setWrongAnswers(newWrongAnswers);
+      
+      // Mark wrong word as unmemorized if it was previously memorized
+      if (currentWord.is_memorized && currentWord.id) {
+        setWrongWordsIds((prev) => [...prev, currentWord.id]);
+      }
     }
 
     const delay = correct ? 1000 : 2000;
     setTimeout(() => {
-      handleContinue(newCorrectAnswers, newWrongAnswers);
+      // Get the updated IDs including the current answer
+      const updatedCorrectIds = correct && currentWord.id ? [...correctWordsIds, currentWord.id] : correctWordsIds;
+      const updatedWrongIds = !correct && currentWord.is_memorized && currentWord.id ? [...wrongWordsIds, currentWord.id] : wrongWordsIds;
+      
+      handleContinue(newCorrectAnswers, newWrongAnswers, updatedCorrectIds, updatedWrongIds);
     }, delay);
   };
 
   const handleContinue = (
     finalCorrectAnswers?: number,
-    finalWrongAnswers?: VocabularyWord[]
+    finalWrongAnswers?: VocabularyWord[],
+    finalCorrectWordsIds?: string[],
+    finalWrongWordsIds?: string[]
   ) => {
     if (currentQuestionIndex < vocabularyWords.length - 1) {
       const nextIndex = currentQuestionIndex + 1;
@@ -129,16 +150,32 @@ const WritingPracticeScreen = () => {
       if (user) {
         learningStreakService.addTodayCompletion(user.id);
 
+        // Use passed arrays or fallback to component state
+        const finalCorrectIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
+        const finalWrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
+
         // Mark correct words as memorized
-        if (correctWordsIds.length > 0) {
-          markWordsAsMemorizedMutation.mutate(correctWordsIds, {
+        if (finalCorrectIds.length > 0) {
+          markWordsAsMemorizedMutation.mutate(finalCorrectIds, {
             onSuccess: () => {
               console.log(
-                `Marked ${correctWordsIds.length} words as memorized`
+                `Marked ${finalCorrectIds.length} words as memorized`
               );
             },
             onError: (error) => {
               console.error("Error marking words as memorized:", error);
+            },
+          });
+        }
+
+        // Mark wrong words as unmemorized
+        if (finalWrongIds.length > 0) {
+          markWordsAsUnmemorizedMutation.mutate(finalWrongIds, {
+            onSuccess: () => {
+              console.log(`Marked ${finalWrongIds.length} words as unmemorized`);
+            },
+            onError: (error) => {
+              console.error("Error marking words as unmemorized:", error);
             },
           });
         }
@@ -178,21 +215,33 @@ const WritingPracticeScreen = () => {
         setIsLoading(false);
       } catch (error) {
         console.error("Error:", error);
-        Toast.error("단어를 불러오는 중 오류가 발생했습니다.");
-        setTimeout(() => {
-          router.back();
-        }, 1500);
+        Alert.alert(
+          "오류",
+          "단어를 불러오는 중 오류가 발생했습니다.",
+          [
+            {
+              text: "확인",
+              onPress: () => router.back(),
+            },
+          ]
+        );
       }
     } else if (
       !vocabularyLoading &&
       vocabularyData !== undefined &&
       vocabularyData.length === 0
     ) {
-      console.log("No vocabulary words found, showing toast");
-      Toast.error("저장한 단어가 없어요! 단어를 더 모아보세요!");
-      setTimeout(() => {
-        router.back();
-      }, 1500);
+      console.log("No vocabulary words found, showing alert");
+      Alert.alert(
+        "단어 없음",
+        "저장한 단어가 없어요! 단어를 더 모아보세요!",
+        [
+          {
+            text: "확인",
+            onPress: () => router.back(),
+          },
+        ]
+      );
     }
   }, [vocabularyLoading, vocabularyData, router, progress]);
 
@@ -224,6 +273,20 @@ const WritingPracticeScreen = () => {
 
   const currentWord = vocabularyWords[currentQuestionIndex];
   const canSubmit = userInput.trim().length > 0 && !showFeedback;
+
+  // If currentWord is undefined, show loading or error state
+  if (!currentWord) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <AppText
+            style={styles.loadingText}
+            text="단어를 불러오는 중..."
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

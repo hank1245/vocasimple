@@ -96,7 +96,6 @@ const styles = StyleSheet.create({
   wrongSection: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    alignItems: "center",
   },
   sectionTitle: {
     fontSize: 20,
@@ -109,6 +108,8 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
+    width: "100%",
+    alignSelf: "center",
   },
   wrongWord: {
     fontSize: 18,
