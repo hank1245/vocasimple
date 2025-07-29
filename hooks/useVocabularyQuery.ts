@@ -1,19 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { vocabularyApi } from "@/utils/vocabularyApi";
+import { unifiedVocabularyApi } from "@/utils/unifiedVocabularyApi";
 import { vocabularyKeys } from "@/utils/queryClient";
 import { VocabularyWord } from "@/types/common";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 import { memorizedService } from "@/utils/memorizedService";
 import { useUserProfileStore } from "@/stores/userProfileStore";
 
 // Hook for fetching vocabulary list
 export function useVocabulary(filter?: "all" | "memorized" | "unmemorized") {
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useQuery({
-    queryKey: vocabularyKeys.list(user?.id || "", filter),
-    queryFn: () => vocabularyApi.fetchVocabulary(user!.id, filter),
-    enabled: !!user,
+    queryKey: vocabularyKeys.list(userId, filter),
+    queryFn: () => unifiedVocabularyApi.fetchVocabulary(userId, filter),
+    enabled: !!user || isGuest,
     staleTime: 3 * 60 * 1000, // 3 minutes
     refetchOnMount: false, // Don't refetch on mount if data is fresh
     refetchOnWindowFocus: false, // Don't refetch on window focus
@@ -23,20 +25,23 @@ export function useVocabulary(filter?: "all" | "memorized" | "unmemorized") {
 // Hook for creating a new word
 export function useCreateWord() {
   const queryClient = useQueryClient();
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
     mutationFn: (word: Omit<VocabularyWord, "id" | "user_id">) =>
-      vocabularyApi.createWord(word, user!.id),
+      unifiedVocabularyApi.createWord(word, userId),
     onSuccess: () => {
       // Invalidate all vocabulary queries for this user
       queryClient.invalidateQueries({
         queryKey: vocabularyKeys.lists(),
       });
 
-      // Update user profile store to refresh total word count
-      const profileStore = useUserProfileStore.getState();
-      profileStore.fetchTierInfo(); // Refresh tier info with updated counts
+      // Update user profile store to refresh total word count (only for logged in users)
+      if (user && !isGuest) {
+        const profileStore = useUserProfileStore.getState();
+        profileStore.fetchTierInfo(); // Refresh tier info with updated counts
+      }
     },
     onError: (error) => {
       console.error("Failed to create word:", error);
@@ -47,7 +52,8 @@ export function useCreateWord() {
 // Hook for updating a word
 export function useUpdateWord() {
   const queryClient = useQueryClient();
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
     mutationFn: ({
@@ -56,7 +62,7 @@ export function useUpdateWord() {
     }: {
       wordId: string;
       updates: Partial<VocabularyWord>;
-    }) => vocabularyApi.updateWord(wordId, updates, user!.id),
+    }) => unifiedVocabularyApi.updateWord(wordId, updates, userId),
     onSuccess: (updatedWord) => {
       // Update the specific word in cache
       queryClient.setQueryData(
@@ -78,10 +84,11 @@ export function useUpdateWord() {
 // Hook for deleting a word
 export function useDeleteWord() {
   const queryClient = useQueryClient();
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
-    mutationFn: (wordId: string) => vocabularyApi.deleteWord(wordId, user!.id),
+    mutationFn: (wordId: string) => unifiedVocabularyApi.deleteWord(wordId, userId),
     onSuccess: (_, wordId) => {
       // Remove the word from all relevant queries
       queryClient.removeQueries({
@@ -93,9 +100,11 @@ export function useDeleteWord() {
         queryKey: vocabularyKeys.lists(),
       });
 
-      // Update user profile store to refresh total word count
-      const profileStore = useUserProfileStore.getState();
-      profileStore.fetchTierInfo(); // Refresh tier info with updated counts
+      // Update user profile store to refresh total word count (only for logged in users)
+      if (user && !isGuest) {
+        const profileStore = useUserProfileStore.getState();
+        profileStore.fetchTierInfo(); // Refresh tier info with updated counts
+      }
     },
     onError: (error) => {
       console.error("Failed to delete word:", error);
@@ -106,12 +115,17 @@ export function useDeleteWord() {
 // Hook for marking words as memorized
 export function useMarkWordsAsMemorized() {
   const queryClient = useQueryClient();
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
     mutationFn: (wordIds: string[]) => {
-      // Use the memorized service to handle tier updates
-      return memorizedService.markWordsAsMemorized(user!.id, wordIds);
+      // Use memorized service for logged in users, direct API for guests
+      if (user && !isGuest) {
+        return memorizedService.markWordsAsMemorized(user.id, wordIds);
+      } else {
+        return unifiedVocabularyApi.markWordsAsMemorized(wordIds, userId);
+      }
     },
     onSuccess: (_, wordIds) => {
       // Invalidate all vocabulary queries to refresh counts and filters
@@ -124,10 +138,12 @@ export function useMarkWordsAsMemorized() {
         queryKey: ["userProfile"],
       });
 
-      // Force refresh profile store data instead of optimistic update
-      const profileStore = useUserProfileStore.getState();
-      profileStore.clearCache(); // Clear cache to force refetch
-      profileStore.fetchTierInfo(); // Refresh tier info with updated counts from server
+      // Force refresh profile store data instead of optimistic update (only for logged in users)
+      if (user && !isGuest) {
+        const profileStore = useUserProfileStore.getState();
+        profileStore.clearCache(); // Clear cache to force refetch
+        profileStore.fetchTierInfo(); // Refresh tier info with updated counts from server
+      }
     },
     onError: (error) => {
       console.error("Failed to mark words as memorized:", error);
@@ -138,12 +154,17 @@ export function useMarkWordsAsMemorized() {
 // Hook for marking words as unmemorized
 export function useMarkWordsAsUnmemorized() {
   const queryClient = useQueryClient();
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
     mutationFn: (wordIds: string[]) => {
-      // Use the memorized service to handle tier updates
-      return memorizedService.markWordsAsUnmemorized(user!.id, wordIds);
+      // Use memorized service for logged in users, direct API for guests
+      if (user && !isGuest) {
+        return memorizedService.markWordsAsUnmemorized(user.id, wordIds);
+      } else {
+        return unifiedVocabularyApi.markWordsAsUnmemorized(wordIds, userId);
+      }
     },
     onSuccess: (_, wordIds) => {
       // Invalidate all vocabulary queries to refresh counts and filters
@@ -156,10 +177,12 @@ export function useMarkWordsAsUnmemorized() {
         queryKey: ["userProfile"],
       });
 
-      // Force refresh profile store data instead of optimistic update
-      const profileStore = useUserProfileStore.getState();
-      profileStore.clearCache(); // Clear cache to force refetch
-      profileStore.fetchTierInfo(); // Refresh tier info with updated counts from server
+      // Force refresh profile store data instead of optimistic update (only for logged in users)
+      if (user && !isGuest) {
+        const profileStore = useUserProfileStore.getState();
+        profileStore.clearCache(); // Clear cache to force refetch
+        profileStore.fetchTierInfo(); // Refresh tier info with updated counts from server
+      }
     },
     onError: (error) => {
       console.error("Failed to mark words as unmemorized:", error);
@@ -170,7 +193,8 @@ export function useMarkWordsAsUnmemorized() {
 // Hook for optimistic updates when marking single word as memorized
 export function useToggleWordMemorized() {
   const queryClient = useQueryClient();
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
     mutationFn: async ({
@@ -180,10 +204,18 @@ export function useToggleWordMemorized() {
       wordId: string;
       isMemorized: boolean;
     }) => {
-      if (isMemorized) {
-        await memorizedService.markWordAsMemorized(user!.id, wordId);
+      if (user && !isGuest) {
+        if (isMemorized) {
+          await memorizedService.markWordAsMemorized(user.id, wordId);
+        } else {
+          await memorizedService.markWordsAsUnmemorized(user.id, [wordId]);
+        }
       } else {
-        await memorizedService.markWordsAsUnmemorized(user!.id, [wordId]);
+        if (isMemorized) {
+          await unifiedVocabularyApi.markWordsAsMemorized([wordId], userId);
+        } else {
+          await unifiedVocabularyApi.markWordsAsUnmemorized([wordId], userId);
+        }
       }
     },
     onMutate: async ({ wordId, isMemorized }) => {
@@ -232,14 +264,15 @@ export function useToggleWordMemorized() {
 // Hook to prefetch vocabulary data
 export function usePrefetchVocabulary() {
   const queryClient = useQueryClient();
-  const user = getCurrentUser();
+  const { user, isGuest } = useAuth();
+  const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   const prefetchVocabulary = (filter?: "all" | "memorized" | "unmemorized") => {
-    if (!user) return;
+    if (!user && !isGuest) return;
 
     queryClient.prefetchQuery({
-      queryKey: vocabularyKeys.list(user.id, filter),
-      queryFn: () => vocabularyApi.fetchVocabulary(user.id, filter),
+      queryKey: vocabularyKeys.list(userId, filter),
+      queryFn: () => unifiedVocabularyApi.fetchVocabulary(userId, filter),
       staleTime: 3 * 60 * 1000,
     });
   };

@@ -20,14 +20,14 @@ import { Platform, Alert, TouchableOpacity, View } from "react-native";
 import AppText from "@/components/common/AppText";
 import * as DevMenu from "expo-dev-menu";
 
-// Android 8.0 호환성을 위한 polyfills
+// Polyfills for Android 8.0 compatibility
 if (!global.structuredClone) {
   global.structuredClone = (obj: any) => {
     return JSON.parse(JSON.stringify(obj));
   };
 }
 
-// Promise.allSettled polyfill (Android 8.0에서 누락될 수 있음)
+// Promise.allSettled polyfill (may be missing in Android 8.0)
 if (!Promise.allSettled) {
   Promise.allSettled = function(promises: Promise<any>[]) {
     return Promise.all(promises.map(p => Promise.resolve(p).then(
@@ -40,28 +40,28 @@ if (!Promise.allSettled) {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { session, loading, initialized, initialize, cleanup } = useAuth();
+  const { session, loading, initialized, initialize, cleanup, isGuest } = useAuth();
   const [isNavigating, setIsNavigating] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const router = useRouter();
 
-  // 앱 초기화 완료 로그 (프로덕션에서도 유용)
+  // App initialization completion log (useful in production)
   useEffect(() => {
     if (loaded && initialized && !loading) {
       console.log("App initialization completed successfully");
     }
   }, [loaded, initialized, loading]);
 
-  // 플랫폼 정보 (에러 디버깅에 유용)
+  // Platform information (useful for error debugging)
   useEffect(() => {
     console.log(`App running on ${Platform.OS} ${Platform.Version}`);
   }, []);
 
-  // 인증 초기화
+  // Authentication initialization
   useEffect(() => {
     initialize().catch((error) => {
       console.error("Auth initialization failed:", error);
-      setInitError(error.message || "인증 초기화 실패");
+      setInitError(error.message || "Authentication initialization failed");
     });
 
     return () => {
@@ -70,12 +70,12 @@ export default function RootLayout() {
   }, [initialize, cleanup]);
 
 
-  // 세션 변경 감지
+  // Session change detection
   useEffect(() => {
     if (initialized && !loading) {
       setIsNavigating(true);
     }
-  }, [session, initialized, loading]);
+  }, [session, isGuest, initialized, loading]);
 
   const colorScheme = useColorScheme();
 
@@ -84,7 +84,7 @@ export default function RootLayout() {
   });
 
 
-  // 초기 네비게이션
+  // Initial navigation
   useEffect(() => {
     const handleInitialNavigation = async () => {
       if ((loaded || error) && initialized && !loading && !isNavigating) {
@@ -92,7 +92,7 @@ export default function RootLayout() {
         
         setTimeout(() => {
           try {
-            if (session) {
+            if (session || isGuest) {
               router.replace("/(tabs)");
             } else {
               router.replace("/(auth)");
@@ -104,14 +104,14 @@ export default function RootLayout() {
       }
     };
     handleInitialNavigation();
-  }, [loaded, error, initialized, loading, session, isNavigating, router]);
+  }, [loaded, error, initialized, loading, session, isGuest, isNavigating, router]);
 
-  // 세션 변경 시 네비게이션
+  // Navigation on session change
   useEffect(() => {
     if (isNavigating && initialized && !loading && (loaded || error)) {
       setTimeout(() => {
         try {
-          if (session) {
+          if (session || isGuest) {
             router.replace("/(tabs)");
           } else {
             router.replace("/(auth)");
@@ -123,23 +123,23 @@ export default function RootLayout() {
         }
       }, 500);
     }
-  }, [isNavigating, session, initialized, loading, loaded, error, router]);
+  }, [isNavigating, session, isGuest, initialized, loading, loaded, error, router]);
 
   if (!loaded || !initialized || loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-        <AppText style={{ fontSize: 20 }} text="로딩 중..." />
+        <AppText style={{ fontSize: 20 }} text="Loading..." />
       </View>
     );
   }
 
-  // 초기화 에러 발생 시 에러 화면 표시
+  // Show error screen on initialization error
   if (initError) {
     return (
       <ErrorBoundary>
         <GestureHandlerRootView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
           <AppText style={{ fontSize: 18, color: 'red', textAlign: 'center', marginBottom: 20 }}>
-            앱 초기화에 실패했습니다
+            App initialization failed
           </AppText>
           <TouchableOpacity 
             style={{ backgroundColor: '#6D60F8', padding: 10, borderRadius: 8 }}
@@ -148,7 +148,7 @@ export default function RootLayout() {
               initialize();
             }}
           >
-            <AppText style={{ color: 'white' }} text="다시 시도" />
+            <AppText style={{ color: 'white' }} text="Try Again" />
           </TouchableOpacity>
         </GestureHandlerRootView>
       </ErrorBoundary>

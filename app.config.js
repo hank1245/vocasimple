@@ -1,29 +1,29 @@
 import "dotenv/config";
 
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 export default {
   expo: {
     owner: "hank1245",
     name: "vocasimple",
     slug: "vocasimple",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     updates: {
-      url: "https://u.expo.dev/993c9bc0-ed27-47ab-bc0a-5959a0e33d19"
+      url: "https://u.expo.dev/993c9bc0-ed27-47ab-bc0a-5959a0e33d19",
     },
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
       bundleIdentifier: "com.hank1245.vocasimple",
-      buildNumber: "1",
+      buildNumber: "3",
       supportsTablet: true,
       requireFullScreen: false,
       config: {
-        usesNonExemptEncryption: false
+        usesNonExemptEncryption: false,
       },
-      runtimeVersion: IS_PRODUCTION ? { policy: "appVersion" } : "1.0.0"
+      runtimeVersion: IS_PRODUCTION ? { policy: "appVersion" } : "1.0.1",
     },
     android: {
       package: "com.hank1245.vocasimple",
@@ -36,9 +36,9 @@ export default {
       usesCleartextTraffic: true,
       networkSecurityConfig: {
         domain: ["krxessvmecpbjsqyrqgw.supabase.co", "api.anthropic.com"],
-        includeSubdomains: true
+        includeSubdomains: true,
       },
-      runtimeVersion: "1.0.0"
+      runtimeVersion: "1.0.1",
     },
     web: {
       scheme: "vocasimple",
@@ -71,10 +71,16 @@ export default {
       router: {
         origin: false,
       },
-      EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || "https://krxessvmecpbjsqyrqgw.supabase.co",
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyeGVzc3ZtZWNwYmpzcXlycWd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzEwNTIsImV4cCI6MjA2ODMwNzA1Mn0.PwCrfVkrBxJMcl6C74j9NJT8lM7wF0eShjBvakMRATY",
+      EXPO_PUBLIC_SUPABASE_URL:
+        process.env.EXPO_PUBLIC_SUPABASE_URL ||
+        "https://krxessvmecpbjsqyrqgw.supabase.co",
+      EXPO_PUBLIC_SUPABASE_ANON_KEY:
+        process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtyeGVzc3ZtZWNwYmpzcXlycWd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI3MzEwNTIsImV4cCI6MjA2ODMwNzA1Mn0.PwCrfVkrBxJMcl6C74j9NJT8lM7wF0eShjBvakMRATY",
       EXPO_PUBLIC_CLAUDE_API_KEY: process.env.EXPO_PUBLIC_CLAUDE_API_KEY || "",
-      EXPO_PUBLIC_CLAUDE_API_URL: process.env.EXPO_PUBLIC_CLAUDE_API_URL || "https://api.anthropic.com/v1/messages",
+      EXPO_PUBLIC_CLAUDE_API_URL:
+        process.env.EXPO_PUBLIC_CLAUDE_API_URL ||
+        "https://api.anthropic.com/v1/messages",
     },
   },
 };

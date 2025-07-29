@@ -2,6 +2,7 @@ import { FormType as FormTypeEnum } from "@/types/auth";
 import React, { useState } from "react";
 import SignUpForm from "./SignUpForm";
 import LoginForm from "./LoginForm";
+import GuestForm from "./GuestForm";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 interface FormProps {
@@ -9,7 +10,7 @@ interface FormProps {
 }
 
 const Form = ({ bottomSheetRef }: FormProps) => {
-  const [formType, setFormType] = useState<FormTypeEnum>("SIGNUP");
+  const [formType, setFormType] = useState<FormTypeEnum>("GUEST");
 
   const changeFormType = (type: FormTypeEnum) => {
     setFormType(type);
@@ -21,8 +22,21 @@ const Form = ({ bottomSheetRef }: FormProps) => {
     }
   };
 
+  if (formType === "GUEST") {
+    return (
+      <GuestForm
+        changeFormType={changeFormType}
+        bottomSheetRef={bottomSheetRef}
+      />
+    );
+  }
   if (formType === "SIGNUP") {
-    return <SignUpForm changeFormType={changeFormType} />;
+    return (
+      <SignUpForm
+        changeFormType={changeFormType}
+        bottomSheetRef={bottomSheetRef}
+      />
+    );
   }
   if (formType === "LOGIN") {
     return (

@@ -9,4 +9,4 @@ export interface AuthState {
     isAuthenticated: boolean;
 }
 
-export type FormType = 'LOGIN' | 'SIGNUP';
+export type FormType = 'LOGIN' | 'SIGNUP' | 'GUEST';

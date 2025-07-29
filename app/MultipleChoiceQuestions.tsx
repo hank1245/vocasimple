@@ -4,7 +4,7 @@ import { View, TouchableOpacity, StyleSheet, Animated, Alert } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 import { VocabularyWord, QuizQuestion } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { learningStreakService } from "@/utils/learningStreak";
@@ -16,6 +16,7 @@ import {
 
 const MultipleChoiceQuestionsScreen = () => {
   const router = useRouter();
+  const { user, isGuest } = useAuth();
   const { filter } = useLocalSearchParams<{
     mode: "meaning" | "word";
     filter: "all" | "unmemorized";
@@ -153,9 +154,8 @@ const MultipleChoiceQuestionsScreen = () => {
       setSelectedAnswer(null);
       setShowFeedback(false);
     } else {
-      // Award fire streak when quiz is completed
-      const user = getCurrentUser();
-      if (user) {
+      // Award fire streak when quiz is completed (only for logged in users)
+      if (user && !isGuest) {
         learningStreakService.addTodayCompletion(user.id);
 
         // Use passed arrays or fallback to component state
@@ -212,11 +212,11 @@ const MultipleChoiceQuestionsScreen = () => {
         // Not enough words for quiz
         console.log("Not enough words for quiz, showing alert");
         Alert.alert(
-          "단어 부족",
-          "퀴즈를 진행하려면 최소 4개의 단어가 필요해요! 단어를 더 모아보세요!",
+          "Insufficient Words",
+          "You need at least 4 words to start the quiz! Please add more words!",
           [
             {
-              text: "확인",
+              text: "OK",
               onPress: () => router.back(),
             },
           ]
@@ -231,7 +231,7 @@ const MultipleChoiceQuestionsScreen = () => {
         <View style={styles.loadingContainer}>
           <AppText
             style={styles.loadingText}
-            text="퀴즈를 준비하고 있어요..."
+            text="Preparing the quiz..."
           />
         </View>
       </SafeAreaView>
@@ -244,7 +244,7 @@ const MultipleChoiceQuestionsScreen = () => {
         <View style={styles.loadingContainer}>
           <AppText
             style={styles.loadingText}
-            text="퀴즈 문제를 생성할 수 없습니다."
+            text="Cannot generate quiz questions."
           />
         </View>
       </SafeAreaView>

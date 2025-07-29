@@ -23,7 +23,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 const ProfileTab = () => {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isGuest, exitGuestMode } = useAuth();
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [newNickname, setNewNickname] = useState("");
   const [loading, setLoading] = useState(false);
@@ -63,13 +63,13 @@ const ProfileTab = () => {
       const success = await updateNickname(newNickname);
       if (success) {
         setIsEditingNickname(false);
-        Alert.alert("성공", "닉네임이 변경되었습니다.");
+        Alert.alert("Success", "Nickname has been changed.");
       } else {
-        Alert.alert("오류", "닉네임 변경에 실패했습니다.");
+        Alert.alert("Error", "Failed to change nickname.");
       }
     } catch (error) {
       console.error("Error updating nickname:", error);
-      Alert.alert("오류", "닉네임 변경 중 오류가 발생했습니다.");
+      Alert.alert("Error", "An error occurred while changing nickname.");
     } finally {
       setLoading(false);
     }
@@ -88,11 +88,11 @@ const ProfileTab = () => {
     React.useCallback(() => {
       // Always fetch fresh data when screen comes into focus to ensure accuracy
       // This prevents stale data from showing after quiz completion
-      if (user) {
+      if (user && !isGuest) {
         console.log("Profile screen focused, refreshing data");
         fetchAllData();
       }
-    }, [user, fetchAllData])
+    }, [user, isGuest, fetchAllData])
   );
 
   const OnPressRecord = () => {
@@ -100,16 +100,33 @@ const ProfileTab = () => {
   };
 
   const handleSignOut = async () => {
-    Alert.alert("로그아웃", "정말로 로그아웃하시겠습니까?", [
-      { text: "취소", style: "cancel" },
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
       {
-        text: "로그아웃",
+        text: "Logout",
         style: "destructive",
         onPress: async () => {
           await signOut();
         },
       },
     ]);
+  };
+
+  const handleSignUp = () => {
+    Alert.alert(
+      "Sign Up",
+      "Sign up to enjoy these benefits:\n\n• Save words to cloud\n• Access from other devices\n• Learning records & statistics\n• Leaderboard participation\n\nWould you like to start now?",
+      [
+        { text: "Later", style: "cancel" },
+        {
+          text: "Sign Up",
+          onPress: () => {
+            exitGuestMode();
+            router.replace("/(auth)");
+          },
+        },
+      ]
+    );
   };
 
   const handleExportVocabulary = async () => {
@@ -119,10 +136,10 @@ const ProfileTab = () => {
     }
 
     Alert.alert(
-      "단어 내보내기",
-      `저장된 단어들을 CSV 파일로 내보내시겠습니까?\n\n파일 공유 화면에서 이메일이나 다른 앱으로 전송할 수 있습니다.`,
+      "Export Words",
+      `Export saved words as CSV file?\n\nYou can send it via email or other apps from the file sharing screen.`,
       [
-        { text: "취소", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
           text: "내보내기",
           onPress: async () => {
@@ -136,19 +153,19 @@ const ProfileTab = () => {
               if (result.success) {
                 Alert.alert(
                   "완료",
-                  result.message || "단어 목록이 성공적으로 공유되었습니다."
+                  result.message || "Word list has been successfully shared."
                 );
               } else {
                 Alert.alert(
                   "오류",
-                  result.error || "단어 내보내기 중 오류가 발생했습니다."
+                  result.error || "An error occurred while exporting words."
                 );
               }
             } catch (error) {
               console.error("Export vocabulary error:", error);
               Alert.alert(
                 "오류",
-                "단어 내보내기 중 예상치 못한 오류가 발생했습니다."
+                "An unexpected error occurred while exporting words."
               );
             } finally {
               setIsExporting(false);
@@ -161,20 +178,20 @@ const ProfileTab = () => {
 
   const handleDeleteAccount = async () => {
     Alert.alert(
-      "회원탈퇴",
-      "정말 탈퇴하시겠습니까?\n\n계정이 삭제된 이후에는 복구할 수 없습니다.\n\n• 저장된 모든 단어\n• 학습 기록\n• 프로필 정보\n\n위 모든 데이터가 영구적으로 삭제됩니다.",
+      "Delete Account",
+      "Are you sure you want to delete your account?\n\nThis action cannot be undone.\n\n• All saved words\n• Learning records\n• Profile information\n\nAll data will be permanently deleted.",
       [
-        { text: "취소", style: "cancel" },
+        { text: "Cancel", style: "cancel" },
         {
           text: "탈퇴하기",
           style: "destructive",
           onPress: async () => {
             // 한 번 더 확인
             Alert.alert(
-              "최종 확인",
+              "Final Confirmation",
               "정말로 계정을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.",
               [
-                { text: "취소", style: "cancel" },
+                { text: "Cancel", style: "cancel" },
                 {
                   text: "삭제",
                   style: "destructive",
@@ -224,293 +241,334 @@ const ProfileTab = () => {
         </View>
         <View style={styles.profileHeader}>
           <View style={styles.profileInfo}>
-            <AppText style={styles.profileName} text={user?.email || ""} />
-            <View style={styles.nicknameContainer}>
-              <AppText
-                style={styles.username}
-                text={nickname || "#loading..."}
-              />
+            {isGuest ? (
+              <>
+                <AppText style={styles.profileName} text="Guest User" />
+                <AppText style={styles.username} text="#guest_user" />
+                <AppText style={styles.joinDate} text="Using in guest mode" />
+              </>
+            ) : (
+              <>
+                <AppText style={styles.profileName} text={user?.email || ""} />
+                <View style={styles.nicknameContainer}>
+                  <AppText
+                    style={styles.username}
+                    text={nickname || "#loading..."}
+                  />
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={handleEditNickname}
+                  >
+                    <MaterialIcons name="edit" size={16} color="#666" />
+                  </TouchableOpacity>
+                </View>
+                <AppText
+                  style={styles.joinDate}
+                  text={
+                    user?.created_at
+                      ? `Joined ${new Date(user.created_at).toLocaleDateString('en-US', { 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}`
+                      : "No join date information"
+                  }
+                />
+              </>
+            )}
+          </View>
+        </View>
+        {!isGuest && (
+          <>
+            <AppText style={styles.sectionTitle} text="Achievements" />
+            <View style={styles.achievementsContainer}>
               <TouchableOpacity
-                style={styles.editButton}
-                onPress={handleEditNickname}
+                style={styles.achievementBox}
+                onPress={OnPressRecord}
               >
-                <MaterialIcons name="edit" size={16} color="#666" />
+                <AppText style={styles.achievementLabel} text="Study Streak" />
+                <AppText
+                  style={styles.achievementNumber}
+                  text={`${streakData.currentStreak} days`}
+                />
               </TouchableOpacity>
+              <View style={styles.achievementBox}>
+                <AppText
+                  style={styles.achievementLabel}
+                  text="Memorized Words"
+                />
+                <AppText
+                  style={styles.achievementNumber}
+                  text={`${memorizedCount} words`}
+                />
+              </View>
             </View>
-            <AppText
-              style={styles.joinDate}
-              text={
-                user?.created_at
-                  ? `${new Date(user.created_at).getFullYear()}년 ${
-                      new Date(user.created_at).getMonth() + 1
-                    }월에 가입`
-                  : "가입일 정보 없음"
+          </>
+        )}
+        {!isGuest && (
+          <View style={styles.tierContainer}>
+            <View style={styles.tierBox}>
+              <AppText style={styles.tierLabel} text="Current Tier" />
+              <AppText
+                style={styles.tierText}
+                text={tierInfo?.currentTier || "Apprentice"}
+              />
+              {tierInfo && tierInfo.nextTier !== "Max" && (
+                <View style={styles.tierProgressContainer}>
+                  <AppText
+                    style={styles.tierProgressText}
+                    text={`To ${tierInfo.nextTier}: ${
+                      tierInfo.nextTierRequirement - tierInfo.memorizedCount
+                    } words left`}
+                  />
+                  <View style={styles.progressBar}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${tierInfo.progressPercentage}%` },
+                      ]}
+                    />
+                  </View>
+                  <AppText
+                    style={styles.tierProgressPercentage}
+                    text={`${tierInfo.progressPercentage}%`}
+                  />
+                </View>
+              )}
+            </View>
+            <Image
+              style={styles.tierImage}
+              source={
+                tierInfo?.currentTier === "Sage"
+                  ? require("@/assets/images/sage.png")
+                  : tierInfo?.currentTier === "Knight"
+                  ? require("@/assets/images/knight.png")
+                  : require("@/assets/images/apprentice.png")
               }
             />
           </View>
-        </View>
-        <AppText style={styles.sectionTitle} text="Achievements" />
-        <View style={styles.achievementsContainer}>
+        )}
+
+        {!isGuest && (
+          <View style={styles.leaderboardContainer}>
+            <AppText style={styles.leaderboardTitle} text="Tier Ranking" />
+
+            {/* Tier Selection Buttons */}
+            <View style={styles.tierButtonsContainer}>
+              {["Sage", "Knight", "Apprentice"].map((tier) => (
+                <TouchableOpacity
+                  key={tier}
+                  style={[
+                    styles.tierButton,
+                    selectedTier === tier && styles.selectedTierButton,
+                  ]}
+                  onPress={() =>
+                    handleTierSelect(tier as "Sage" | "Knight" | "Apprentice")
+                  }
+                >
+                  <Image
+                    source={
+                      tier === "Sage"
+                        ? require("@/assets/images/sage.png")
+                        : tier === "Knight"
+                        ? require("@/assets/images/knight.png")
+                        : require("@/assets/images/apprentice.png")
+                    }
+                    style={styles.tierButtonImage}
+                  />
+                  <AppText
+                    style={[
+                      styles.tierButtonText,
+                      selectedTier === tier && styles.selectedTierButtonText,
+                    ]}
+                    text={tier}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Leaderboard List */}
+            <View style={styles.leaderboardList}>
+              {leaderboardData?.users.slice(0, 10).map((user) => (
+                <View
+                  key={user.user_id}
+                  style={[
+                    styles.leaderboardItem,
+                    user.is_current_user && styles.currentUserItem,
+                  ]}
+                >
+                  <View style={styles.leaderboardRank}>
+                    <AppText
+                      style={[
+                        styles.rankText,
+                        user.is_current_user && styles.currentUserText,
+                      ]}
+                      text={`#${user.rank}`}
+                    />
+                  </View>
+                  <View style={styles.leaderboardUserInfo}>
+                    <AppText
+                      style={[
+                        styles.leaderboardUserName,
+                        user.is_current_user && styles.currentUserText,
+                      ]}
+                      text={user.nickname}
+                    />
+                    <AppText
+                      style={[
+                        styles.leaderboardUserScore,
+                        user.is_current_user && styles.currentUserText,
+                      ]}
+                      text={`${user.memorized_count} Memorized`}
+                    />
+                  </View>
+                  {user.is_current_user && (
+                    <View style={styles.currentUserBadge}>
+                      <AppText style={styles.currentUserBadgeText} text="나" />
+                    </View>
+                  )}
+                </View>
+              ))}
+
+              {leaderboardData?.users.length === 0 && (
+                <View style={styles.emptyLeaderboard}>
+                  <AppText
+                    style={styles.emptyLeaderboardText}
+                    text="No users in this tier yet."
+                  />
+                </View>
+              )}
+            </View>
+
+            {/* Current User Stats */}
+            {leaderboardData?.currentUserRank && (
+              <View style={styles.currentUserStats}>
+                <AppText
+                  style={styles.currentUserStatsText}
+                  text={`Rank ${leaderboardData.currentUserRank} in ${selectedTier} tier (${leaderboardData.totalUsers} total)`}
+                />
+              </View>
+            )}
+          </View>
+        )}
+
+        {isGuest ? (
           <TouchableOpacity
-            style={styles.achievementBox}
-            onPress={OnPressRecord}
+            style={styles.buttonContainer}
+            onPress={handleSignUp}
           >
-            <AppText style={styles.achievementLabel} text="연속 공부 기록" />
             <AppText
-              style={styles.achievementNumber}
-              text={`${streakData.currentStreak}일`}
+              text="Sign Up"
+              style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
             />
           </TouchableOpacity>
-          <View style={styles.achievementBox}>
-            <AppText style={styles.achievementLabel} text="암기한 단어" />
-            <AppText
-              style={styles.achievementNumber}
-              text={`${memorizedCount}개`}
-            />
-          </View>
-        </View>
-        <View style={styles.tierContainer}>
-          <View style={styles.tierBox}>
-            <AppText style={styles.tierLabel} text="현재 티어" />
-            <AppText
-              style={styles.tierText}
-              text={tierInfo?.currentTier || "Apprentice"}
-            />
-            {tierInfo && tierInfo.nextTier !== "Max" && (
-              <View style={styles.tierProgressContainer}>
-                <AppText
-                  style={styles.tierProgressText}
-                  text={`${tierInfo.nextTier}까지 ${
-                    tierInfo.nextTierRequirement - tierInfo.memorizedCount
-                  }개 남음`}
-                />
-                <View style={styles.progressBar}>
-                  <View
-                    style={[
-                      styles.progressBarFill,
-                      { width: `${tierInfo.progressPercentage}%` },
-                    ]}
-                  />
-                </View>
-                <AppText
-                  style={styles.tierProgressPercentage}
-                  text={`${tierInfo.progressPercentage}%`}
-                />
-              </View>
-            )}
-          </View>
-          <Image
-            style={styles.tierImage}
-            source={
-              tierInfo?.currentTier === "Sage"
-                ? require("@/assets/images/sage.png")
-                : tierInfo?.currentTier === "Knight"
-                ? require("@/assets/images/knight.png")
-                : require("@/assets/images/apprentice.png")
-            }
-          />
-        </View>
-
-        <View style={styles.leaderboardContainer}>
-          <AppText style={styles.leaderboardTitle} text="티어별 랭킹" />
-
-          {/* Tier Selection Buttons */}
-          <View style={styles.tierButtonsContainer}>
-            {["Sage", "Knight", "Apprentice"].map((tier) => (
-              <TouchableOpacity
-                key={tier}
-                style={[
-                  styles.tierButton,
-                  selectedTier === tier && styles.selectedTierButton,
-                ]}
-                onPress={() =>
-                  handleTierSelect(tier as "Sage" | "Knight" | "Apprentice")
-                }
-              >
-                <Image
-                  source={
-                    tier === "Sage"
-                      ? require("@/assets/images/sage.png")
-                      : tier === "Knight"
-                      ? require("@/assets/images/knight.png")
-                      : require("@/assets/images/apprentice.png")
-                  }
-                  style={styles.tierButtonImage}
-                />
-                <AppText
-                  style={[
-                    styles.tierButtonText,
-                    selectedTier === tier && styles.selectedTierButtonText,
-                  ]}
-                  text={tier}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Leaderboard List */}
-          <View style={styles.leaderboardList}>
-            {leaderboardData?.users.slice(0, 10).map((user) => (
-              <View
-                key={user.user_id}
-                style={[
-                  styles.leaderboardItem,
-                  user.is_current_user && styles.currentUserItem,
-                ]}
-              >
-                <View style={styles.leaderboardRank}>
-                  <AppText
-                    style={[
-                      styles.rankText,
-                      user.is_current_user && styles.currentUserText,
-                    ]}
-                    text={`#${user.rank}`}
-                  />
-                </View>
-                <View style={styles.leaderboardUserInfo}>
-                  <AppText
-                    style={[
-                      styles.leaderboardUserName,
-                      user.is_current_user && styles.currentUserText,
-                    ]}
-                    text={user.nickname}
-                  />
-                  <AppText
-                    style={[
-                      styles.leaderboardUserScore,
-                      user.is_current_user && styles.currentUserText,
-                    ]}
-                    text={`${user.memorized_count}개 암기`}
-                  />
-                </View>
-                {user.is_current_user && (
-                  <View style={styles.currentUserBadge}>
-                    <AppText style={styles.currentUserBadgeText} text="나" />
-                  </View>
-                )}
-              </View>
-            ))}
-
-            {leaderboardData?.users.length === 0 && (
-              <View style={styles.emptyLeaderboard}>
-                <AppText
-                  style={styles.emptyLeaderboardText}
-                  text="아직 이 티어에 사용자가 없습니다."
-                />
-              </View>
-            )}
-          </View>
-
-          {/* Current User Stats */}
-          {leaderboardData?.currentUserRank && (
-            <View style={styles.currentUserStats}>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.buttonContainer}
+              onPress={handleSignOut}
+            >
               <AppText
-                style={styles.currentUserStatsText}
-                text={`${selectedTier} 티어에서 ${leaderboardData.currentUserRank}위 (총 ${leaderboardData.totalUsers}명)`}
+                text="Logout"
+                style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
               />
-            </View>
-          )}
-        </View>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={handleSignOut}
-        >
-          <AppText
-            text="로그아웃"
-            style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
-          />
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.exportButton}
+              onPress={handleExportVocabulary}
+              disabled={isExporting}
+            >
+              <MaterialIcons
+                name="download"
+                size={20}
+                color="white"
+                style={{ marginRight: 8 }}
+              />
+              <AppText
+                text={isExporting ? "Exporting..." : "Export Words"}
+                style={[
+                  styles.exportButtonText,
+                  isExporting && styles.disabledText,
+                ]}
+              />
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.exportButton}
-          onPress={handleExportVocabulary}
-          disabled={isExporting}
-        >
-          <MaterialIcons
-            name="download"
-            size={20}
-            color="white"
-            style={{ marginRight: 8 }}
-          />
-          <AppText
-            text={isExporting ? "내보내는 중..." : "단어 저장하기"}
-            style={[
-              styles.exportButtonText,
-              isExporting && styles.disabledText,
-            ]}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.deleteAccountButton}
-          onPress={handleDeleteAccount}
-          disabled={loading}
-        >
-          <AppText
-            text={loading ? "처리 중..." : "회원탈퇴"}
-            style={[styles.deleteAccountText, loading && styles.disabledText]}
-          />
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteAccountButton}
+              onPress={handleDeleteAccount}
+              disabled={loading}
+            >
+              <AppText
+                text={loading ? "Processing..." : "Delete Account"}
+                style={[
+                  styles.deleteAccountText,
+                  loading && styles.disabledText,
+                ]}
+              />
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
 
       {/* Nickname Edit Modal */}
-      <Modal
-        visible={isEditingNickname}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCancelEdit}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle} text="닉네임 변경" />
+      {!isGuest && (
+        <Modal
+          visible={isEditingNickname}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={handleCancelEdit}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <AppText style={styles.modalTitle} text="Change Nickname" />
 
-            <View style={styles.inputContainer}>
-              <AppText style={styles.inputLabel} text="새 닉네임" />
-              <View style={styles.nicknameInputContainer}>
-                <AppText style={styles.hashSymbol} text="#" />
-                <TextInput
-                  style={styles.nicknameInput}
-                  value={newNickname}
-                  onChangeText={setNewNickname}
-                  placeholder="닉네임을 입력하세요"
-                  placeholderTextColor="#999"
-                  maxLength={20}
-                  autoFocus={true}
+              <View style={styles.inputContainer}>
+                <AppText style={styles.inputLabel} text="New Nickname" />
+                <View style={styles.nicknameInputContainer}>
+                  <AppText style={styles.hashSymbol} text="#" />
+                  <TextInput
+                    style={styles.nicknameInput}
+                    value={newNickname}
+                    onChangeText={setNewNickname}
+                    placeholder="Enter your nickname"
+                    placeholderTextColor="#999"
+                    maxLength={20}
+                    autoFocus={true}
+                  />
+                </View>
+                <AppText
+                  style={styles.inputHint}
+                  text="Letters, numbers, Korean, underscore (_) allowed (3-20 chars)"
                 />
               </View>
-              <AppText
-                style={styles.inputHint}
-                text="영문, 숫자, 한글, 밑줄(_) 사용 가능 (3-20자)"
-              />
-            </View>
 
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={handleCancelEdit}
-              >
-                <AppText style={styles.cancelButtonText} text="취소" />
-              </TouchableOpacity>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={handleCancelEdit}
+                >
+                  <AppText style={styles.cancelButtonText} text="Cancel" />
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
-                onPress={handleSaveNickname}
-                disabled={loading || nicknameLoading || !newNickname.trim()}
-              >
-                <AppText
-                  style={[
-                    styles.saveButtonText,
-                    (!newNickname.trim() || loading) &&
-                      styles.disabledButtonText,
-                  ]}
-                  text={loading || nicknameLoading ? "저장 중..." : "저장"}
-                />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.saveButton]}
+                  onPress={handleSaveNickname}
+                  disabled={loading || nicknameLoading || !newNickname.trim()}
+                >
+                  <AppText
+                    style={[
+                      styles.saveButtonText,
+                      (!newNickname.trim() || loading) &&
+                        styles.disabledButtonText,
+                    ]}
+                    text={loading || nicknameLoading ? "Saving..." : "Save"}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };

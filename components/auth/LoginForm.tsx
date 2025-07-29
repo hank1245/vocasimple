@@ -5,6 +5,8 @@ import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { supabase } from "@/utils/supabase";
+import { handleSignInBackup } from "@/utils/unifiedVocabularyApi";
+import { useAuth } from "@/stores/authStore";
 
 interface Props {
   changeFormType: (type: FormType) => void;
@@ -12,6 +14,7 @@ interface Props {
 }
 
 const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
+  const { enterGuestMode } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,13 +32,17 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
 
       if (error) {
         console.error("Login error:", error);
-        Alert.alert("존재하지 않거나 인증이 완료되지 않은 계정입니다.");
+        Alert.alert("Account doesn't exist or email verification incomplete.");
       } else {
+        // 로그인 성공 후 서버 데이터를 로컬로 백업 (백그라운드에서 실행)
+        if (data.user) {
+          handleSignInBackup(data.user.id).catch(console.error);
+        }
         bottomSheetRef.current?.close();
       }
     } catch (err) {
       console.error("Login exception:", err);
-      Alert.alert("로그인 중 오류가 발생했습니다.");
+      Alert.alert("An error occurred during login.");
     } finally {
       setLoading(false);
     }
@@ -48,10 +55,15 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
     }, 10);
   };
 
+  const handleGuestStart = () => {
+    enterGuestMode();
+    bottomSheetRef.current?.close();
+  };
+
   return (
     <View style={styles.container}>
       <View>
-        <AppText style={styles.label} text="email 주소" />
+        <AppText style={styles.label} text="Email Address" />
         <TextInput
           style={styles.input}
           keyboardType="email-address"
@@ -61,7 +73,7 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
       </View>
 
       <View style={{ marginBottom: 30 }}>
-        <AppText style={styles.label} text="비밀번호" />
+        <AppText style={styles.label} text="Password" />
         <TextInput
           style={styles.input}
           secureTextEntry
@@ -71,7 +83,7 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
       </View>
 
       <AuthButton
-        text="로그인"
+        text="Login"
         onPress={signInWithEmail}
         disabled={isDisabled}
       />
@@ -79,11 +91,23 @@ const LoginForm = ({ changeFormType, bottomSheetRef }: Props) => {
       {/* Google 로그인 버튼 및 관련 코드 제거됨 */}
 
       <View style={styles.guidance}>
-        <AppText style={styles.guide} text="아직 계정이 없으신가요?" />
+        <AppText style={styles.guide} text="Don't have an account yet?" />
         <Pressable onPress={onChangeFormTypeToSignUp}>
-          <AppText style={styles.link} text="회원가입" />
+          <AppText style={styles.link} text="Sign Up" />
         </Pressable>
       </View>
+
+      <View style={styles.divider}>
+        <View style={styles.line} />
+        <AppText style={styles.dividerText} text="or" />
+        <View style={styles.line} />
+      </View>
+
+      <AuthButton
+        text="Start as Guest"
+        onPress={handleGuestStart}
+        variant="secondary"
+      />
     </View>
   );
 };
@@ -126,6 +150,22 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+    width: 321,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E0E0E0",
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: "#888",
   },
 });
 

@@ -17,13 +17,14 @@ import { Colors } from "@/constants/Colors";
 import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 import Toast from "toastify-react-native";
 import { aiExampleService } from "@/utils/aiExampleService";
 import { useUpdateWord } from "@/hooks/useVocabularyQuery";
 
 const EditVocabularyScreen = () => {
   const router = useRouter();
+  const { user, isGuest } = useAuth();
   const params = useLocalSearchParams();
 
   // Extract parameters passed from the card
@@ -78,9 +79,7 @@ const EditVocabularyScreen = () => {
       return;
     }
 
-    const user = getCurrentUser();
-
-    if (!user) {
+    if (!user && !isGuest) {
       Alert.alert("오류", "로그인이 필요합니다.");
       return;
     }

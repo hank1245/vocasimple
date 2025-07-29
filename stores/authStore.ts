@@ -9,9 +9,12 @@ interface AuthStore {
   loading: boolean;
   initialized: boolean;
   authListener: any;
+  isGuest: boolean;
   initialize: () => Promise<void>;
   cleanup: () => void;
   signOut: () => Promise<void>;
+  enterGuestMode: () => void;
+  exitGuestMode: () => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -21,6 +24,7 @@ export const useAuthStore = create<AuthStore>()(
     loading: true,
     initialized: false,
     authListener: null,
+    isGuest: false,
 
     initialize: async () => {
       const state = get();
@@ -95,14 +99,42 @@ export const useAuthStore = create<AuthStore>()(
     },
 
     signOut: async () => {
+      const currentState = get();
       try {
+        // 로그아웃 전에 서버 데이터를 로컬로 백업
+        if (currentState.user && !currentState.isGuest) {
+          const { handleSignOutBackup } = await import('@/utils/unifiedVocabularyApi');
+          await handleSignOutBackup(currentState.user.id).catch(console.error);
+        }
+        
         const { error } = await supabase.auth.signOut();
         if (error) {
           console.error("Sign out error:", error);
         }
+        set({ isGuest: false });
       } catch (error) {
         console.error("Sign out error:", error);
       }
+    },
+
+    enterGuestMode: () => {
+      set({
+        isGuest: true,
+        loading: false,
+        initialized: true,
+        user: null,
+        session: null
+      });
+    },
+
+    exitGuestMode: () => {
+      set({
+        isGuest: false,
+        loading: false,
+        initialized: true,
+        user: null,
+        session: null
+      });
     },
   }))
 );
@@ -126,8 +158,11 @@ export const useAuth = () => {
     session: store.session,
     loading: store.loading,
     initialized: store.initialized,
+    isGuest: store.isGuest,
     initialize: store.initialize,
     cleanup: store.cleanup,
     signOut: store.signOut,
+    enterGuestMode: store.enterGuestMode,
+    exitGuestMode: store.exitGuestMode,
   };
 };

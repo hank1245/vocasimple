@@ -18,12 +18,13 @@ import { Colors } from "@/constants/Colors";
 import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter } from "expo-router";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 import Toast from "toastify-react-native";
 import { aiExampleService } from "@/utils/aiExampleService";
 import { useCreateWord } from "@/hooks/useVocabularyQuery";
 
 const AddScreen = () => {
+  const { user, isGuest } = useAuth();
   const [word, setWord] = useState("");
   const [meaning, setMeaning] = useState("");
   const [example, setExample] = useState("");
@@ -36,7 +37,7 @@ const AddScreen = () => {
 
   const onCreateExample = async () => {
     if (!word.trim() || !meaning.trim()) {
-      Alert.alert("알림", "단어와 뜻을 먼저 입력해주세요.");
+      Alert.alert("Notice", "Please enter word and meaning first.");
       return;
     }
 
@@ -49,13 +50,13 @@ const AddScreen = () => {
 
       if (result.success && result.example) {
         setExample(result.example);
-        console.log("AI 예시가 생성되었습니다!");
+        console.log("AI example generated!");
       } else {
-        Alert.alert("오류", result.error || "예시 생성에 실패했습니다.");
+        Alert.alert("Error", result.error || "Failed to generate example.");
       }
     } catch (error) {
       console.error("AI example generation error:", error);
-      Alert.alert("오류", "예시 생성 중 오류가 발생했습니다.");
+      Alert.alert("Error", "An error occurred while generating example.");
     } finally {
       setAiLoading(false);
     }
@@ -67,14 +68,12 @@ const AddScreen = () => {
 
   const onSave = async () => {
     if (word.trim() === "" || meaning.trim() === "") {
-      Alert.alert("알림", "단어 혹은 뜻 칸이 비었어요");
+      Alert.alert("Notice", "Word or meaning field is empty");
       return;
     }
 
-    // 전역 상태에서 사용자 정보 가져오기
-    const user = getCurrentUser();
-
-    if (!user) {
+    // 게스트 모드나 로그인 모드 모두 지원
+    if (!user && !isGuest) {
       Alert.alert("오류", "로그인이 필요합니다.");
       return;
     }
@@ -87,7 +86,7 @@ const AddScreen = () => {
         group: selectedGroup,
       });
 
-      Alert.alert("성공", "단어가 저장되었습니다.");
+      Alert.alert("Success", "Word has been saved.");
       setWord("");
       setMeaning("");
       setExample("");
@@ -122,7 +121,7 @@ const AddScreen = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <AppText style={styles.label} text="단어" />
+            <AppText style={styles.label} text="Word" />
             <TextInput
               style={styles.input}
               value={word}
@@ -131,7 +130,7 @@ const AddScreen = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <AppText style={styles.label} text="뜻" />
+            <AppText style={styles.label} text="Meaning" />
             <TextInput
               style={styles.input}
               value={meaning}
@@ -140,7 +139,7 @@ const AddScreen = () => {
           </View>
 
           <View style={styles.inputContainer}>
-            <AppText style={styles.label} text="예문(선택)" />
+            <AppText style={styles.label} text="Example (Optional)" />
             <TextInput
               style={styles.input}
               value={example}
@@ -162,7 +161,7 @@ const AddScreen = () => {
                 )}
                 <AppText
                   style={[styles.aiText, aiLoading && styles.aiTextDisabled]}
-                  text={aiLoading ? "AI로 예문 생성중..." : "AI로 예문 생성하기"}
+                  text={aiLoading ? "Generating example with AI..." : "Generate example with AI"}
                 />
               </TouchableOpacity>
             </View>

@@ -8,7 +8,7 @@ export const accountService = {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
-        return { success: false, error: "사용자 정보를 확인할 수 없습니다." };
+        return { success: false, error: "Unable to verify user information." };
       }
 
       // Delete user's associated data first (profiles, vocabulary, learning_streaks)
@@ -52,13 +52,13 @@ export const accountService = {
 
       if (deleteError) {
         console.error("Error deleting user account:", deleteError);
-        return { success: false, error: "계정 삭제 중 오류가 발생했습니다." };
+        return { success: false, error: "An error occurred while deleting the account." };
       }
 
       return { success: true };
     } catch (error) {
       console.error("Error in deleteAccount:", error);
-      return { success: false, error: "계정 삭제 중 예상치 못한 오류가 발생했습니다." };
+      return { success: false, error: "An unexpected error occurred while deleting the account." };
     }
   },
 
@@ -69,7 +69,7 @@ export const accountService = {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError || !user) {
-        return { success: false, error: "사용자 정보를 확인할 수 없습니다." };
+        return { success: false, error: "Unable to verify user information." };
       }
 
       // Use RPC function to delete account (if available)
@@ -86,7 +86,7 @@ export const accountService = {
       return { success: true };
     } catch (error) {
       console.error("Error in deleteAccountWithRPC:", error);
-      return { success: false, error: "계정 삭제 중 예상치 못한 오류가 발생했습니다." };
+      return { success: false, error: "An unexpected error occurred while deleting the account." };
     }
   },
 
@@ -97,13 +97,13 @@ export const accountService = {
       
       if (error) {
         console.error("Error signing out:", error);
-        return { success: false, error: "로그아웃 중 오류가 발생했습니다." };
+        return { success: false, error: "An error occurred while logging out." };
       }
 
       return { success: true };
     } catch (error) {
       console.error("Error in signOutUser:", error);
-      return { success: false, error: "로그아웃 중 예상치 못한 오류가 발생했습니다." };
+      return { success: false, error: "An unexpected error occurred while logging out." };
     }
   }
 };

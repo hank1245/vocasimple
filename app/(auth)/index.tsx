@@ -89,7 +89,7 @@ export default function Index() {
             ]}
             resizeMode="contain"
           />
-          <AuthButton text="시작하기" onPress={openBottomSheet} />
+          <AuthButton text="Get Started" onPress={openBottomSheet} />
         </SafeAreaView>
 
         <BottomSheet

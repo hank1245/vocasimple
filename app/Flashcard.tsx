@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Ionicons } from "@expo/vector-icons";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 import { VocabularyWord } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { Colors } from "@/constants/Colors";
@@ -22,6 +22,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 const FlashcardScreen = () => {
   const router = useRouter();
+  const { user, isGuest } = useAuth();
   const [vocabularyWords, setVocabularyWords] = useState<VocabularyWord[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -34,19 +35,18 @@ const FlashcardScreen = () => {
     useVocabulary("all");
 
   const fetchVocabularyWords = useCallback(async () => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
+    if (!user && !isGuest) return;
 
     try {
       // Use TanStack Query data instead of direct API call
       if (!vocabularyData || vocabularyData.length === 0) {
         console.log("No vocabulary words found for flashcard, showing alert");
         Alert.alert(
-          "단어 없음",
-          "저장한 단어가 없어요! 단어를 더 모아보세요!",
+          "No Words",
+          "You have no saved words! Please add more words!",
           [
             {
-              text: "확인",
+              text: "OK",
               onPress: () => router.back(),
             },
           ]
@@ -69,11 +69,11 @@ const FlashcardScreen = () => {
     } catch (error) {
       console.error("Error:", error);
       Alert.alert(
-        "오류",
-        "플래시카드를 생성하는 중 오류가 발생했습니다.",
+        "Error",
+        "An error occurred while creating flashcards.",
         [
           {
-            text: "확인",
+            text: "OK",
             onPress: () => router.back(),
           },
         ]
@@ -158,7 +158,7 @@ const FlashcardScreen = () => {
         <View style={styles.loadingContainer}>
           <AppText
             style={styles.loadingText}
-            text="플래시카드를 준비하고 있어요..."
+            text="Preparing flashcards..."
           />
         </View>
       </SafeAreaView>
@@ -171,7 +171,7 @@ const FlashcardScreen = () => {
         <View style={styles.loadingContainer}>
           <AppText
             style={styles.loadingText}
-            text="플래시카드를 생성할 수 없습니다."
+            text="Cannot create flashcards."
           />
         </View>
       </SafeAreaView>
@@ -194,7 +194,7 @@ const FlashcardScreen = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <AntDesign name="close" size={30} color="black" />
         </TouchableOpacity>
-        <AppText style={styles.title} text="플래시카드" />
+        <AppText style={styles.title} text="Flashcards" />
         <View style={styles.placeholder} />
       </View>
 
@@ -226,7 +226,7 @@ const FlashcardScreen = () => {
         >
           <Animated.View style={[styles.cardFace, { opacity: frontOpacity }]}>
             <AppText style={styles.cardText} text={currentWord.word} />
-            <AppText style={styles.cardHint} text="탭하여 뜻 보기" />
+            <AppText style={styles.cardHint} text="Tap to see meaning" />
           </Animated.View>
 
           <Animated.View
@@ -236,7 +236,7 @@ const FlashcardScreen = () => {
             {currentWord.example && (
               <AppText style={styles.exampleText} text={currentWord.example} />
             )}
-            <AppText style={styles.cardHint} text="탭하여 단어 보기" />
+            <AppText style={styles.cardHint} text="Tap to see word" />
           </Animated.View>
         </TouchableOpacity>
       </View>
@@ -260,12 +260,12 @@ const FlashcardScreen = () => {
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton} onPress={handleShuffle}>
             <Ionicons name="shuffle" size={20} color={Colors.primary} />
-            <AppText style={styles.actionButtonText} text="셔플" />
+            <AppText style={styles.actionButtonText} text="Shuffle" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={handleReset}>
             <Ionicons name="refresh" size={20} color={Colors.primary} />
-            <AppText style={styles.actionButtonText} text="처음으로" />
+            <AppText style={styles.actionButtonText} text="Start Over" />
           </TouchableOpacity>
         </View>
 
@@ -295,15 +295,14 @@ const FlashcardScreen = () => {
           <TouchableOpacity
             style={styles.completeButton}
             onPress={() => {
-              // Award fire streak when flashcard is completed
-              const user = getCurrentUser();
-              if (user) {
+              // Award fire streak when flashcard is completed (only for logged in users)
+              if (user && !isGuest) {
                 learningStreakService.addTodayCompletion(user.id);
               }
               router.push("/(tabs)");
             }}
           >
-            <AppText style={styles.completeButtonText} text="완료" />
+            <AppText style={styles.completeButtonText} text="Complete" />
           </TouchableOpacity>
         </View>
       )}

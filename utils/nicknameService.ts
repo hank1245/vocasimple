@@ -126,16 +126,16 @@ export const nicknameService = {
     
     // Check length (3-20 characters)
     if (cleanNickname.length < 3) {
-      return { isValid: false, error: "닉네임은 최소 3글자 이상이어야 합니다." };
+      return { isValid: false, error: "Nickname must be at least 3 characters long." };
     }
     if (cleanNickname.length > 20) {
-      return { isValid: false, error: "닉네임은 최대 20글자까지 가능합니다." };
+      return { isValid: false, error: "Nickname can be up to 20 characters long." };
     }
 
     // Check allowed characters (letters, numbers, Korean characters)
     const allowedPattern = /^[a-zA-Z0-9가-힣_]+$/;
     if (!allowedPattern.test(cleanNickname)) {
-      return { isValid: false, error: "닉네임은 영문, 숫자, 한글, 밑줄(_)만 사용 가능합니다." };
+      return { isValid: false, error: "Nickname can only contain letters, numbers, Korean characters, and underscores (_)." };
     }
 
     return { isValid: true };

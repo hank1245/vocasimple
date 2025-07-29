@@ -14,19 +14,26 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
 import { learningStreakService } from "@/utils/learningStreak";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 const windowWidth = Dimensions.get("window").width;
 
 const FireCalendar = () => {
   const router = useRouter();
+  const { user, isGuest } = useAuth();
   const [markedDates, setMarkedDates] = useState<Record<string, any>>({});
   const [maxStreak, setMaxStreak] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [totalFireCount, setTotalFireCount] = useState(0);
 
   const fetchStreakData = async () => {
-    const user = getCurrentUser();
-    if (!user) return;
+    if (isGuest || !user) {
+      // Set default values in guest mode
+      setMarkedDates({});
+      setMaxStreak(0);
+      setCurrentStreak(0);
+      setTotalFireCount(0);
+      return;
+    }
 
     try {
       const [markedDatesData, maxStreakData, currentStreakData, totalFireCountData] = await Promise.all([
@@ -64,7 +71,7 @@ const FireCalendar = () => {
             source={require("@/assets/images/flame.png")}
             style={styles.headerIcon}
           />
-          <Text style={styles.headerText}>불꽃 달력</Text>
+          <Text style={styles.headerText}>Fire Calendar</Text>
         </View>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="close" size={30} color="black" />
@@ -91,14 +98,14 @@ const FireCalendar = () => {
       </View>
       <View style={styles.record}>
         <View>
-          <AppText text="최대 연속 기록" style={styles.recordText} />
-          <AppText text="획득한 불꽃 수" style={styles.recordText} />
-          <AppText text="현재 연속 기록" style={styles.recordText} />
+          <AppText text="Max Streak" style={styles.recordText} />
+          <AppText text="Flames Earned" style={styles.recordText} />
+          <AppText text="Current Streak" style={styles.recordText} />
         </View>
         <View>
-          <AppText text={`${maxStreak}일`} style={styles.recordText} />
-          <AppText text={`${totalFireCount}개`} style={styles.recordText} />
-          <AppText text={`${currentStreak}일`} style={styles.recordText} />
+          <AppText text={`${maxStreak} days`} style={styles.recordText} />
+          <AppText text={`${totalFireCount} flames`} style={styles.recordText} />
+          <AppText text={`${currentStreak} days`} style={styles.recordText} />
         </View>
       </View>
     </SafeAreaView>

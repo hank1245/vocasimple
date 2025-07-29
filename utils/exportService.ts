@@ -33,11 +33,11 @@ export const exportService = {
   // Convert vocabulary data to CSV format
   convertToCSV(vocabularyData: VocabularyItem[]): string {
     if (!vocabularyData || vocabularyData.length === 0) {
-      return "단어,의미,예문,등록일\n";
+      return "Word,Meaning,Example,Registration Date\n";
     }
 
     // CSV header
-    const header = "단어,의미,예문,등록일\n";
+    const header = "Word,Meaning,Example,Registration Date\n";
     
     // Convert each vocabulary item to CSV row
     const rows = vocabularyData.map(item => {
@@ -95,14 +95,14 @@ export const exportService = {
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
         return {
           success: false,
-          error: "파일 공유 기능을 사용할 수 없습니다."
+          error: "File sharing feature is not available."
         };
       }
 
       // Share the file
       await Sharing.shareAsync(fileUri, {
         mimeType: 'text/csv',
-        dialogTitle: `단어 목록 공유 (${vocabularyCount}개 단어)`,
+        dialogTitle: `Share Word List (${vocabularyCount} words)`,
       });
 
       // Clean up temporary file after sharing
@@ -113,7 +113,7 @@ export const exportService = {
       console.error("Error in sendVocabularyEmail:", error);
       return { 
         success: false, 
-        error: "파일 공유 중 예상치 못한 오류가 발생했습니다." 
+        error: "An unexpected error occurred while sharing the file." 
       };
     }
   },
@@ -131,7 +131,7 @@ export const exportService = {
       if (vocabulary.length === 0) {
         return {
           success: false,
-          error: "저장된 단어가 없습니다."
+          error: "No saved words found."
         };
       }
 
@@ -148,7 +148,7 @@ export const exportService = {
       if (emailResult.success) {
         return {
           success: true,
-          message: `${vocabulary.length}개의 단어가 성공적으로 공유되었습니다.`
+          message: `${vocabulary.length} words have been successfully shared.`
         };
       } else {
         return {
@@ -160,7 +160,7 @@ export const exportService = {
       console.error("Error in exportVocabularyToEmail:", error);
       return {
         success: false,
-        error: "단어 내보내기 중 오류가 발생했습니다."
+        error: "An error occurred while exporting words."
       };
     }
   },

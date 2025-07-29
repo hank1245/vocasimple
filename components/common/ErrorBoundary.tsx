@@ -44,12 +44,12 @@ class ErrorBoundary extends React.Component<Props, State> {
 
       return (
         <View style={styles.container}>
-          <Text style={styles.title}>앱에 오류가 발생했습니다</Text>
+          <Text style={styles.title}>An error occurred in the app</Text>
           <Text style={styles.message}>
-            {this.state.error?.message || '알 수 없는 오류가 발생했습니다'}
+            {this.state.error?.message || 'An unknown error occurred'}
           </Text>
           <TouchableOpacity style={styles.button} onPress={this.resetError}>
-            <Text style={styles.buttonText}>다시 시도</Text>
+            <Text style={styles.buttonText}>Try Again</Text>
           </TouchableOpacity>
         </View>
       );

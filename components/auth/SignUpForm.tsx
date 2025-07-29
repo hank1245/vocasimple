@@ -4,12 +4,17 @@ import AuthButton from "./AuthButton";
 import AppText from "../common/AppText";
 import { FormType } from "@/types/auth";
 import { supabase } from "@/utils/supabase";
+import { handleSignUpSync } from "@/utils/unifiedVocabularyApi";
+import { useAuth } from "@/stores/authStore";
+import BottomSheet from "@gorhom/bottom-sheet";
 
 interface Props {
   changeFormType: (type: FormType) => void;
+  bottomSheetRef?: React.RefObject<BottomSheet>;
 }
 
-const SignUpForm = ({ changeFormType }: Props) => {
+const SignUpForm = ({ changeFormType, bottomSheetRef }: Props) => {
+  const { enterGuestMode } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,11 +36,11 @@ const SignUpForm = ({ changeFormType }: Props) => {
 
   async function signUpWithEmail() {
     if (!isValidEmail(email)) {
-      Alert.alert("이메일 형식이 올바르지 않습니다.");
+      Alert.alert("Invalid email format.");
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+      Alert.alert("Password and password confirmation do not match.");
       return;
     }
     
@@ -52,14 +57,19 @@ const SignUpForm = ({ changeFormType }: Props) => {
 
       if (error) {
         console.error("Signup error:", error);
-        Alert.alert("회원가입 실패", error.message);
+        Alert.alert("Sign Up Failed", error.message);
       } else if (!session) {
-        Alert.alert("계정을 생성했습니다. 이메일 인증 후 로그인해 주세요!");
+        Alert.alert("Account created! Please verify your email and then log in.");
         changeFormType("LOGIN");
+      } else {
+        // 회원가입 성공 후 로컬 데이터를 서버로 동기화 (백그라운드에서 실행)
+        if (session.user) {
+          handleSignUpSync(session.user.id).catch(console.error);
+        }
       }
     } catch (err) {
       console.error("Signup exception:", err);
-      Alert.alert("네트워크 오류", "인터넷 연결을 확인해주세요.");
+      Alert.alert("Network Error", "Please check your internet connection.");
     } finally {
       setLoading(false);
     }
@@ -69,15 +79,20 @@ const SignUpForm = ({ changeFormType }: Props) => {
     changeFormType("LOGIN");
   };
 
+  const handleGuestStart = () => {
+    enterGuestMode();
+    bottomSheetRef?.current?.close();
+  };
+
   return (
     <View style={styles.container}>
       <View>
-        <AppText style={styles.label} text="이름" />
+        <AppText style={styles.label} text="Name" />
         <TextInput style={styles.input} value={name} onChangeText={setName} />
       </View>
 
       <View>
-        <AppText style={styles.label} text="email 주소" />
+        <AppText style={styles.label} text="Email Address" />
         <TextInput
           style={styles.input}
           keyboardType="email-address"
@@ -87,29 +102,29 @@ const SignUpForm = ({ changeFormType }: Props) => {
       </View>
 
       <View>
-        <AppText style={styles.label} text="비밀번호" />
+        <AppText style={styles.label} text="Password" />
         <TextInput
           style={styles.input}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
-          placeholder="6자리 이상"
+          placeholder="6+ characters"
         />
       </View>
 
       <View style={{ marginBottom: 30 }}>
-        <AppText style={styles.label} text="비밀번호 확인" />
+        <AppText style={styles.label} text="Confirm Password" />
         <TextInput
           style={styles.input}
           secureTextEntry
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          placeholder="6자리 이상"
+          placeholder="6+ characters"
         />
       </View>
 
       <AuthButton
-        text="회원 가입하기"
+        text="Sign Up"
         onPress={signUpWithEmail}
         disabled={isDisabled || loading}
       />
@@ -117,11 +132,23 @@ const SignUpForm = ({ changeFormType }: Props) => {
       {/* Google 로그인 버튼 및 관련 코드 제거됨 */}
 
       <View style={styles.guidance}>
-        <AppText style={styles.guide} text="이미 계정이 있으신가요?" />
+        <AppText style={styles.guide} text="Already have an account?" />
         <Pressable onPress={onChangeFormToLogin}>
-          <AppText style={styles.link} text="로그인" />
+          <AppText style={styles.link} text="Login" />
         </Pressable>
       </View>
+
+      <View style={styles.divider}>
+        <View style={styles.line} />
+        <AppText style={styles.dividerText} text="or" />
+        <View style={styles.line} />
+      </View>
+
+      <AuthButton
+        text="Start as Guest"
+        onPress={handleGuestStart}
+        variant="secondary"
+      />
     </View>
   );
 };
@@ -164,6 +191,22 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+    width: 321,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#E0E0E0",
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: "#888",
   },
 });
 

@@ -18,10 +18,11 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useRouter } from "expo-router";
 import { QuizMode } from "@/types/common";
 import { learningStreakService } from "@/utils/learningStreak";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 
 const QuizTab = () => {
   const router = useRouter();
+  const { user, isGuest } = useAuth();
   const [currentMonthCount, setCurrentMonthCount] = useState(0);
   const [totalDaysInMonth, setTotalDaysInMonth] = useState(0);
   const [showQuizFilterModal, setShowQuizFilterModal] = useState(false);
@@ -29,12 +30,19 @@ const QuizTab = () => {
   const [scaleAnim] = useState(new Animated.Value(1));
 
   const fetchFireCount = async () => {
-    const user = getCurrentUser();
-    if (!user) return;
+    if (isGuest) {
+      // 게스트 모드에서는 기본값 설정
+      setCurrentMonthCount(0);
+      setTotalDaysInMonth(learningStreakService.getCurrentMonthTotalDays());
+      return;
+    }
+
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
 
     try {
       const monthCount = await learningStreakService.getCurrentMonthCount(
-        user.id
+        currentUser.id
       );
       const totalDays = learningStreakService.getCurrentMonthTotalDays();
 
@@ -99,7 +107,7 @@ const QuizTab = () => {
             onPress={() => handleNavigateToMultipleChoiceQuestions("meaning")}
           >
             <Ionicons name="list" size={34} color="white" />
-            <AppText style={styles.cardText} text="뜻 맞추기" />
+            <AppText style={styles.cardText} text="Meaning Match" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -107,7 +115,7 @@ const QuizTab = () => {
             onPress={() => handleNavigateToMultipleChoiceQuestions("word")}
           >
             <Ionicons name="text" size={34} color="white" />
-            <AppText style={styles.cardText} text="단어 맞추기" />
+            <AppText style={styles.cardText} text="Word Match" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -119,7 +127,7 @@ const QuizTab = () => {
               size={34}
               color="white"
             />
-            <AppText style={styles.cardText} text="플래시카드" />
+            <AppText style={styles.cardText} text="Flashcard" />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -127,7 +135,7 @@ const QuizTab = () => {
             onPress={() => router.push("/WritingPractice")}
           >
             <Entypo name="pencil" size={34} color="white" />
-            <AppText style={styles.cardText} text="쓰기 연습" />
+            <AppText style={styles.cardText} text="Writing Practice" />
           </TouchableOpacity>
         </View>
 
@@ -141,13 +149,17 @@ const QuizTab = () => {
         >
           <TouchableOpacity
             style={styles.progressTouchable}
-            onPress={handleFireCalendarPress}
-            activeOpacity={0.8}
+            onPress={isGuest ? undefined : handleFireCalendarPress}
+            activeOpacity={isGuest ? 1 : 0.8}
           >
             <View style={styles.progressHeader}>
               <AppText
                 style={styles.progressText}
-                text="매일 퀴즈를 달성하고 불꽃을 밝히세요!"
+                text={
+                  isGuest
+                    ? "Sign up and manage your learning records!"
+                    : "Complete daily quizzes and light up flames!"
+                }
               />
             </View>
 
@@ -157,12 +169,18 @@ const QuizTab = () => {
             />
             <AppText
               style={styles.progressSubText}
-              text={`이번 달 획득한 불꽃: ${currentMonthCount}/${totalDaysInMonth}`}
+              text={
+                isGuest
+                  ? "Guest Mode"
+                  : `Flames earned this month: ${currentMonthCount}/${totalDaysInMonth}`
+              }
             />
 
-            <View style={styles.clickHint}>
-              <AppText style={styles.clickHintText} text="캘린더 보기" />
-            </View>
+            {!isGuest && (
+              <View style={styles.clickHint}>
+                <AppText style={styles.clickHintText} text="View Calendar" />
+              </View>
+            )}
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -176,11 +194,11 @@ const QuizTab = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle} text="퀴즈 설정" />
+            <AppText style={styles.modalTitle} text="Quiz Settings" />
 
             <AppText
               style={styles.modalSubtitle}
-              text="어떤 단어로 퀴즈를 진행하시겠습니까?"
+              text="Which words would you like to use for the quiz?"
             />
 
             <TouchableOpacity
@@ -191,11 +209,11 @@ const QuizTab = () => {
               <View style={styles.filterOptionText}>
                 <AppText
                   style={styles.filterOptionTitle}
-                  text="암기되지 않은 단어만"
+                  text="Unmemorized Words Only"
                 />
                 <AppText
                   style={styles.filterOptionSubtitle}
-                  text="아직 암기하지 못한 단어들로 퀴즈 진행"
+                  text="Quiz with words you haven't memorized yet"
                 />
               </View>
             </TouchableOpacity>
@@ -210,10 +228,10 @@ const QuizTab = () => {
                 color={Colors.primary}
               />
               <View style={styles.filterOptionText}>
-                <AppText style={styles.filterOptionTitle} text="모든 단어" />
+                <AppText style={styles.filterOptionTitle} text="All Words" />
                 <AppText
                   style={styles.filterOptionSubtitle}
-                  text="저장된 모든 단어들로 퀴즈 진행"
+                  text="Quiz with all saved words"
                 />
               </View>
             </TouchableOpacity>
@@ -222,7 +240,7 @@ const QuizTab = () => {
               style={styles.modalCancelButton}
               onPress={() => setShowQuizFilterModal(false)}
             >
-              <AppText style={styles.modalCancelText} text="취소" />
+              <AppText style={styles.modalCancelText} text="Cancel" />
             </TouchableOpacity>
           </View>
         </View>

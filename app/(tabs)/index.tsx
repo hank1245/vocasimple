@@ -31,7 +31,7 @@ const Index = () => {
   >("all");
 
   // Zustand stores
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
 
   // TanStack Query hooks
   const {
@@ -52,26 +52,26 @@ const Index = () => {
   // Prefetch other filter data when component mounts (only once)
   useFocusEffect(
     useCallback(() => {
-      // Only prefetch if not already cached and user is logged in
-      if (user) {
+      // Only prefetch if not already cached and user is logged in or guest
+      if (user || isGuest) {
         // Prefetch only the filters that are likely to be used
         if (currentFilter !== "all") prefetchVocabulary("all");
         if (currentFilter !== "memorized") prefetchVocabulary("memorized");
         if (currentFilter !== "unmemorized") prefetchVocabulary("unmemorized");
       }
-    }, [prefetchVocabulary, user, currentFilter])
+    }, [prefetchVocabulary, user, isGuest, currentFilter])
   );
 
   // Get filter display text
   const getFilterText = (filter: "all" | "memorized" | "unmemorized") => {
     switch (filter) {
       case "memorized":
-        return "외운 단어";
+        return "Memorized Words";
       case "unmemorized":
-        return "미암기";
+        return "Unmemorized";
       case "all":
       default:
-        return "전체";
+        return "All";
     }
   };
 
@@ -80,14 +80,14 @@ const Index = () => {
   };
 
   const handleDeleteVocabulary = async (index: number) => {
-    if (!user) {
+    if (!user && !isGuest) {
       console.log("사용자가 로그인되지 않았습니다.");
       return;
     }
 
     const item = vocabularyList[index];
     if (!item?.id) {
-      console.error("삭제할 단어 ID가 없습니다.");
+      console.error("No word ID to delete.");
       return;
     }
 
@@ -120,11 +120,11 @@ const Index = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.errorContainer}>
           <AppText
-            text="데이터를 불러오는 중 오류가 발생했습니다"
+            text="An error occurred while loading data"
             style={styles.errorText}
           />
           <AppText
-            text={error.message || "알 수 없는 오류"}
+            text={error.message || "Unknown error"}
             style={styles.errorDetailText}
           />
         </View>
@@ -137,7 +137,7 @@ const Index = () => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
-          <AppText text="로딩 중..." style={styles.loadingText} />
+          <AppText text="Loading..." style={styles.loadingText} />
         </View>
       </SafeAreaView>
     );
@@ -165,9 +165,7 @@ const Index = () => {
         <View style={styles.topbar}>
           <AppText
             style={styles.filterStatusText}
-            text={`${getFilterText(currentFilter)} (${
-              vocabularyList.length
-            }개)`}
+            text={`${getFilterText(currentFilter)} (${vocabularyList.length})`}
           />
           <View style={styles.modeButtons}>
             <TouchableOpacity
@@ -179,7 +177,7 @@ const Index = () => {
                   styles.modeText,
                   mode === "word" ? { color: "white" } : undefined,
                 ]}
-                text="단어만"
+                text="Words Only"
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -196,7 +194,7 @@ const Index = () => {
                   styles.modeText,
                   mode === "meaning" ? { color: "white" } : undefined,
                 ]}
-                text="뜻만"
+                text="Meanings Only"
               />
             </TouchableOpacity>
           </View>
@@ -224,11 +222,11 @@ const Index = () => {
         ) : (
           <View style={styles.emptyMessageContainer}>
             <AppText
-              text="상단의 + 버튼을 눌러"
+              text="Tap the + button above"
               style={styles.emptyMessageText}
             />
             <AppText
-              text="단어를 추가해 보세요!"
+              text="to add your first word!"
               style={styles.emptyMessageText}
             />
           </View>
@@ -244,7 +242,7 @@ const Index = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle} text="필터 선택" />
+            <AppText style={styles.modalTitle} text="Select Filter" />
 
             <TouchableOpacity
               style={[
@@ -258,7 +256,7 @@ const Index = () => {
                   styles.filterOptionText,
                   currentFilter === "all" && styles.selectedFilterText,
                 ]}
-                text="전체"
+                text="All"
               />
             </TouchableOpacity>
 
@@ -274,7 +272,7 @@ const Index = () => {
                   styles.filterOptionText,
                   currentFilter === "memorized" && styles.selectedFilterText,
                 ]}
-                text="외운 단어"
+                text="Memorized Words"
               />
             </TouchableOpacity>
 
@@ -290,7 +288,7 @@ const Index = () => {
                   styles.filterOptionText,
                   currentFilter === "unmemorized" && styles.selectedFilterText,
                 ]}
-                text="미암기"
+                text="Unmemorized"
               />
             </TouchableOpacity>
 
@@ -298,7 +296,7 @@ const Index = () => {
               style={styles.modalCancelButton}
               onPress={() => setShowFilterModal(false)}
             >
-              <AppText style={styles.modalCancelText} text="취소" />
+              <AppText style={styles.modalCancelText} text="Cancel" />
             </TouchableOpacity>
           </View>
         </View>
@@ -310,7 +308,7 @@ const Index = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   headerContainer: {
     flexDirection: "row",
@@ -443,7 +441,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
-  
+
   // Error and loading styles
   errorContainer: {
     flex: 1,

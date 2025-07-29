@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { Ionicons } from "@expo/vector-icons";
-import { getCurrentUser } from "@/stores/authStore";
+import { getCurrentUser, useAuth } from "@/stores/authStore";
 import { VocabularyWord } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { Toast } from "toastify-react-native";
@@ -27,6 +27,7 @@ import {
 
 const WritingPracticeScreen = () => {
   const router = useRouter();
+  const { user, isGuest } = useAuth();
   const [vocabularyWords, setVocabularyWords] = useState<VocabularyWord[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userInput, setUserInput] = useState("");
@@ -145,9 +146,8 @@ const WritingPracticeScreen = () => {
       setShowHint(false);
       setShowFeedback(false);
     } else {
-      // Award fire streak when writing practice is completed
-      const user = getCurrentUser();
-      if (user) {
+      // Award fire streak when writing practice is completed (only for logged in users)
+      if (user && !isGuest) {
         learningStreakService.addTodayCompletion(user.id);
 
         // Use passed arrays or fallback to component state
@@ -195,8 +195,7 @@ const WritingPracticeScreen = () => {
   useEffect(() => {
     // Process vocabulary data when it's loaded
     if (!vocabularyLoading && vocabularyData && vocabularyData.length > 0) {
-      const currentUser = getCurrentUser();
-      if (!currentUser) return;
+      if (!user && !isGuest) return;
 
       try {
         const shuffledWords = vocabularyData.sort(() => Math.random() - 0.5);
@@ -216,11 +215,11 @@ const WritingPracticeScreen = () => {
       } catch (error) {
         console.error("Error:", error);
         Alert.alert(
-          "오류",
-          "단어를 불러오는 중 오류가 발생했습니다.",
+          "Error",
+          "An error occurred while loading words.",
           [
             {
-              text: "확인",
+              text: "OK",
               onPress: () => router.back(),
             },
           ]
@@ -233,11 +232,11 @@ const WritingPracticeScreen = () => {
     ) {
       console.log("No vocabulary words found, showing alert");
       Alert.alert(
-        "단어 없음",
-        "저장한 단어가 없어요! 단어를 더 모아보세요!",
+        "No Words",
+        "You have no saved words! Please add more words!",
         [
           {
-            text: "확인",
+            text: "OK",
             onPress: () => router.back(),
           },
         ]
@@ -251,7 +250,7 @@ const WritingPracticeScreen = () => {
         <View style={styles.loadingContainer}>
           <AppText
             style={styles.loadingText}
-            text="Writing Practice를 준비하고 있어요..."
+            text="Preparing Writing Practice..."
           />
         </View>
       </SafeAreaView>
@@ -264,7 +263,7 @@ const WritingPracticeScreen = () => {
         <View style={styles.loadingContainer}>
           <AppText
             style={styles.loadingText}
-            text="Writing Practice를 생성할 수 없습니다."
+            text="Cannot generate Writing Practice."
           />
         </View>
       </SafeAreaView>
@@ -281,7 +280,7 @@ const WritingPracticeScreen = () => {
         <View style={styles.loadingContainer}>
           <AppText
             style={styles.loadingText}
-            text="단어를 불러오는 중..."
+            text="Loading words..."
           />
         </View>
       </SafeAreaView>
@@ -328,7 +327,7 @@ const WritingPracticeScreen = () => {
               ]}
               value={userInput}
               onChangeText={setUserInput}
-              placeholder="단어를 입력하세요..."
+              placeholder="Enter the word..."
               placeholderTextColor="#999"
               editable={!showFeedback}
               autoCorrect={false}
@@ -340,7 +339,7 @@ const WritingPracticeScreen = () => {
           {showHint && (
             <AppText
               style={styles.hintText}
-              text={`힌트: ${currentWord.word.charAt(0).toUpperCase()}...`}
+              text={`Hint: ${currentWord.word.charAt(0).toUpperCase()}...`}
             />
           )}
         </View>
@@ -361,7 +360,7 @@ const WritingPracticeScreen = () => {
                 styles.hintButtonText,
                 showHint && styles.hintButtonTextUsed,
               ]}
-              text="힌트"
+              text="Hint"
             />
           </TouchableOpacity>
 
