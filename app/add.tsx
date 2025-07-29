@@ -11,14 +11,13 @@ import {
   Alert,
   TouchableWithoutFeedback,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 import { Colors } from "@/constants/Colors";
 import AppText from "@/components/common/AppText";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { useRouter } from "expo-router";
-import { getCurrentUser, useAuth } from "@/stores/authStore";
+import { useAuth } from "@/stores/authStore";
 import Toast from "toastify-react-native";
 import { aiExampleService } from "@/utils/aiExampleService";
 import { useCreateWord } from "@/hooks/useVocabularyQuery";
@@ -105,13 +104,15 @@ const AddScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={handleBackgroundPress}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <View style={styles.container}>
           <View style={styles.header}>
             <Pressable onPress={onGoBack}>
               <Ionicons name="close" size={34} color="black" />
             </Pressable>
-            <Pressable onPress={createWordMutation.isPending ? () => {} : onSave}>
+            <Pressable
+              onPress={createWordMutation.isPending ? () => {} : onSave}
+            >
               {createWordMutation.isPending ? (
                 <ActivityIndicator size="small" color={Colors.primary} />
               ) : (
@@ -145,26 +146,32 @@ const AddScreen = () => {
               value={example}
               onChangeText={setExample}
             />
-            <View style={styles.aiButton}>
-              <TouchableOpacity
-                style={[
-                  styles.aiButtonContainer,
-                  aiLoading && styles.aiButtonDisabled,
-                ]}
-                onPress={onCreateExample}
-                disabled={aiLoading}
-              >
-                {aiLoading ? (
-                  <ActivityIndicator size="small" color="#6D60F8" />
-                ) : (
-                  <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
-                )}
-                <AppText
-                  style={[styles.aiText, aiLoading && styles.aiTextDisabled]}
-                  text={aiLoading ? "Generating example with AI..." : "Generate example with AI"}
-                />
-              </TouchableOpacity>
-            </View>
+            {user && !isGuest && (
+              <View style={styles.aiButton}>
+                <TouchableOpacity
+                  style={[
+                    styles.aiButtonContainer,
+                    aiLoading && styles.aiButtonDisabled,
+                  ]}
+                  onPress={onCreateExample}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? (
+                    <ActivityIndicator size="small" color="#6D60F8" />
+                  ) : (
+                    <FontAwesome5 name="pen-nib" size={20} color="#6D60F8" />
+                  )}
+                  <AppText
+                    style={[styles.aiText, aiLoading && styles.aiTextDisabled]}
+                    text={
+                      aiLoading
+                        ? "Generating example with AI..."
+                        : "Generate example with AI"
+                    }
+                  />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
         <Toast

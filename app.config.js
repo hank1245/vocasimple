@@ -54,6 +54,7 @@ export default {
     scheme: "vocasimple",
     plugins: [
       "expo-router",
+      "expo-splash-screen",
       [
         "expo-font",
         {

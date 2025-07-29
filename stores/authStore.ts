@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { supabase } from "@/utils/supabase";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { handleSignOutBackup } from "@/utils/unifiedVocabularyApi";
 
 interface AuthStore {
   user: User | null;
@@ -32,16 +33,21 @@ export const useAuthStore = create<AuthStore>()(
         return;
       }
 
-      // 타임아웃 설정 (10초)
+      console.log("Starting auth initialization...");
+
+      // 타임아웃 설정 (5초로 단축)
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Auth initialization timeout")), 10000);
+        setTimeout(
+          () => reject(new Error("Auth initialization timeout")),
+          5000
+        );
       });
 
       try {
         // 초기 세션 가져오기 (타임아웃과 함께)
         const sessionPromise = supabase.auth.getSession();
         const result = await Promise.race([sessionPromise, timeoutPromise]);
-        
+
         const {
           data: { session },
           error,
@@ -53,6 +59,8 @@ export const useAuthStore = create<AuthStore>()(
           return;
         }
 
+        console.log("Auth initialization completed, session:", !!session);
+
         set({
           session,
           user: session?.user ?? null,
@@ -63,9 +71,17 @@ export const useAuthStore = create<AuthStore>()(
         // 세션 변경 리스너 설정
         const { data: authListener } = supabase.auth.onAuthStateChange(
           (event: AuthChangeEvent, session: Session | null) => {
-            // 불필요한 리렌더링 방지
+            console.log("Auth state change:", event, !!session);
+
+            // 불필요한 리렌더링 방지 - 세션이 실제로 변경된 경우만 업데이트
             const currentState = get();
-            if (currentState.session?.user?.id === session?.user?.id) {
+            const currentUserId = currentState.session?.user?.id;
+            const newUserId = session?.user?.id;
+
+            if (
+              currentUserId === newUserId &&
+              !!currentState.session === !!session
+            ) {
               return;
             }
 
@@ -81,11 +97,11 @@ export const useAuthStore = create<AuthStore>()(
       } catch (error) {
         console.error("Auth initialization error:", error);
         // 에러가 발생해도 앱이 계속 실행되도록 함
-        set({ 
-          loading: false, 
+        set({
+          loading: false,
           initialized: true,
           session: null,
-          user: null 
+          user: null,
         });
       }
     },
@@ -103,10 +119,9 @@ export const useAuthStore = create<AuthStore>()(
       try {
         // 로그아웃 전에 서버 데이터를 로컬로 백업
         if (currentState.user && !currentState.isGuest) {
-          const { handleSignOutBackup } = await import('@/utils/unifiedVocabularyApi');
           await handleSignOutBackup(currentState.user.id).catch(console.error);
         }
-        
+
         const { error } = await supabase.auth.signOut();
         if (error) {
           console.error("Sign out error:", error);
@@ -123,7 +138,7 @@ export const useAuthStore = create<AuthStore>()(
         loading: false,
         initialized: true,
         user: null,
-        session: null
+        session: null,
       });
     },
 
@@ -133,7 +148,7 @@ export const useAuthStore = create<AuthStore>()(
         loading: false,
         initialized: true,
         user: null,
-        session: null
+        session: null,
       });
     },
   }))

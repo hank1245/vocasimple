@@ -4,7 +4,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import { useFonts } from "expo-font";
@@ -16,9 +16,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/utils/queryClient";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-import { Platform, Alert, TouchableOpacity, View } from "react-native";
+import { Platform, TouchableOpacity } from "react-native";
 import AppText from "@/components/common/AppText";
-import * as DevMenu from "expo-dev-menu";
 
 // Polyfills for Android 8.0 compatibility
 if (!global.structuredClone) {
@@ -29,126 +28,151 @@ if (!global.structuredClone) {
 
 // Promise.allSettled polyfill (may be missing in Android 8.0)
 if (!Promise.allSettled) {
-  Promise.allSettled = function(promises: Promise<any>[]) {
-    return Promise.all(promises.map(p => Promise.resolve(p).then(
-      val => ({ status: 'fulfilled' as const, value: val }),
-      err => ({ status: 'rejected' as const, reason: err })
-    )));
+  Promise.allSettled = function (promises: Promise<any>[]) {
+    return Promise.all(
+      promises.map((p) =>
+        Promise.resolve(p).then(
+          (val) => ({ status: "fulfilled" as const, value: val }),
+          (err) => ({ status: "rejected" as const, reason: err })
+        )
+      )
+    );
   };
 }
 
+// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const { session, loading, initialized, initialize, cleanup, isGuest } = useAuth();
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [initError, setInitError] = useState<string | null>(null);
+// Navigation hook that safely handles routing
+function useProtectedRoute() {
+  const { session, loading, initialized, isGuest } = useAuth();
+  const segments = useSegments();
   const router = useRouter();
 
-  // App initialization completion log (useful in production)
   useEffect(() => {
-    if (loaded && initialized && !loading) {
-      console.log("App initialization completed successfully");
+    if (!initialized || loading) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+    const inTabGroup = segments[0] === "(tabs)";
+
+    if (session || isGuest) {
+      // User is signed in or in guest mode
+      if (inAuthGroup) {
+        router.replace("/(tabs)");
+      }
+    } else {
+      // User is not signed in
+      if (inTabGroup) {
+        router.replace("/(auth)");
+      }
     }
-  }, [loaded, initialized, loading]);
+  }, [session, isGuest, initialized, loading, segments, router]);
+}
 
-  // Platform information (useful for error debugging)
-  useEffect(() => {
-    console.log(`App running on ${Platform.OS} ${Platform.Version}`);
-  }, []);
-
-  // Authentication initialization
-  useEffect(() => {
-    initialize().catch((error) => {
-      console.error("Auth initialization failed:", error);
-      setInitError(error.message || "Authentication initialization failed");
-    });
-
-    return () => {
-      cleanup();
-    };
-  }, [initialize, cleanup]);
-
-
-  // Session change detection
-  useEffect(() => {
-    if (initialized && !loading) {
-      setIsNavigating(true);
-    }
-  }, [session, isGuest, initialized, loading]);
-
+export default function RootLayout() {
+  const { session, loading, initialized, initialize, cleanup, isGuest } =
+    useAuth();
+  const [initError, setInitError] = useState<string | null>(null);
+  const [appIsReady, setAppIsReady] = useState(false);
   const colorScheme = useColorScheme();
 
   const [loaded, error] = useFonts({
     Lexend: require("../assets/fonts/Lexend.ttf"),
   });
 
-
-  // Initial navigation
+  // Platform information (useful for error debugging)
   useEffect(() => {
-    const handleInitialNavigation = async () => {
-      if ((loaded || error) && initialized && !loading && !isNavigating) {
-        await SplashScreen.hideAsync();
-        
-        setTimeout(() => {
-          try {
-            if (session || isGuest) {
-              router.replace("/(tabs)");
-            } else {
-              router.replace("/(auth)");
-            }
-          } catch (error) {
-            console.error("Navigation error:", error);
-          }
-        }, 500);
+    console.log(`App running on ${Platform.OS} ${Platform.Version}`);
+  }, []);
+
+  // Initialize authentication once
+  useEffect(() => {
+    let isMounted = true;
+
+    const initAuth = async () => {
+      try {
+        await initialize();
+      } catch (error) {
+        if (isMounted) {
+          console.error("Auth initialization failed:", error);
+          setInitError(
+            error instanceof Error
+              ? error.message
+              : "Authentication initialization failed"
+          );
+        }
       }
     };
-    handleInitialNavigation();
-  }, [loaded, error, initialized, loading, session, isGuest, isNavigating, router]);
 
-  // Navigation on session change
+    initAuth();
+
+    return () => {
+      isMounted = false;
+      cleanup();
+    };
+  }, [initialize, cleanup]);
+
+  // Check if app is ready
   useEffect(() => {
-    if (isNavigating && initialized && !loading && (loaded || error)) {
-      setTimeout(() => {
-        try {
-          if (session || isGuest) {
-            router.replace("/(tabs)");
-          } else {
-            router.replace("/(auth)");
-          }
-          setIsNavigating(false);
-        } catch (error) {
-          console.error("Session navigation error:", error);
-          setIsNavigating(false);
-        }
-      }, 500);
-    }
-  }, [isNavigating, session, isGuest, initialized, loading, loaded, error, router]);
+    const prepareApp = async () => {
+      try {
+        // Wait for fonts and auth to be ready
+        if ((loaded || error) && initialized && !loading && !appIsReady) {
+          console.log("App initialization completed successfully");
 
-  if (!loaded || !initialized || loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
-        <AppText style={{ fontSize: 20 }} text="Loading..." />
-      </View>
-    );
+          // Small delay to ensure everything is ready
+          await new Promise((resolve) => setTimeout(resolve, 300));
+
+          setAppIsReady(true);
+
+          // Hide splash screen
+          await SplashScreen.hideAsync();
+        }
+      } catch (error) {
+        console.error("App preparation error:", error);
+        setInitError("Failed to initialize app");
+        setAppIsReady(true);
+        await SplashScreen.hideAsync().catch(() => {});
+      }
+    };
+
+    prepareApp();
+  }, [loaded, error, initialized, loading, appIsReady]);
+
+  // Show loading screen while app is not ready
+  if (!appIsReady || !initialized || loading || (!loaded && !error)) {
+    return null; // Let splash screen show
   }
 
   // Show error screen on initialization error
   if (initError) {
     return (
       <ErrorBoundary>
-        <GestureHandlerRootView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-          <AppText style={{ fontSize: 18, color: 'red', textAlign: 'center', marginBottom: 20 }}>
-            App initialization failed
-          </AppText>
-          <TouchableOpacity 
-            style={{ backgroundColor: '#6D60F8', padding: 10, borderRadius: 8 }}
+        <GestureHandlerRootView
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <AppText
+            text="App initialization failed"
+            style={{
+              fontSize: 18,
+              color: "red",
+              textAlign: "center",
+              marginBottom: 20,
+            }}
+          />
+          <TouchableOpacity
+            style={{ backgroundColor: "#6D60F8", padding: 10, borderRadius: 8 }}
             onPress={() => {
               setInitError(null);
               initialize();
             }}
           >
-            <AppText style={{ color: 'white' }} text="Try Again" />
+            <AppText style={{ color: "white" }} text="Try Again" />
           </TouchableOpacity>
         </GestureHandlerRootView>
       </ErrorBoundary>
@@ -162,14 +186,22 @@ export default function RootLayout() {
           <ThemeProvider
             value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
           >
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            </Stack>
+            <RootLayoutNav />
             <ToastManager />
           </ThemeProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
     </ErrorBoundary>
+  );
+}
+
+function RootLayoutNav() {
+  useProtectedRoute();
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
   );
 }

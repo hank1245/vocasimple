@@ -113,20 +113,8 @@ const ProfileTab = () => {
   };
 
   const handleSignUp = () => {
-    Alert.alert(
-      "Sign Up",
-      "Sign up to enjoy these benefits:\n\n• Save words to cloud\n• Access from other devices\n• Learning records & statistics\n• Leaderboard participation\n\nWould you like to start now?",
-      [
-        { text: "Later", style: "cancel" },
-        {
-          text: "Sign Up",
-          onPress: () => {
-            exitGuestMode();
-            router.replace("/(auth)");
-          },
-        },
-      ]
-    );
+    exitGuestMode();
+    router.replace("/(auth)");
   };
 
   const handleExportVocabulary = async () => {
@@ -266,10 +254,13 @@ const ProfileTab = () => {
                   style={styles.joinDate}
                   text={
                     user?.created_at
-                      ? `Joined ${new Date(user.created_at).toLocaleDateString('en-US', { 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}`
+                      ? `Joined ${new Date(user.created_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "long",
+                            year: "numeric",
+                          }
+                        )}`
                       : "No join date information"
                   }
                 />
@@ -452,15 +443,91 @@ const ProfileTab = () => {
         )}
 
         {isGuest ? (
-          <TouchableOpacity
-            style={styles.buttonContainer}
-            onPress={handleSignUp}
-          >
-            <AppText
-              text="Sign Up"
-              style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
-            />
-          </TouchableOpacity>
+          <>
+            {/* Benefits List for Guest Users */}
+            <View style={styles.benefitsContainer}>
+              <AppText style={styles.benefitsTitle} text="Sign up to unlock:" />
+
+              <View style={styles.benefitItem}>
+                <MaterialIcons
+                  name="cloud-upload"
+                  size={24}
+                  color={Colors.primary}
+                />
+                <View style={styles.benefitTextContainer}>
+                  <AppText style={styles.benefitTitle} text="Cloud Sync" />
+                  <AppText
+                    style={styles.benefitDescription}
+                    text="Save words to cloud and access from any device"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.benefitItem}>
+                <MaterialIcons
+                  name="auto-awesome"
+                  size={24}
+                  color={Colors.primary}
+                />
+                <View style={styles.benefitTextContainer}>
+                  <AppText
+                    style={styles.benefitTitle}
+                    text="AI Example Generation"
+                  />
+                  <AppText
+                    style={styles.benefitDescription}
+                    text="Generate contextual examples with AI"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.benefitItem}>
+                <MaterialIcons
+                  name="leaderboard"
+                  size={24}
+                  color={Colors.primary}
+                />
+                <View style={styles.benefitTextContainer}>
+                  <AppText
+                    style={styles.benefitTitle}
+                    text="Tier System & Leaderboard"
+                  />
+                  <AppText
+                    style={styles.benefitDescription}
+                    text="Compete with others and track your progress"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.benefitItem}>
+                <MaterialIcons
+                  name="analytics"
+                  size={24}
+                  color={Colors.primary}
+                />
+                <View style={styles.benefitTextContainer}>
+                  <AppText
+                    style={styles.benefitTitle}
+                    text="Learning Analytics"
+                  />
+                  <AppText
+                    style={styles.benefitDescription}
+                    text="Track streaks, statistics, and learning patterns"
+                  />
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.buttonContainer}
+              onPress={handleSignUp}
+            >
+              <AppText
+                text="Sign Up"
+                style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+              />
+            </TouchableOpacity>
+          </>
         ) : (
           <>
             <TouchableOpacity
@@ -912,6 +979,44 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: "#ccc",
+  },
+
+  // Benefits section styles for guest users
+  benefitsContainer: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 16,
+    padding: 20,
+    marginVertical: 20,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  benefitsTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  benefitItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  benefitTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  benefitTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  benefitDescription: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
   },
 });
 
