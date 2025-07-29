@@ -88,6 +88,9 @@ export default function RootLayout() {
   // Initialize authentication once
   useEffect(() => {
     let isMounted = true;
+    
+    // Reset app ready state on initialization
+    setAppIsReady(false);
 
     const initAuth = async () => {
       try {

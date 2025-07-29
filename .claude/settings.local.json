@@ -17,7 +17,8 @@
       "Bash(npx expo:*)",
       "Bash(npx expo install:*)",
       "Bash(adb shell:*)",
-      "Bash(eas build:list:*)"
+      "Bash(eas build:list:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
