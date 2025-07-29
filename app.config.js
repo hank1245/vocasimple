@@ -17,7 +17,7 @@ export default {
     newArchEnabled: true,
     ios: {
       bundleIdentifier: "com.hank1245.vocasimple",
-      buildNumber: "3",
+      buildNumber: "5",
       supportsTablet: true,
       requireFullScreen: false,
       config: {
