@@ -177,7 +177,7 @@ const Index = () => {
                   styles.modeText,
                   mode === "word" ? { color: "white" } : undefined,
                 ]}
-                text="Words Only"
+                text="Words"
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -194,7 +194,7 @@ const Index = () => {
                   styles.modeText,
                   mode === "meaning" ? { color: "white" } : undefined,
                 ]}
-                text="Meanings Only"
+                text="Meanings"
               />
             </TouchableOpacity>
           </View>
