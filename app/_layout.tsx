@@ -144,7 +144,9 @@ export default function RootLayout() {
 
   // Show loading screen while app is not ready
   if (!appIsReady || !initialized || loading || (!loaded && !error)) {
-    return null; // Let splash screen show
+    // Keep splash screen visible by not rendering anything
+    // The native splash screen will continue to show
+    return null;
   }
 
   // Show error screen on initialization error

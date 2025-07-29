@@ -7,7 +7,7 @@ export default {
     owner: "hank1245",
     name: "vocasimple",
     slug: "vocasimple",
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "portrait",
     updates: {
       url: "https://u.expo.dev/993c9bc0-ed27-47ab-bc0a-5959a0e33d19",
@@ -17,13 +17,13 @@ export default {
     newArchEnabled: true,
     ios: {
       bundleIdentifier: "com.hank1245.vocasimple",
-      buildNumber: "5",
+      buildNumber: "6",
       supportsTablet: true,
       requireFullScreen: false,
       config: {
         usesNonExemptEncryption: false,
       },
-      runtimeVersion: IS_PRODUCTION ? { policy: "appVersion" } : "1.0.1",
+      runtimeVersion: IS_PRODUCTION ? { policy: "appVersion" } : "1.0.2",
     },
     android: {
       package: "com.hank1245.vocasimple",
@@ -38,7 +38,7 @@ export default {
         domain: ["krxessvmecpbjsqyrqgw.supabase.co", "api.anthropic.com"],
         includeSubdomains: true,
       },
-      runtimeVersion: "1.0.1",
+      runtimeVersion: "1.0.2",
     },
     web: {
       scheme: "vocasimple",
