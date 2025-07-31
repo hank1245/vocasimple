@@ -146,39 +146,37 @@ const WritingPracticeScreen = () => {
       setShowHint(false);
       setShowFeedback(false);
     } else {
-      // Award fire streak when writing practice is completed (only for logged in users)
+      // Use passed arrays or fallback to component state
+      const finalCorrectIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
+      const finalWrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
+
+      // Award fire streak for logged-in users only
       if (user && !isGuest) {
         learningStreakService.addTodayCompletion(user.id);
+      }
 
-        // Use passed arrays or fallback to component state
-        const finalCorrectIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
-        const finalWrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
+      // Mark correct words as memorized (works for both guest and logged-in users)
+      if (finalCorrectIds.length > 0) {
+        markWordsAsMemorizedMutation.mutate(finalCorrectIds, {
+          onSuccess: () => {
+            console.log(`Marked ${finalCorrectIds.length} words as memorized`);
+          },
+          onError: (error) => {
+            console.error("Error marking words as memorized:", error);
+          },
+        });
+      }
 
-        // Mark correct words as memorized
-        if (finalCorrectIds.length > 0) {
-          markWordsAsMemorizedMutation.mutate(finalCorrectIds, {
-            onSuccess: () => {
-              console.log(
-                `Marked ${finalCorrectIds.length} words as memorized`
-              );
-            },
-            onError: (error) => {
-              console.error("Error marking words as memorized:", error);
-            },
-          });
-        }
-
-        // Mark wrong words as unmemorized
-        if (finalWrongIds.length > 0) {
-          markWordsAsUnmemorizedMutation.mutate(finalWrongIds, {
-            onSuccess: () => {
-              console.log(`Marked ${finalWrongIds.length} words as unmemorized`);
-            },
-            onError: (error) => {
-              console.error("Error marking words as unmemorized:", error);
-            },
-          });
-        }
+      // Mark wrong words as unmemorized
+      if (finalWrongIds.length > 0) {
+        markWordsAsUnmemorizedMutation.mutate(finalWrongIds, {
+          onSuccess: () => {
+            console.log(`Marked ${finalWrongIds.length} words as unmemorized`);
+          },
+          onError: (error) => {
+            console.error("Error marking words as unmemorized:", error);
+          },
+        });
       }
 
       router.push({

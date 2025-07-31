@@ -154,37 +154,37 @@ const MultipleChoiceQuestionsScreen = () => {
       setSelectedAnswer(null);
       setShowFeedback(false);
     } else {
-      // Award fire streak when quiz is completed (only for logged in users)
+      // Use passed arrays or fallback to component state
+      const correctIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
+      const wrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
+
+      // Award fire streak for logged-in users only
       if (user && !isGuest) {
         learningStreakService.addTodayCompletion(user.id);
+      }
 
-        // Use passed arrays or fallback to component state
-        const correctIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
-        const wrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
+      // Mark correct words as memorized (works for both guest and logged-in users)
+      if (correctIds.length > 0) {
+        markWordsAsMemorizedMutation.mutate(correctIds, {
+          onSuccess: () => {
+            console.log(`Marked ${correctIds.length} words as memorized`);
+          },
+          onError: (error) => {
+            console.error("Error marking words as memorized:", error);
+          },
+        });
+      }
 
-        // Mark correct words as memorized
-        if (correctIds.length > 0) {
-          markWordsAsMemorizedMutation.mutate(correctIds, {
-            onSuccess: () => {
-              console.log(`Marked ${correctIds.length} words as memorized`);
-            },
-            onError: (error) => {
-              console.error("Error marking words as memorized:", error);
-            },
-          });
-        }
-
-        // Mark wrong words as unmemorized (for "All Words" mode)
-        if (wrongIds.length > 0) {
-          markWordsAsUnmemorizedMutation.mutate(wrongIds, {
-            onSuccess: () => {
-              console.log(`Marked ${wrongIds.length} words as unmemorized`);
-            },
-            onError: (error) => {
-              console.error("Error marking words as unmemorized:", error);
-            },
-          });
-        }
+      // Mark wrong words as unmemorized (for "All Words" mode)
+      if (wrongIds.length > 0) {
+        markWordsAsUnmemorizedMutation.mutate(wrongIds, {
+          onSuccess: () => {
+            console.log(`Marked ${wrongIds.length} words as unmemorized`);
+          },
+          onError: (error) => {
+            console.error("Error marking words as unmemorized:", error);
+          },
+        });
       }
 
       router.push({

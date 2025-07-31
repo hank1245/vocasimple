@@ -3,6 +3,9 @@ import { subscribeWithSelector } from "zustand/middleware";
 import { supabase } from "@/utils/supabase";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { handleSignOutBackup } from "@/utils/unifiedVocabularyApi";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const GUEST_MODE_KEY = 'guest_mode_active';
 
 interface AuthStore {
   user: User | null;
@@ -14,8 +17,9 @@ interface AuthStore {
   initialize: () => Promise<void>;
   cleanup: () => void;
   signOut: () => Promise<void>;
-  enterGuestMode: () => void;
-  exitGuestMode: () => void;
+  enterGuestMode: () => Promise<void>;
+  exitGuestMode: () => Promise<void>;
+  loadGuestMode: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -44,6 +48,10 @@ export const useAuthStore = create<AuthStore>()(
       });
 
       try {
+        // Check for saved guest mode first
+        const savedGuestMode = await AsyncStorage.getItem(GUEST_MODE_KEY);
+        const wasInGuestMode = savedGuestMode === 'true';
+
         // 초기 세션 가져오기 (타임아웃과 함께)
         const sessionPromise = supabase.auth.getSession();
         const result = await Promise.race([sessionPromise, timeoutPromise]);
@@ -55,18 +63,42 @@ export const useAuthStore = create<AuthStore>()(
 
         if (error) {
           console.error("Session fetch error:", error);
-          set({ loading: false, initialized: true });
+          // If there was an error but user was in guest mode, restore guest mode
+          if (wasInGuestMode) {
+            set({ loading: false, initialized: true, isGuest: true });
+          } else {
+            set({ loading: false, initialized: true });
+          }
           return;
         }
 
         console.log("Auth initialization completed, session:", !!session);
 
-        set({
-          session,
-          user: session?.user ?? null,
-          loading: false,
-          initialized: true,
-        });
+        // If user has a session, use it; otherwise check if they were in guest mode
+        if (session) {
+          set({
+            session,
+            user: session?.user ?? null,
+            loading: false,
+            initialized: true,
+            isGuest: false,
+          });
+        } else if (wasInGuestMode) {
+          set({
+            session: null,
+            user: null,
+            loading: false,
+            initialized: true,
+            isGuest: true,
+          });
+        } else {
+          set({
+            session,
+            user: session?.user ?? null,
+            loading: false,
+            initialized: true,
+          });
+        }
 
         // 세션 변경 리스너 설정
         const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -126,30 +158,67 @@ export const useAuthStore = create<AuthStore>()(
         if (error) {
           console.error("Sign out error:", error);
         }
+        // Clear guest mode when signing out
+        await AsyncStorage.removeItem(GUEST_MODE_KEY);
         set({ isGuest: false });
       } catch (error) {
         console.error("Sign out error:", error);
       }
     },
 
-    enterGuestMode: () => {
-      set({
-        isGuest: true,
-        loading: false,
-        initialized: true,
-        user: null,
-        session: null,
-      });
+    enterGuestMode: async () => {
+      try {
+        await AsyncStorage.setItem(GUEST_MODE_KEY, 'true');
+        set({
+          isGuest: true,
+          loading: false,
+          initialized: true,
+          user: null,
+          session: null,
+        });
+      } catch (error) {
+        console.error('Error saving guest mode:', error);
+        set({
+          isGuest: true,
+          loading: false,
+          initialized: true,
+          user: null,
+          session: null,
+        });
+      }
     },
 
-    exitGuestMode: () => {
-      set({
-        isGuest: false,
-        loading: false,
-        initialized: true,
-        user: null,
-        session: null,
-      });
+    exitGuestMode: async () => {
+      try {
+        await AsyncStorage.removeItem(GUEST_MODE_KEY);
+        set({
+          isGuest: false,
+          loading: false,
+          initialized: true,
+          user: null,
+          session: null,
+        });
+      } catch (error) {
+        console.error('Error removing guest mode:', error);
+        set({
+          isGuest: false,
+          loading: false,
+          initialized: true,
+          user: null,
+          session: null,
+        });
+      }
+    },
+
+    loadGuestMode: async () => {
+      try {
+        const savedGuestMode = await AsyncStorage.getItem(GUEST_MODE_KEY);
+        if (savedGuestMode === 'true') {
+          set({ isGuest: true });
+        }
+      } catch (error) {
+        console.error('Error loading guest mode:', error);
+      }
     },
   }))
 );

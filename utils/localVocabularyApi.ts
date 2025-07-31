@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VocabularyWord } from "@/types/common";
 import { VocabularyApiService } from "./vocabularyApi";
+import { guestMemorizedService } from "./guestMemorizedService";
 
 const VOCABULARY_STORAGE_KEY = 'vocabulary_words';
 
@@ -48,6 +49,17 @@ export const localVocabularyApi: VocabularyApiService = {
     filter?: "all" | "memorized" | "unmemorized"
   ): Promise<VocabularyWord[]> {
     const words = await getStoredWords();
+    
+    // For guest users, sync memorized status from guest service
+    if (userId === 'guest_user') {
+      const memorizedWordIds = await guestMemorizedService.getMemorizedWordIds();
+      const memorizedSet = new Set(memorizedWordIds);
+      
+      // Update is_memorized status based on guest service
+      words.forEach(word => {
+        word.is_memorized = memorizedSet.has(word.id);
+      });
+    }
     
     // Apply filter
     let filteredWords = words;
@@ -116,6 +128,21 @@ export const localVocabularyApi: VocabularyApiService = {
   async markWordsAsMemorized(wordIds: string[], userId: string): Promise<void> {
     if (!wordIds || wordIds.length === 0) return;
     
+    // For guest users, use guest service to manage memorized status
+    if (userId === 'guest_user') {
+      const words = await getStoredWords();
+      const wordsToMark = words
+        .filter(word => wordIds.includes(word.id))
+        .map(word => ({
+          id: word.id,
+          word: word.word,
+          meaning: word.meaning
+        }));
+      
+      await guestMemorizedService.markWordsAsMemorized(wordsToMark);
+      return;
+    }
+    
     const words = await getStoredWords();
     const updatedWords = words.map(word => 
       wordIds.includes(word.id) ? { ...word, is_memorized: true } : word
@@ -126,6 +153,12 @@ export const localVocabularyApi: VocabularyApiService = {
 
   async markWordsAsUnmemorized(wordIds: string[], userId: string): Promise<void> {
     if (!wordIds || wordIds.length === 0) return;
+    
+    // For guest users, use guest service to manage memorized status
+    if (userId === 'guest_user') {
+      await guestMemorizedService.markWordsAsUnmemorized(wordIds);
+      return;
+    }
     
     const words = await getStoredWords();
     const updatedWords = words.map(word => 

@@ -14,8 +14,8 @@ interface Props {
 const GuestForm = ({ changeFormType, bottomSheetRef }: Props) => {
   const { enterGuestMode } = useAuth();
 
-  const handleGuestStart = () => {
-    enterGuestMode();
+  const handleGuestStart = async () => {
+    await enterGuestMode();
     bottomSheetRef.current?.close();
   };
 

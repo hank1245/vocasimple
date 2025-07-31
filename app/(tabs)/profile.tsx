@@ -112,8 +112,8 @@ const ProfileTab = () => {
     ]);
   };
 
-  const handleSignUp = () => {
-    exitGuestMode();
+  const handleSignUp = async () => {
+    await exitGuestMode();
     router.replace("/(auth)");
   };
 

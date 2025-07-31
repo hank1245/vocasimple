@@ -119,12 +119,12 @@ export function useMarkWordsAsMemorized() {
   const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
-    mutationFn: (wordIds: string[]) => {
+    mutationFn: async (wordIds: string[]) => {
       // Use memorized service for logged in users, direct API for guests
       if (user && !isGuest) {
-        return memorizedService.markWordsAsMemorized(user.id, wordIds);
+        await memorizedService.markWordsAsMemorized(user.id, wordIds);
       } else {
-        return unifiedVocabularyApi.markWordsAsMemorized(wordIds, userId);
+        await unifiedVocabularyApi.markWordsAsMemorized(wordIds, userId);
       }
     },
     onSuccess: (_, wordIds) => {
@@ -158,12 +158,12 @@ export function useMarkWordsAsUnmemorized() {
   const userId = user?.id || (isGuest ? 'guest_user' : '');
 
   return useMutation({
-    mutationFn: (wordIds: string[]) => {
+    mutationFn: async (wordIds: string[]) => {
       // Use memorized service for logged in users, direct API for guests
       if (user && !isGuest) {
-        return memorizedService.markWordsAsUnmemorized(user.id, wordIds);
+        await memorizedService.markWordsAsUnmemorized(user.id, wordIds);
       } else {
-        return unifiedVocabularyApi.markWordsAsUnmemorized(wordIds, userId);
+        await unifiedVocabularyApi.markWordsAsUnmemorized(wordIds, userId);
       }
     },
     onSuccess: (_, wordIds) => {
