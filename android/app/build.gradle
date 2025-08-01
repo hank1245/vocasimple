@@ -86,7 +86,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.vocasimple"
+    namespace 'com.hank1245.vocasimple'
     defaultConfig {
         applicationId 'com.hank1245.vocasimple'
         minSdkVersion rootProject.ext.minSdkVersion
