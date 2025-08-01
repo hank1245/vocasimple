@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/Colors";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   View,
@@ -28,6 +28,7 @@ const QuizTab = () => {
   const [showQuizFilterModal, setShowQuizFilterModal] = useState(false);
   const [selectedQuizMode, setSelectedQuizMode] = useState<QuizMode>("meaning");
   const [scaleAnim] = useState(new Animated.Value(1));
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const fetchFireCount = async () => {
     if (isGuest) {
@@ -62,6 +63,19 @@ const QuizTab = () => {
     }, [])
   );
 
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        if (animationRef.current) {
+          animationRef.current.stop();
+        }
+      } catch (error) {
+        console.warn("Error stopping animation:", error);
+      }
+    };
+  }, []);
+
   const handleNavigateToMultipleChoiceQuestions = (mode: QuizMode) => {
     setSelectedQuizMode(mode);
     setShowQuizFilterModal(true);
@@ -80,7 +94,7 @@ const QuizTab = () => {
 
   const handleFireCalendarPress = () => {
     // Add scale animation for press feedback
-    Animated.sequence([
+    animationRef.current = Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 0.95,
         duration: 100,
@@ -91,7 +105,8 @@ const QuizTab = () => {
         duration: 100,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    animationRef.current.start();
 
     router.push("/FireCalendar");
   };

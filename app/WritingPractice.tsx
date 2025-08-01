@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -40,6 +40,7 @@ const WritingPracticeScreen = () => {
   const [wrongWordsIds, setWrongWordsIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [progress] = useState(new Animated.Value(0));
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // TanStack Query hook for marking words as memorized
   const { data: vocabularyData = [], isLoading: vocabularyLoading } =
@@ -136,11 +137,12 @@ const WritingPracticeScreen = () => {
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
 
-      Animated.timing(progress, {
+      animationRef.current = Animated.timing(progress, {
         toValue: ((nextIndex + 1) / vocabularyWords.length) * 100,
         duration: 300,
         useNativeDriver: false,
-      }).start();
+      });
+      animationRef.current.start();
 
       setUserInput("");
       setShowHint(false);
@@ -203,11 +205,12 @@ const WritingPracticeScreen = () => {
         );
         setVocabularyWords(selectedWords);
 
-        Animated.timing(progress, {
+        animationRef.current = Animated.timing(progress, {
           toValue: 20,
           duration: 300,
           useNativeDriver: false,
-        }).start();
+        });
+        animationRef.current.start();
 
         setIsLoading(false);
       } catch (error) {
@@ -241,6 +244,19 @@ const WritingPracticeScreen = () => {
       );
     }
   }, [vocabularyLoading, vocabularyData, router, progress]);
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        if (animationRef.current) {
+          animationRef.current.stop();
+        }
+      } catch (error) {
+        console.warn("Error stopping animation:", error);
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return (

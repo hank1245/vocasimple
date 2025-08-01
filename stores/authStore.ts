@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { supabase } from "@/utils/supabase";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
-import { handleSignOutBackup } from "@/utils/unifiedVocabularyApi";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const GUEST_MODE_KEY = 'guest_mode_active';
@@ -48,9 +47,15 @@ export const useAuthStore = create<AuthStore>()(
       });
 
       try {
-        // Check for saved guest mode first
-        const savedGuestMode = await AsyncStorage.getItem(GUEST_MODE_KEY);
-        const wasInGuestMode = savedGuestMode === 'true';
+        // Check for saved guest mode first (separate try-catch to prevent crashes)
+        let wasInGuestMode = false;
+        try {
+          const savedGuestMode = await AsyncStorage.getItem(GUEST_MODE_KEY);
+          wasInGuestMode = savedGuestMode === 'true';
+        } catch (storageError) {
+          console.warn("AsyncStorage error during initialization:", storageError);
+          // Continue with initialization even if AsyncStorage fails
+        }
 
         // 초기 세션 가져오기 (타임아웃과 함께)
         const sessionPromise = supabase.auth.getSession();
@@ -151,62 +156,69 @@ export const useAuthStore = create<AuthStore>()(
       try {
         // 로그아웃 전에 서버 데이터를 로컬로 백업
         if (currentState.user && !currentState.isGuest) {
-          await handleSignOutBackup(currentState.user.id).catch(console.error);
+          try {
+            const { handleSignOutBackup } = await import("@/utils/unifiedVocabularyApi");
+            await handleSignOutBackup(currentState.user.id);
+          } catch (error) {
+            console.error("Error backing up data on sign out:", error);
+          }
         }
 
         const { error } = await supabase.auth.signOut();
         if (error) {
           console.error("Sign out error:", error);
         }
+        
         // Clear guest mode when signing out
-        await AsyncStorage.removeItem(GUEST_MODE_KEY);
         set({ isGuest: false });
+        
+        // Try to clear AsyncStorage in background
+        try {
+          await AsyncStorage.removeItem(GUEST_MODE_KEY);
+        } catch (storageError) {
+          console.warn("Failed to clear guest mode from storage:", storageError);
+          // Continue without crashing
+        }
       } catch (error) {
         console.error("Sign out error:", error);
       }
     },
 
     enterGuestMode: async () => {
+      // Set guest mode immediately, don't wait for AsyncStorage
+      set({
+        isGuest: true,
+        loading: false,
+        initialized: true,
+        user: null,
+        session: null,
+      });
+
+      // Try to save to AsyncStorage in background
       try {
         await AsyncStorage.setItem(GUEST_MODE_KEY, 'true');
-        set({
-          isGuest: true,
-          loading: false,
-          initialized: true,
-          user: null,
-          session: null,
-        });
       } catch (error) {
-        console.error('Error saving guest mode:', error);
-        set({
-          isGuest: true,
-          loading: false,
-          initialized: true,
-          user: null,
-          session: null,
-        });
+        console.warn('Failed to save guest mode to storage:', error);
+        // Continue without crashing - guest mode is already set in state
       }
     },
 
     exitGuestMode: async () => {
+      // Set state immediately, don't wait for AsyncStorage
+      set({
+        isGuest: false,
+        loading: false,
+        initialized: true,
+        user: null,
+        session: null,
+      });
+
+      // Try to remove from AsyncStorage in background
       try {
         await AsyncStorage.removeItem(GUEST_MODE_KEY);
-        set({
-          isGuest: false,
-          loading: false,
-          initialized: true,
-          user: null,
-          session: null,
-        });
       } catch (error) {
-        console.error('Error removing guest mode:', error);
-        set({
-          isGuest: false,
-          loading: false,
-          initialized: true,
-          user: null,
-          session: null,
-        });
+        console.warn('Failed to remove guest mode from storage:', error);
+        // Continue without crashing - state is already updated
       }
     },
 

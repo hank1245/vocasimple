@@ -1,5 +1,5 @@
 import { Colors } from "./../constants/Colors";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, TouchableOpacity, StyleSheet, Animated, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -35,6 +35,7 @@ const MultipleChoiceQuestionsScreen = () => {
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [progress] = useState(new Animated.Value(0));
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -145,11 +146,12 @@ const MultipleChoiceQuestionsScreen = () => {
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
 
-      Animated.timing(progress, {
+      animationRef.current = Animated.timing(progress, {
         toValue: ((nextIndex + 1) / quizQuestions.length) * 100,
         duration: 300,
         useNativeDriver: false,
-      }).start();
+      });
+      animationRef.current.start();
 
       setSelectedAnswer(null);
       setShowFeedback(false);
@@ -224,6 +226,19 @@ const MultipleChoiceQuestionsScreen = () => {
       }
     }
   }, [vocabularyLoading, vocabularyData, router, quizQuestions.length]);
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        if (animationRef.current) {
+          animationRef.current.stop();
+        }
+      } catch (error) {
+        console.warn("Error stopping animation:", error);
+      }
+    };
+  }, []);
 
   if (vocabularyLoading || isLoading) {
     return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -29,6 +29,7 @@ const FlashcardScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [flipAnimation] = useState(new Animated.Value(0));
   const [progress] = useState(new Animated.Value(0));
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
   // Use TanStack Query instead of direct API call
   const { data: vocabularyData = [], isLoading: vocabularyLoading } =
@@ -61,11 +62,12 @@ const FlashcardScreen = () => {
       );
       setVocabularyWords(selectedWords);
 
-      Animated.timing(progress, {
+      animationRef.current = Animated.timing(progress, {
         toValue: (1 / selectedWords.length) * 100,
         duration: 300,
         useNativeDriver: false,
-      }).start();
+      });
+      animationRef.current.start();
     } catch (error) {
       console.error("Error:", error);
       Alert.alert(
@@ -97,11 +99,12 @@ const FlashcardScreen = () => {
       setIsFlipped(false);
       flipAnimation.setValue(0);
 
-      Animated.timing(progress, {
+      animationRef.current = Animated.timing(progress, {
         toValue: (currentCardIndex / vocabularyWords.length) * 100,
         duration: 300,
         useNativeDriver: false,
-      }).start();
+      });
+      animationRef.current.start();
     }
   };
 
@@ -111,11 +114,12 @@ const FlashcardScreen = () => {
       setIsFlipped(false);
       flipAnimation.setValue(0);
 
-      Animated.timing(progress, {
+      animationRef.current = Animated.timing(progress, {
         toValue: ((currentCardIndex + 2) / vocabularyWords.length) * 100,
         duration: 300,
         useNativeDriver: false,
-      }).start();
+      });
+      animationRef.current.start();
     }
   };
 
@@ -126,11 +130,12 @@ const FlashcardScreen = () => {
     setIsFlipped(false);
     flipAnimation.setValue(0);
 
-    Animated.timing(progress, {
+    animationRef.current = Animated.timing(progress, {
       toValue: (1 / shuffledWords.length) * 100,
       duration: 300,
       useNativeDriver: false,
-    }).start();
+    });
+    animationRef.current.start();
   };
 
   const handleReset = () => {
@@ -138,11 +143,12 @@ const FlashcardScreen = () => {
     setIsFlipped(false);
     flipAnimation.setValue(0);
 
-    Animated.timing(progress, {
+    animationRef.current = Animated.timing(progress, {
       toValue: (1 / vocabularyWords.length) * 100,
       duration: 300,
       useNativeDriver: false,
-    }).start();
+    });
+    animationRef.current.start();
   };
 
   useEffect(() => {
@@ -151,6 +157,19 @@ const FlashcardScreen = () => {
       fetchVocabularyWords();
     }
   }, [fetchVocabularyWords, vocabularyLoading, vocabularyData]);
+
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        if (animationRef.current) {
+          animationRef.current.stop();
+        }
+      } catch (error) {
+        console.warn("Error stopping animation:", error);
+      }
+    };
+  }, []);
 
   if (vocabularyLoading || isLoading) {
     return (

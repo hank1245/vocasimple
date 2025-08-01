@@ -86,13 +86,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.hank1245.vocasimple'
+    namespace "com.vocasimple"
     defaultConfig {
         applicationId 'com.hank1245.vocasimple'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0.2"
+        versionName "1.0.3"
     }
     signingConfigs {
         debug {
