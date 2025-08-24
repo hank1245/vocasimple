@@ -83,3 +83,6 @@ yarn-error.*
 # @end expo-cli
 
 .claude
+
+ios
+android
