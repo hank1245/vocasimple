@@ -13,6 +13,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import { useImagePrefetch } from "@/hooks/usePrefetch";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/stores/authStore";
 import { nicknameService } from "@/utils/nicknameService";
@@ -23,6 +25,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 
 const ProfileTab = () => {
   const router = useRouter();
+  const prefetchImages = useImagePrefetch();
   const { user, signOut, isGuest, exitGuestMode } = useAuth();
   const [isEditingNickname, setIsEditingNickname] = useState(false);
   const [newNickname, setNewNickname] = useState("");
@@ -89,11 +92,20 @@ const ProfileTab = () => {
       // Always fetch fresh data when screen comes into focus to ensure accuracy
       // This prevents stale data from showing after quiz completion
       if (user && !isGuest) {
-        console.log("Profile screen focused, refreshing data");
+        // Profile screen focused — refreshing data
         fetchAllData();
       }
     }, [user, isGuest, fetchAllData])
   );
+
+  // prefetch tier images once
+  React.useEffect(() => {
+    prefetchImages([
+      require("@/assets/images/sage.png"),
+      require("@/assets/images/knight.png"),
+      require("@/assets/images/apprentice.png"),
+    ]);
+  }, [prefetchImages]);
 
   const OnPressRecord = () => {
     router.push("/FireCalendar");
@@ -219,424 +231,437 @@ const ProfileTab = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 70 }}
-        style={styles.container}
-      >
-        <View>
-          <AppText text="My Profile" style={styles.header} />
-        </View>
-        <View style={styles.profileHeader}>
-          <View style={styles.profileInfo}>
-            {isGuest ? (
-              <>
-                <AppText style={styles.profileName} text="Guest User" />
-                <AppText style={styles.username} text="#guest_user" />
-                <AppText style={styles.joinDate} text="Using in guest mode" />
-              </>
-            ) : (
-              <>
-                <AppText style={styles.profileName} text={user?.email || ""} />
-                <View style={styles.nicknameContainer}>
+    <ErrorBoundary>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 70 }}
+          style={styles.container}
+        >
+          <View>
+            <AppText text="My Profile" style={styles.header} />
+          </View>
+          <View style={styles.profileHeader}>
+            <View style={styles.profileInfo}>
+              {isGuest ? (
+                <>
+                  <AppText style={styles.profileName} text="Guest User" />
+                  <AppText style={styles.username} text="#guest_user" />
+                  <AppText style={styles.joinDate} text="Using in guest mode" />
+                </>
+              ) : (
+                <>
                   <AppText
-                    style={styles.username}
-                    text={nickname || "#loading..."}
+                    style={styles.profileName}
+                    text={user?.email || ""}
                   />
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={handleEditNickname}
-                  >
-                    <MaterialIcons name="edit" size={16} color="#666" />
-                  </TouchableOpacity>
-                </View>
-                <AppText
-                  style={styles.joinDate}
-                  text={
-                    user?.created_at
-                      ? `Joined ${new Date(user.created_at).toLocaleDateString(
-                          "en-US",
-                          {
+                  <View style={styles.nicknameContainer}>
+                    <AppText
+                      style={styles.username}
+                      text={nickname || "#loading..."}
+                    />
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={handleEditNickname}
+                    >
+                      <MaterialIcons name="edit" size={16} color="#666" />
+                    </TouchableOpacity>
+                  </View>
+                  <AppText
+                    style={styles.joinDate}
+                    text={
+                      user?.created_at
+                        ? `Joined ${new Date(
+                            user.created_at
+                          ).toLocaleDateString("en-US", {
                             month: "long",
                             year: "numeric",
-                          }
-                        )}`
-                      : "No join date information"
-                  }
-                />
-              </>
-            )}
+                          })}`
+                        : "No join date information"
+                    }
+                  />
+                </>
+              )}
+            </View>
           </View>
-        </View>
-        {!isGuest && (
-          <>
-            <AppText style={styles.sectionTitle} text="Achievements" />
-            <View style={styles.achievementsContainer}>
-              <TouchableOpacity
-                style={styles.achievementBox}
-                onPress={OnPressRecord}
-              >
-                <AppText style={styles.achievementLabel} text="Study Streak" />
+          {!isGuest && (
+            <>
+              <AppText style={styles.sectionTitle} text="Achievements" />
+              <View style={styles.achievementsContainer}>
+                <TouchableOpacity
+                  style={styles.achievementBox}
+                  onPress={OnPressRecord}
+                >
+                  <AppText
+                    style={styles.achievementLabel}
+                    text="Study Streak"
+                  />
+                  <AppText
+                    style={styles.achievementNumber}
+                    text={`${streakData.currentStreak} days`}
+                  />
+                </TouchableOpacity>
+                <View style={styles.achievementBox}>
+                  <AppText
+                    style={styles.achievementLabel}
+                    text="Memorized Words"
+                  />
+                  <AppText
+                    style={styles.achievementNumber}
+                    text={`${memorizedCount} words`}
+                  />
+                </View>
+              </View>
+            </>
+          )}
+          {!isGuest && (
+            <View style={styles.tierContainer}>
+              <View style={styles.tierBox}>
+                <AppText style={styles.tierLabel} text="Current Tier" />
                 <AppText
-                  style={styles.achievementNumber}
-                  text={`${streakData.currentStreak} days`}
+                  style={styles.tierText}
+                  text={tierInfo?.currentTier || "Apprentice"}
+                />
+                {tierInfo && tierInfo.nextTier !== "Max" && (
+                  <View style={styles.tierProgressContainer}>
+                    <AppText
+                      style={styles.tierProgressText}
+                      text={`To ${tierInfo.nextTier}: ${
+                        tierInfo.nextTierRequirement - tierInfo.memorizedCount
+                      } words left`}
+                    />
+                    <View style={styles.progressBar}>
+                      <View
+                        style={[
+                          styles.progressBarFill,
+                          { width: `${tierInfo.progressPercentage}%` },
+                        ]}
+                      />
+                    </View>
+                    <AppText
+                      style={styles.tierProgressPercentage}
+                      text={`${tierInfo.progressPercentage}%`}
+                    />
+                  </View>
+                )}
+              </View>
+              <Image
+                style={styles.tierImage}
+                source={
+                  tierInfo?.currentTier === "Sage"
+                    ? require("@/assets/images/sage.png")
+                    : tierInfo?.currentTier === "Knight"
+                    ? require("@/assets/images/knight.png")
+                    : require("@/assets/images/apprentice.png")
+                }
+              />
+            </View>
+          )}
+
+          {!isGuest && (
+            <View style={styles.leaderboardContainer}>
+              <AppText style={styles.leaderboardTitle} text="Tier Ranking" />
+
+              {/* Tier Selection Buttons */}
+              <View style={styles.tierButtonsContainer}>
+                {["Sage", "Knight", "Apprentice"].map((tier) => (
+                  <TouchableOpacity
+                    key={tier}
+                    style={[
+                      styles.tierButton,
+                      selectedTier === tier && styles.selectedTierButton,
+                    ]}
+                    onPress={() =>
+                      handleTierSelect(tier as "Sage" | "Knight" | "Apprentice")
+                    }
+                  >
+                    <Image
+                      source={
+                        tier === "Sage"
+                          ? require("@/assets/images/sage.png")
+                          : tier === "Knight"
+                          ? require("@/assets/images/knight.png")
+                          : require("@/assets/images/apprentice.png")
+                      }
+                      style={styles.tierButtonImage}
+                    />
+                    <AppText
+                      style={[
+                        styles.tierButtonText,
+                        selectedTier === tier && styles.selectedTierButtonText,
+                      ]}
+                      text={tier}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Leaderboard List */}
+              <View style={styles.leaderboardList}>
+                {leaderboardData?.users.slice(0, 10).map((user) => (
+                  <View
+                    key={user.user_id}
+                    style={[
+                      styles.leaderboardItem,
+                      user.is_current_user && styles.currentUserItem,
+                    ]}
+                  >
+                    <View style={styles.leaderboardRank}>
+                      <AppText
+                        style={[
+                          styles.rankText,
+                          user.is_current_user && styles.currentUserText,
+                        ]}
+                        text={`#${user.rank}`}
+                      />
+                    </View>
+                    <View style={styles.leaderboardUserInfo}>
+                      <AppText
+                        style={[
+                          styles.leaderboardUserName,
+                          user.is_current_user && styles.currentUserText,
+                        ]}
+                        text={user.nickname}
+                      />
+                      <AppText
+                        style={[
+                          styles.leaderboardUserScore,
+                          user.is_current_user && styles.currentUserText,
+                        ]}
+                        text={`${user.memorized_count} Memorized`}
+                      />
+                    </View>
+                    {user.is_current_user && (
+                      <View style={styles.currentUserBadge}>
+                        <AppText
+                          style={styles.currentUserBadgeText}
+                          text="나"
+                        />
+                      </View>
+                    )}
+                  </View>
+                ))}
+
+                {leaderboardData?.users.length === 0 && (
+                  <View style={styles.emptyLeaderboard}>
+                    <AppText
+                      style={styles.emptyLeaderboardText}
+                      text="No users in this tier yet."
+                    />
+                  </View>
+                )}
+              </View>
+
+              {/* Current User Stats */}
+              {leaderboardData?.currentUserRank && (
+                <View style={styles.currentUserStats}>
+                  <AppText
+                    style={styles.currentUserStatsText}
+                    text={`Rank ${leaderboardData.currentUserRank} in ${selectedTier} tier (${leaderboardData.totalUsers} total)`}
+                  />
+                </View>
+              )}
+            </View>
+          )}
+
+          {isGuest ? (
+            <>
+              {/* Benefits List for Guest Users */}
+              <View style={styles.benefitsContainer}>
+                <AppText
+                  style={styles.benefitsTitle}
+                  text="Sign up to unlock:"
+                />
+
+                <View style={styles.benefitItem}>
+                  <MaterialIcons
+                    name="cloud-upload"
+                    size={24}
+                    color={Colors.primary}
+                  />
+                  <View style={styles.benefitTextContainer}>
+                    <AppText style={styles.benefitTitle} text="Cloud Sync" />
+                    <AppText
+                      style={styles.benefitDescription}
+                      text="Save words to cloud and access from any device"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.benefitItem}>
+                  <MaterialIcons
+                    name="auto-awesome"
+                    size={24}
+                    color={Colors.primary}
+                  />
+                  <View style={styles.benefitTextContainer}>
+                    <AppText
+                      style={styles.benefitTitle}
+                      text="AI Example Generation"
+                    />
+                    <AppText
+                      style={styles.benefitDescription}
+                      text="Generate contextual examples with AI"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.benefitItem}>
+                  <MaterialIcons
+                    name="leaderboard"
+                    size={24}
+                    color={Colors.primary}
+                  />
+                  <View style={styles.benefitTextContainer}>
+                    <AppText
+                      style={styles.benefitTitle}
+                      text="Tier System & Leaderboard"
+                    />
+                    <AppText
+                      style={styles.benefitDescription}
+                      text="Compete with others and track your progress"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.benefitItem}>
+                  <MaterialIcons
+                    name="analytics"
+                    size={24}
+                    color={Colors.primary}
+                  />
+                  <View style={styles.benefitTextContainer}>
+                    <AppText
+                      style={styles.benefitTitle}
+                      text="Learning Analytics"
+                    />
+                    <AppText
+                      style={styles.benefitDescription}
+                      text="Track streaks, statistics, and learning patterns"
+                    />
+                  </View>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={styles.buttonContainer}
+                onPress={handleSignUp}
+              >
+                <AppText
+                  text="Sign Up"
+                  style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
                 />
               </TouchableOpacity>
-              <View style={styles.achievementBox}>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.buttonContainer}
+                onPress={handleSignOut}
+              >
                 <AppText
-                  style={styles.achievementLabel}
-                  text="Memorized Words"
+                  text="Logout"
+                  style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.exportButton}
+                onPress={handleExportVocabulary}
+                disabled={isExporting}
+              >
+                <MaterialIcons
+                  name="download"
+                  size={20}
+                  color="white"
+                  style={{ marginRight: 8 }}
                 />
                 <AppText
-                  style={styles.achievementNumber}
-                  text={`${memorizedCount} words`}
-                />
-              </View>
-            </View>
-          </>
-        )}
-        {!isGuest && (
-          <View style={styles.tierContainer}>
-            <View style={styles.tierBox}>
-              <AppText style={styles.tierLabel} text="Current Tier" />
-              <AppText
-                style={styles.tierText}
-                text={tierInfo?.currentTier || "Apprentice"}
-              />
-              {tierInfo && tierInfo.nextTier !== "Max" && (
-                <View style={styles.tierProgressContainer}>
-                  <AppText
-                    style={styles.tierProgressText}
-                    text={`To ${tierInfo.nextTier}: ${
-                      tierInfo.nextTierRequirement - tierInfo.memorizedCount
-                    } words left`}
-                  />
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressBarFill,
-                        { width: `${tierInfo.progressPercentage}%` },
-                      ]}
-                    />
-                  </View>
-                  <AppText
-                    style={styles.tierProgressPercentage}
-                    text={`${tierInfo.progressPercentage}%`}
-                  />
-                </View>
-              )}
-            </View>
-            <Image
-              style={styles.tierImage}
-              source={
-                tierInfo?.currentTier === "Sage"
-                  ? require("@/assets/images/sage.png")
-                  : tierInfo?.currentTier === "Knight"
-                  ? require("@/assets/images/knight.png")
-                  : require("@/assets/images/apprentice.png")
-              }
-            />
-          </View>
-        )}
-
-        {!isGuest && (
-          <View style={styles.leaderboardContainer}>
-            <AppText style={styles.leaderboardTitle} text="Tier Ranking" />
-
-            {/* Tier Selection Buttons */}
-            <View style={styles.tierButtonsContainer}>
-              {["Sage", "Knight", "Apprentice"].map((tier) => (
-                <TouchableOpacity
-                  key={tier}
+                  text={isExporting ? "Exporting..." : "Export Words"}
                   style={[
-                    styles.tierButton,
-                    selectedTier === tier && styles.selectedTierButton,
+                    styles.exportButtonText,
+                    isExporting && styles.disabledText,
                   ]}
-                  onPress={() =>
-                    handleTierSelect(tier as "Sage" | "Knight" | "Apprentice")
-                  }
-                >
-                  <Image
-                    source={
-                      tier === "Sage"
-                        ? require("@/assets/images/sage.png")
-                        : tier === "Knight"
-                        ? require("@/assets/images/knight.png")
-                        : require("@/assets/images/apprentice.png")
-                    }
-                    style={styles.tierButtonImage}
-                  />
-                  <AppText
-                    style={[
-                      styles.tierButtonText,
-                      selectedTier === tier && styles.selectedTierButtonText,
-                    ]}
-                    text={tier}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
+                />
+              </TouchableOpacity>
 
-            {/* Leaderboard List */}
-            <View style={styles.leaderboardList}>
-              {leaderboardData?.users.slice(0, 10).map((user) => (
-                <View
-                  key={user.user_id}
+              <TouchableOpacity
+                style={styles.deleteAccountButton}
+                onPress={handleDeleteAccount}
+                disabled={loading}
+              >
+                <AppText
+                  text={loading ? "Processing..." : "Delete Account"}
                   style={[
-                    styles.leaderboardItem,
-                    user.is_current_user && styles.currentUserItem,
+                    styles.deleteAccountText,
+                    loading && styles.disabledText,
                   ]}
-                >
-                  <View style={styles.leaderboardRank}>
-                    <AppText
-                      style={[
-                        styles.rankText,
-                        user.is_current_user && styles.currentUserText,
-                      ]}
-                      text={`#${user.rank}`}
+                />
+              </TouchableOpacity>
+            </>
+          )}
+        </ScrollView>
+
+        {/* Nickname Edit Modal */}
+        {!isGuest && (
+          <Modal
+            visible={isEditingNickname}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={handleCancelEdit}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <AppText style={styles.modalTitle} text="Change Nickname" />
+
+                <View style={styles.inputContainer}>
+                  <AppText style={styles.inputLabel} text="New Nickname" />
+                  <View style={styles.nicknameInputContainer}>
+                    <AppText style={styles.hashSymbol} text="#" />
+                    <TextInput
+                      style={styles.nicknameInput}
+                      value={newNickname}
+                      onChangeText={setNewNickname}
+                      placeholder="Enter your nickname"
+                      placeholderTextColor="#999"
+                      maxLength={20}
+                      autoFocus={true}
                     />
                   </View>
-                  <View style={styles.leaderboardUserInfo}>
+                  <AppText
+                    style={styles.inputHint}
+                    text="Letters, numbers, Korean, underscore (_) allowed (3-20 chars)"
+                  />
+                </View>
+
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={handleCancelEdit}
+                  >
+                    <AppText style={styles.cancelButtonText} text="Cancel" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.saveButton]}
+                    onPress={handleSaveNickname}
+                    disabled={loading || nicknameLoading || !newNickname.trim()}
+                  >
                     <AppText
                       style={[
-                        styles.leaderboardUserName,
-                        user.is_current_user && styles.currentUserText,
+                        styles.saveButtonText,
+                        (!newNickname.trim() || loading) &&
+                          styles.disabledButtonText,
                       ]}
-                      text={user.nickname}
+                      text={loading || nicknameLoading ? "Saving..." : "Save"}
                     />
-                    <AppText
-                      style={[
-                        styles.leaderboardUserScore,
-                        user.is_current_user && styles.currentUserText,
-                      ]}
-                      text={`${user.memorized_count} Memorized`}
-                    />
-                  </View>
-                  {user.is_current_user && (
-                    <View style={styles.currentUserBadge}>
-                      <AppText style={styles.currentUserBadgeText} text="나" />
-                    </View>
-                  )}
+                  </TouchableOpacity>
                 </View>
-              ))}
-
-              {leaderboardData?.users.length === 0 && (
-                <View style={styles.emptyLeaderboard}>
-                  <AppText
-                    style={styles.emptyLeaderboardText}
-                    text="No users in this tier yet."
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* Current User Stats */}
-            {leaderboardData?.currentUserRank && (
-              <View style={styles.currentUserStats}>
-                <AppText
-                  style={styles.currentUserStatsText}
-                  text={`Rank ${leaderboardData.currentUserRank} in ${selectedTier} tier (${leaderboardData.totalUsers} total)`}
-                />
               </View>
-            )}
-          </View>
+            </View>
+          </Modal>
         )}
-
-        {isGuest ? (
-          <>
-            {/* Benefits List for Guest Users */}
-            <View style={styles.benefitsContainer}>
-              <AppText style={styles.benefitsTitle} text="Sign up to unlock:" />
-
-              <View style={styles.benefitItem}>
-                <MaterialIcons
-                  name="cloud-upload"
-                  size={24}
-                  color={Colors.primary}
-                />
-                <View style={styles.benefitTextContainer}>
-                  <AppText style={styles.benefitTitle} text="Cloud Sync" />
-                  <AppText
-                    style={styles.benefitDescription}
-                    text="Save words to cloud and access from any device"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.benefitItem}>
-                <MaterialIcons
-                  name="auto-awesome"
-                  size={24}
-                  color={Colors.primary}
-                />
-                <View style={styles.benefitTextContainer}>
-                  <AppText
-                    style={styles.benefitTitle}
-                    text="AI Example Generation"
-                  />
-                  <AppText
-                    style={styles.benefitDescription}
-                    text="Generate contextual examples with AI"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.benefitItem}>
-                <MaterialIcons
-                  name="leaderboard"
-                  size={24}
-                  color={Colors.primary}
-                />
-                <View style={styles.benefitTextContainer}>
-                  <AppText
-                    style={styles.benefitTitle}
-                    text="Tier System & Leaderboard"
-                  />
-                  <AppText
-                    style={styles.benefitDescription}
-                    text="Compete with others and track your progress"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.benefitItem}>
-                <MaterialIcons
-                  name="analytics"
-                  size={24}
-                  color={Colors.primary}
-                />
-                <View style={styles.benefitTextContainer}>
-                  <AppText
-                    style={styles.benefitTitle}
-                    text="Learning Analytics"
-                  />
-                  <AppText
-                    style={styles.benefitDescription}
-                    text="Track streaks, statistics, and learning patterns"
-                  />
-                </View>
-              </View>
-            </View>
-
-            <TouchableOpacity
-              style={styles.buttonContainer}
-              onPress={handleSignUp}
-            >
-              <AppText
-                text="Sign Up"
-                style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
-              />
-            </TouchableOpacity>
-          </>
-        ) : (
-          <>
-            <TouchableOpacity
-              style={styles.buttonContainer}
-              onPress={handleSignOut}
-            >
-              <AppText
-                text="Logout"
-                style={{ color: "white", fontSize: 16, fontWeight: "bold" }}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.exportButton}
-              onPress={handleExportVocabulary}
-              disabled={isExporting}
-            >
-              <MaterialIcons
-                name="download"
-                size={20}
-                color="white"
-                style={{ marginRight: 8 }}
-              />
-              <AppText
-                text={isExporting ? "Exporting..." : "Export Words"}
-                style={[
-                  styles.exportButtonText,
-                  isExporting && styles.disabledText,
-                ]}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.deleteAccountButton}
-              onPress={handleDeleteAccount}
-              disabled={loading}
-            >
-              <AppText
-                text={loading ? "Processing..." : "Delete Account"}
-                style={[
-                  styles.deleteAccountText,
-                  loading && styles.disabledText,
-                ]}
-              />
-            </TouchableOpacity>
-          </>
-        )}
-      </ScrollView>
-
-      {/* Nickname Edit Modal */}
-      {!isGuest && (
-        <Modal
-          visible={isEditingNickname}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={handleCancelEdit}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <AppText style={styles.modalTitle} text="Change Nickname" />
-
-              <View style={styles.inputContainer}>
-                <AppText style={styles.inputLabel} text="New Nickname" />
-                <View style={styles.nicknameInputContainer}>
-                  <AppText style={styles.hashSymbol} text="#" />
-                  <TextInput
-                    style={styles.nicknameInput}
-                    value={newNickname}
-                    onChangeText={setNewNickname}
-                    placeholder="Enter your nickname"
-                    placeholderTextColor="#999"
-                    maxLength={20}
-                    autoFocus={true}
-                  />
-                </View>
-                <AppText
-                  style={styles.inputHint}
-                  text="Letters, numbers, Korean, underscore (_) allowed (3-20 chars)"
-                />
-              </View>
-
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={handleCancelEdit}
-                >
-                  <AppText style={styles.cancelButtonText} text="Cancel" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.saveButton]}
-                  onPress={handleSaveNickname}
-                  disabled={loading || nicknameLoading || !newNickname.trim()}
-                >
-                  <AppText
-                    style={[
-                      styles.saveButtonText,
-                      (!newNickname.trim() || loading) &&
-                        styles.disabledButtonText,
-                    ]}
-                    text={loading || nicknameLoading ? "Saving..." : "Save"}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 };
 

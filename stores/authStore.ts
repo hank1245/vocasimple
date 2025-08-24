@@ -2,9 +2,9 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { supabase } from "@/utils/supabase";
 import { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const GUEST_MODE_KEY = 'guest_mode_active';
+const GUEST_MODE_KEY = "guest_mode_active";
 
 interface AuthStore {
   user: User | null;
@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthStore>()(
         return;
       }
 
-      console.log("Starting auth initialization...");
+      // Starting auth initialization...
 
       // 타임아웃 설정 (5초로 단축)
       const timeoutPromise = new Promise((_, reject) => {
@@ -51,9 +51,12 @@ export const useAuthStore = create<AuthStore>()(
         let wasInGuestMode = false;
         try {
           const savedGuestMode = await AsyncStorage.getItem(GUEST_MODE_KEY);
-          wasInGuestMode = savedGuestMode === 'true';
+          wasInGuestMode = savedGuestMode === "true";
         } catch (storageError) {
-          console.warn("AsyncStorage error during initialization:", storageError);
+          console.warn(
+            "AsyncStorage error during initialization:",
+            storageError
+          );
           // Continue with initialization even if AsyncStorage fails
         }
 
@@ -77,7 +80,7 @@ export const useAuthStore = create<AuthStore>()(
           return;
         }
 
-        console.log("Auth initialization completed, session:", !!session);
+        // Auth initialization completed
 
         // If user has a session, use it; otherwise check if they were in guest mode
         if (session) {
@@ -108,7 +111,7 @@ export const useAuthStore = create<AuthStore>()(
         // 세션 변경 리스너 설정
         const { data: authListener } = supabase.auth.onAuthStateChange(
           (event: AuthChangeEvent, session: Session | null) => {
-            console.log("Auth state change:", event, !!session);
+            // Auth state changed
 
             // 불필요한 리렌더링 방지 - 세션이 실제로 변경된 경우만 업데이트
             const currentState = get();
@@ -157,7 +160,9 @@ export const useAuthStore = create<AuthStore>()(
         // 로그아웃 전에 서버 데이터를 로컬로 백업
         if (currentState.user && !currentState.isGuest) {
           try {
-            const { handleSignOutBackup } = await import("@/utils/unifiedVocabularyApi");
+            const { handleSignOutBackup } = await import(
+              "@/utils/unifiedVocabularyApi"
+            );
             await handleSignOutBackup(currentState.user.id);
           } catch (error) {
             console.error("Error backing up data on sign out:", error);
@@ -168,15 +173,18 @@ export const useAuthStore = create<AuthStore>()(
         if (error) {
           console.error("Sign out error:", error);
         }
-        
+
         // Clear guest mode when signing out
         set({ isGuest: false });
-        
+
         // Try to clear AsyncStorage in background
         try {
           await AsyncStorage.removeItem(GUEST_MODE_KEY);
         } catch (storageError) {
-          console.warn("Failed to clear guest mode from storage:", storageError);
+          console.warn(
+            "Failed to clear guest mode from storage:",
+            storageError
+          );
           // Continue without crashing
         }
       } catch (error) {
@@ -196,9 +204,9 @@ export const useAuthStore = create<AuthStore>()(
 
       // Try to save to AsyncStorage in background
       try {
-        await AsyncStorage.setItem(GUEST_MODE_KEY, 'true');
+        await AsyncStorage.setItem(GUEST_MODE_KEY, "true");
       } catch (error) {
-        console.warn('Failed to save guest mode to storage:', error);
+        console.warn("Failed to save guest mode to storage:", error);
         // Continue without crashing - guest mode is already set in state
       }
     },
@@ -217,7 +225,7 @@ export const useAuthStore = create<AuthStore>()(
       try {
         await AsyncStorage.removeItem(GUEST_MODE_KEY);
       } catch (error) {
-        console.warn('Failed to remove guest mode from storage:', error);
+        console.warn("Failed to remove guest mode from storage:", error);
         // Continue without crashing - state is already updated
       }
     },
@@ -225,11 +233,11 @@ export const useAuthStore = create<AuthStore>()(
     loadGuestMode: async () => {
       try {
         const savedGuestMode = await AsyncStorage.getItem(GUEST_MODE_KEY);
-        if (savedGuestMode === 'true') {
+        if (savedGuestMode === "true") {
           set({ isGuest: true });
         }
       } catch (error) {
-        console.error('Error loading guest mode:', error);
+        console.error("Error loading guest mode:", error);
       }
     },
   }))

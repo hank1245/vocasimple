@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
   TouchableOpacity,
-  Image,
   Text,
   SafeAreaView,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { Calendar } from "react-native-calendars";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
 import { learningStreakService } from "@/utils/learningStreak";
-import { getCurrentUser, useAuth } from "@/stores/authStore";
+import { useAuth } from "@/stores/authStore";
 const windowWidth = Dimensions.get("window").width;
 
 const FireCalendar = () => {
@@ -25,7 +25,7 @@ const FireCalendar = () => {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [totalFireCount, setTotalFireCount] = useState(0);
 
-  const fetchStreakData = async () => {
+  const fetchStreakData = useCallback(async () => {
     if (isGuest || !user) {
       // Set default values in guest mode
       setMarkedDates({});
@@ -36,7 +36,12 @@ const FireCalendar = () => {
     }
 
     try {
-      const [markedDatesData, maxStreakData, currentStreakData, totalFireCountData] = await Promise.all([
+      const [
+        markedDatesData,
+        maxStreakData,
+        currentStreakData,
+        totalFireCountData,
+      ] = await Promise.all([
         learningStreakService.getMarkedDates(user.id),
         learningStreakService.getMaxStreak(user.id),
         learningStreakService.getCurrentStreak(user.id),
@@ -49,18 +54,17 @@ const FireCalendar = () => {
       setTotalFireCount(totalFireCountData || 0);
     } catch (error) {
       console.error("Error fetching streak data:", error);
-      // Set default values on error
       setMarkedDates({});
       setMaxStreak(0);
       setCurrentStreak(0);
       setTotalFireCount(0);
     }
-  };
+  }, [isGuest, user]);
 
   useFocusEffect(
     React.useCallback(() => {
       fetchStreakData();
-    }, [])
+    }, [fetchStreakData])
   );
 
   return (
@@ -84,11 +88,11 @@ const FireCalendar = () => {
           markedDates={markedDates}
           current={new Date().toISOString().split("T")[0]}
           onDayPress={(day: any) => {
-            console.log("selected day", day);
+            // day selected handler
           }}
           monthFormat={"yyyy MM"}
           onMonthChange={(month: any) => {
-            console.log("month changed", month);
+            // month change handler
           }}
           hideDayNames={false}
           showWeekNumbers={false}
@@ -104,7 +108,10 @@ const FireCalendar = () => {
         </View>
         <View>
           <AppText text={`${maxStreak} days`} style={styles.recordText} />
-          <AppText text={`${totalFireCount} flames`} style={styles.recordText} />
+          <AppText
+            text={`${totalFireCount} flames`}
+            style={styles.recordText}
+          />
           <AppText text={`${currentStreak} days`} style={styles.recordText} />
         </View>
       </View>

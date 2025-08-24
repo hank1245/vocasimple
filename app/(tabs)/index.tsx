@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   TouchableOpacity,
@@ -21,6 +21,8 @@ import {
   usePrefetchVocabulary,
 } from "@/hooks/useVocabularyQuery";
 import { VocabularyWord } from "@/types/common";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import { useImagePrefetch } from "@/hooks/usePrefetch";
 
 const Index = () => {
   const router = useRouter();
@@ -30,10 +32,8 @@ const Index = () => {
     "all" | "memorized" | "unmemorized"
   >("all");
 
-  // Zustand stores
   const { user, isGuest } = useAuth();
 
-  // TanStack Query hooks
   const {
     data: vocabularyList = [],
     isLoading: loading,
@@ -42,25 +42,40 @@ const Index = () => {
 
   const deleteWordMutation = useDeleteWord();
   const { prefetchVocabulary } = usePrefetchVocabulary();
+  const prefetchImages = useImagePrefetch();
 
-  // Handle filter selection
   const handleFilterSelect = (filter: "all" | "memorized" | "unmemorized") => {
     setCurrentFilter(filter);
     setShowFilterModal(false);
   };
 
-  // Prefetch other filter data when component mounts (only once)
   useFocusEffect(
     useCallback(() => {
-      // Only prefetch if not already cached and user is logged in or guest
       if (user || isGuest) {
-        // Prefetch only the filters that are likely to be used
         if (currentFilter !== "all") prefetchVocabulary("all");
         if (currentFilter !== "memorized") prefetchVocabulary("memorized");
         if (currentFilter !== "unmemorized") prefetchVocabulary("unmemorized");
       }
     }, [prefetchVocabulary, user, isGuest, currentFilter])
   );
+
+  useEffect(() => {
+    Promise.allSettled([
+      import("@/app/MultipleChoiceQuestions"),
+      import("@/app/Flashcard"),
+      import("@/app/WritingPractice"),
+      import("@/app/FireCalendar"),
+      import("@/app/EditVocabulary"),
+      import("@/app/add"),
+    ]);
+
+    prefetchImages([
+      require("@/assets/images/flame.png"),
+      require("@/assets/images/sage.png"),
+      require("@/assets/images/knight.png"),
+      require("@/assets/images/apprentice.png"),
+    ]);
+  }, [prefetchImages]);
 
   // Get filter display text
   const getFilterText = (filter: "all" | "memorized" | "unmemorized") => {
@@ -81,7 +96,7 @@ const Index = () => {
 
   const handleDeleteVocabulary = async (index: number) => {
     if (!user && !isGuest) {
-      console.log("사용자가 로그인되지 않았습니다.");
+      // user not logged in
       return;
     }
 
@@ -144,164 +159,173 @@ const Index = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerContainer}>
-        <View style={styles.filterButtonContainer}>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setShowFilterModal(true)}
-          >
-            <Octicons name="stack" size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.add}>
-          <Pressable onPress={onAdd}>
-            <AntDesign name="plus" size={32} color="black" />
-          </Pressable>
-        </View>
-      </View>
-      <View style={styles.container}>
-        <AppText style={styles.title} text="Vocabulary" />
-        <View style={styles.topbar}>
-          <AppText
-            style={styles.filterStatusText}
-            text={`${getFilterText(currentFilter)} (${vocabularyList.length})`}
-          />
-          <View style={styles.modeButtons}>
+    <ErrorBoundary>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerContainer}>
+          <View style={styles.filterButtonContainer}>
             <TouchableOpacity
-              style={[styles.modeButton, mode === "word" && styles.activeMode]}
-              onPress={() => setMode((m) => (m === "word" ? null : "word"))}
+              style={styles.filterButton}
+              onPress={() => setShowFilterModal(true)}
             >
-              <AppText
-                style={[
-                  styles.modeText,
-                  mode === "word" ? { color: "white" } : undefined,
-                ]}
-                text="Words"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.modeButton,
-                mode === "meaning" && styles.activeMode,
-              ]}
-              onPress={() =>
-                setMode((m) => (m === "meaning" ? null : "meaning"))
-              }
-            >
-              <AppText
-                style={[
-                  styles.modeText,
-                  mode === "meaning" ? { color: "white" } : undefined,
-                ]}
-                text="Meanings"
-              />
+              <Octicons name="stack" size={24} color="white" />
             </TouchableOpacity>
           </View>
+          <View style={styles.add}>
+            <Pressable onPress={onAdd}>
+              <AntDesign name="plus" size={32} color="black" />
+            </Pressable>
+          </View>
         </View>
-        {vocabularyList && vocabularyList.length > 0 ? (
-          <ScrollView
-            contentContainerStyle={{ paddingVertical: 40 }}
-            showsVerticalScrollIndicator={false}
-          >
-            {vocabularyList.map((item: VocabularyWord, idx: number) => (
-              <VocabularyCard
-                key={idx}
-                word={item.word}
-                meaning={item.meaning}
-                group={item.group}
-                example={item.example}
-                mode={mode}
-                isMemorized={item.is_memorized}
-                currentFilter={currentFilter}
-                onDelete={() => handleDeleteVocabulary(idx)}
-                onEdit={() => handleEditVocabulary(idx)}
-              />
-            ))}
-          </ScrollView>
-        ) : (
-          <View style={styles.emptyMessageContainer}>
+        <View style={styles.container}>
+          <AppText style={styles.title} text="Vocabulary" />
+          <View style={styles.topbar}>
             <AppText
-              text="Tap the + button above"
-              style={styles.emptyMessageText}
+              style={styles.filterStatusText}
+              text={`${getFilterText(currentFilter)} (${
+                vocabularyList.length
+              })`}
             />
-            <AppText
-              text="to add your first word!"
-              style={styles.emptyMessageText}
-            />
+            <View style={styles.modeButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.modeButton,
+                  mode === "word" && styles.activeMode,
+                ]}
+                onPress={() => setMode((m) => (m === "word" ? null : "word"))}
+              >
+                <AppText
+                  style={[
+                    styles.modeText,
+                    mode === "word" ? { color: "white" } : undefined,
+                  ]}
+                  text="Words"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modeButton,
+                  mode === "meaning" && styles.activeMode,
+                ]}
+                onPress={() =>
+                  setMode((m) => (m === "meaning" ? null : "meaning"))
+                }
+              >
+                <AppText
+                  style={[
+                    styles.modeText,
+                    mode === "meaning" ? { color: "white" } : undefined,
+                  ]}
+                  text="Meanings"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
-      </View>
-
-      {/* Filter Modal */}
-      <Modal
-        visible={showFilterModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowFilterModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle} text="Select Filter" />
-
-            <TouchableOpacity
-              style={[
-                styles.filterOption,
-                currentFilter === "all" && styles.selectedFilterOption,
-              ]}
-              onPress={() => handleFilterSelect("all")}
+          {vocabularyList && vocabularyList.length > 0 ? (
+            <ScrollView
+              contentContainerStyle={{ paddingVertical: 40 }}
+              showsVerticalScrollIndicator={false}
             >
+              {vocabularyList.map((item: VocabularyWord, idx: number) => (
+                <VocabularyCard
+                  key={item.id || idx}
+                  word={item.word}
+                  meaning={item.meaning}
+                  group={item.group}
+                  example={item.example}
+                  mode={mode}
+                  isMemorized={item.is_memorized}
+                  currentFilter={currentFilter}
+                  onDelete={() => handleDeleteVocabulary(idx)}
+                  onEdit={() => handleEditVocabulary(idx)}
+                />
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.emptyMessageContainer}>
               <AppText
-                style={[
-                  styles.filterOptionText,
-                  currentFilter === "all" && styles.selectedFilterText,
-                ]}
-                text="All"
+                text="Tap the + button above"
+                style={styles.emptyMessageText}
               />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.filterOption,
-                currentFilter === "memorized" && styles.selectedFilterOption,
-              ]}
-              onPress={() => handleFilterSelect("memorized")}
-            >
               <AppText
-                style={[
-                  styles.filterOptionText,
-                  currentFilter === "memorized" && styles.selectedFilterText,
-                ]}
-                text="Memorized Words"
+                text="to add your first word!"
+                style={styles.emptyMessageText}
               />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.filterOption,
-                currentFilter === "unmemorized" && styles.selectedFilterOption,
-              ]}
-              onPress={() => handleFilterSelect("unmemorized")}
-            >
-              <AppText
-                style={[
-                  styles.filterOptionText,
-                  currentFilter === "unmemorized" && styles.selectedFilterText,
-                ]}
-                text="Unmemorized"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.modalCancelButton}
-              onPress={() => setShowFilterModal(false)}
-            >
-              <AppText style={styles.modalCancelText} text="Cancel" />
-            </TouchableOpacity>
-          </View>
+            </View>
+          )}
         </View>
-      </Modal>
-    </SafeAreaView>
+
+        {/* Filter Modal */}
+        <Modal
+          visible={showFilterModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowFilterModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <AppText style={styles.modalTitle} text="Select Filter" />
+
+              <TouchableOpacity
+                style={[
+                  styles.filterOption,
+                  currentFilter === "all" && styles.selectedFilterOption,
+                ]}
+                onPress={() => handleFilterSelect("all")}
+              >
+                <AppText
+                  style={[
+                    styles.filterOptionText,
+                    currentFilter === "all" && styles.selectedFilterText,
+                  ]}
+                  text="All"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.filterOption,
+                  currentFilter === "memorized" && styles.selectedFilterOption,
+                ]}
+                onPress={() => handleFilterSelect("memorized")}
+              >
+                <AppText
+                  style={[
+                    styles.filterOptionText,
+                    currentFilter === "memorized" && styles.selectedFilterText,
+                  ]}
+                  text="Memorized Words"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.filterOption,
+                  currentFilter === "unmemorized" &&
+                    styles.selectedFilterOption,
+                ]}
+                onPress={() => handleFilterSelect("unmemorized")}
+              >
+                <AppText
+                  style={[
+                    styles.filterOptionText,
+                    currentFilter === "unmemorized" &&
+                      styles.selectedFilterText,
+                  ]}
+                  text="Unmemorized"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowFilterModal(false)}
+              >
+                <AppText style={styles.modalCancelText} text="Cancel" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 };
 

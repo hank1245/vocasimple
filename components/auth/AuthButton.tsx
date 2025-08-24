@@ -1,27 +1,36 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import AppText from "../common/AppText";
 
 interface Props {
   text: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
 }
 
-export default function AuthButton({ text, onPress, disabled, variant = 'primary' }: Props) {
+export default function AuthButton({
+  text,
+  onPress,
+  disabled,
+  variant = "primary",
+}: Props) {
   const getContainerStyle = () => {
     if (disabled) {
       return { backgroundColor: "#6d6d6d" };
     }
-    if (variant === 'secondary') {
-      return { backgroundColor: "white", borderWidth: 2, borderColor: "#F5C92B" };
+    if (variant === "secondary") {
+      return {
+        backgroundColor: "white",
+        borderWidth: 2,
+        borderColor: "#F5C92B",
+      };
     }
     return {};
   };
 
   const getTextStyle = () => {
-    if (variant === 'secondary') {
+    if (variant === "secondary") {
       return { color: "#F5C92B" };
     }
     return {};
