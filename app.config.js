@@ -23,7 +23,7 @@ export default {
       config: {
         usesNonExemptEncryption: false,
       },
-      runtimeVersion: IS_PRODUCTION ? { policy: "appVersion" } : "1.0.3",
+      runtimeVersion: IS_PRODUCTION ? { policy: "appVersion" } : "1.0.4",
     },
     android: {
       package: "com.hank1245.vocasimple",

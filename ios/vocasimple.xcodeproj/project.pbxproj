@@ -36,6 +36,7 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-vocasimple/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		711DA5C6B105418BA4B09F1C /* vocasimple-Bridging-Header.h */ = {isa = PBXFileReference; name = "vocasimple-Bridging-Header.h"; path = "vocasimple/vocasimple-Bridging-Header.h"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +63,7 @@
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				8EE3A5546ED14D82B00E55A0 /* noop-file.swift */,
 				379669E163FF7BDE4F86BE23 /* PrivacyInfo.xcprivacy */,
+				711DA5C6B105418BA4B09F1C /* vocasimple-Bridging-Header.h */,
 			);
 			name = vocasimple;
 			sourceTree = "<group>";
@@ -214,6 +216,7 @@
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				52DBE9538ADE461F9BE49845 /* Lexend.ttf in Resources */,
 				87109E46D8F694FCD946CC90 /* PrivacyInfo.xcprivacy in Resources */,
+				90F22E7BBBF547EF9759FAAF /* vocasimple-Bridging-Header.h in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -401,11 +404,12 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hank1245.vocasimple;
-				PRODUCT_NAME = vocasimple;
+				PRODUCT_NAME = "vocasimple";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				SWIFT_OBJC_BRIDGING_HEADER = vocasimple/vocasimple-Bridging-Header.h;
 			};
 			name = Debug;
 		};
@@ -428,10 +432,11 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.hank1245.vocasimple;
-				PRODUCT_NAME = vocasimple;
+				PRODUCT_NAME = "vocasimple";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
+				SWIFT_OBJC_BRIDGING_HEADER = vocasimple/vocasimple-Bridging-Header.h;
 			};
 			name = Release;
 		};
