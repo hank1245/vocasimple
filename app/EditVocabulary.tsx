@@ -9,7 +9,6 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-  TouchableWithoutFeedback,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -36,7 +35,7 @@ const EditVocabularyScreen = () => {
   const [word, setWord] = useState(initialWord || "");
   const [meaning, setMeaning] = useState(initialMeaning || "");
   const [example, setExample] = useState(initialExample || "");
-  const [selectedGroup, setSelectedGroup] = useState(initialGroup || "기본");
+  const [selectedGroup] = useState(initialGroup || "기본");
   const [aiLoading, setAiLoading] = useState(false);
 
   // TanStack Query hook for updating words

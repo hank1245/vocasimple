@@ -16,7 +16,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/utils/queryClient";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-import { Platform, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 import AppText from "@/components/common/AppText";
 
 if (!global.structuredClone) {

@@ -15,10 +15,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { getCurrentUser, useAuth } from "@/stores/authStore";
 import { VocabularyWord } from "@/types/common";
 import AppText from "@/components/common/AppText";
-import { Toast } from "toastify-react-native";
+// import { Toast } from "toastify-react-native";
 import { Colors } from "@/constants/Colors";
 import { learningStreakService } from "@/utils/learningStreak";
-import ToastManager from "toastify-react-native";
+// import ToastManager from "toastify-react-native";
 import {
   useVocabulary,
   useMarkWordsAsMemorized,
@@ -247,7 +247,7 @@ const WritingPracticeScreen = () => {
         ]
       );
     }
-  }, [vocabularyLoading, vocabularyData, router, progress]);
+  }, [vocabularyLoading, vocabularyData, router, progress, user, isGuest]);
 
   useEffect(() => {
     return () => {

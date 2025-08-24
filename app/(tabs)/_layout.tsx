@@ -3,7 +3,6 @@ import React from "react";
 import { Platform } from "react-native";
 import { HapticTab } from "@/components/common/HapticTab";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
 import { Entypo, FontAwesome } from "@expo/vector-icons";
 
 export default function TabLayout() {
@@ -17,12 +16,12 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: Colors.tabBarBackground,
           paddingTop: 6,
-          ...(Platform.OS === "ios" 
-            ? { position: "absolute" } 
-            : { 
-                height: 80, 
+          ...(Platform.OS === "ios"
+            ? { position: "absolute" }
+            : {
+                height: 80,
                 paddingBottom: 12,
-                paddingTop: 12 
+                paddingTop: 12,
               }),
         },
       }}

@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Alert,
   Animated,
 } from "react-native";
 import { Image } from "expo-image";

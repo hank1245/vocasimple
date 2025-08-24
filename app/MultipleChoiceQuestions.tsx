@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import { getCurrentUser, useAuth } from "@/stores/authStore";
+import { useAuth } from "@/stores/authStore";
 import { VocabularyWord, QuizQuestion } from "@/types/common";
 import AppText from "@/components/common/AppText";
 import { learningStreakService } from "@/utils/learningStreak";
