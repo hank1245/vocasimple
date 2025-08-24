@@ -51,7 +51,7 @@ const WritingPracticeScreen = () => {
   const getTypedLetterColor = (letter: string, index: number) => {
     const currentWord = vocabularyWords[currentQuestionIndex];
     if (!currentWord) return "#000"; // Default color if word is undefined
-    
+
     const correctWord = currentWord.word.toLowerCase();
     const userLetter = letter.toLowerCase();
     const correctLetter = correctWord?.charAt(index)?.toLowerCase();
@@ -66,7 +66,7 @@ const WritingPracticeScreen = () => {
   const renderTypedText = () => {
     const currentWord = vocabularyWords[currentQuestionIndex];
     if (!currentWord) return null; // Return null if word is undefined
-    
+
     return userInput.split("").map((letter, index) => (
       <Text
         key={index}
@@ -89,7 +89,7 @@ const WritingPracticeScreen = () => {
 
     const currentWord = vocabularyWords[currentQuestionIndex];
     if (!currentWord) return; // Early return if word is undefined
-    
+
     const correct =
       userInput.toLowerCase().trim() === currentWord.word.toLowerCase();
 
@@ -103,15 +103,13 @@ const WritingPracticeScreen = () => {
       newCorrectAnswers = correctAnswers + 1;
       setCorrectAnswers(newCorrectAnswers);
 
-      // Add correct word ID to the list for later memorization
       if (currentWord.id) {
         setCorrectWordsIds((prev) => [...prev, currentWord.id]);
       }
     } else {
       newWrongAnswers = [...wrongAnswers, currentWord];
       setWrongAnswers(newWrongAnswers);
-      
-      // Mark wrong word as unmemorized if it was previously memorized
+
       if (currentWord.is_memorized && currentWord.id) {
         setWrongWordsIds((prev) => [...prev, currentWord.id]);
       }
@@ -119,11 +117,21 @@ const WritingPracticeScreen = () => {
 
     const delay = correct ? 1000 : 2000;
     setTimeout(() => {
-      // Get the updated IDs including the current answer
-      const updatedCorrectIds = correct && currentWord.id ? [...correctWordsIds, currentWord.id] : correctWordsIds;
-      const updatedWrongIds = !correct && currentWord.is_memorized && currentWord.id ? [...wrongWordsIds, currentWord.id] : wrongWordsIds;
-      
-      handleContinue(newCorrectAnswers, newWrongAnswers, updatedCorrectIds, updatedWrongIds);
+      const updatedCorrectIds =
+        correct && currentWord.id
+          ? [...correctWordsIds, currentWord.id]
+          : correctWordsIds;
+      const updatedWrongIds =
+        !correct && currentWord.is_memorized && currentWord.id
+          ? [...wrongWordsIds, currentWord.id]
+          : wrongWordsIds;
+
+      handleContinue(
+        newCorrectAnswers,
+        newWrongAnswers,
+        updatedCorrectIds,
+        updatedWrongIds
+      );
     }, delay);
   };
 
@@ -148,20 +156,21 @@ const WritingPracticeScreen = () => {
       setShowHint(false);
       setShowFeedback(false);
     } else {
-      // Use passed arrays or fallback to component state
-      const finalCorrectIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
-      const finalWrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
+      const finalCorrectIds =
+        finalCorrectWordsIds !== undefined
+          ? finalCorrectWordsIds
+          : correctWordsIds;
+      const finalWrongIds =
+        finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
 
-      // Award fire streak for logged-in users only
       if (user && !isGuest) {
         learningStreakService.addTodayCompletion(user.id);
       }
 
-      // Mark correct words as memorized (works for both guest and logged-in users)
       if (finalCorrectIds.length > 0) {
         markWordsAsMemorizedMutation.mutate(finalCorrectIds, {
           onSuccess: () => {
-            console.log(`Marked ${finalCorrectIds.length} words as memorized`);
+            // Marked final correct words as memorized
           },
           onError: (error) => {
             console.error("Error marking words as memorized:", error);
@@ -173,7 +182,7 @@ const WritingPracticeScreen = () => {
       if (finalWrongIds.length > 0) {
         markWordsAsUnmemorizedMutation.mutate(finalWrongIds, {
           onSuccess: () => {
-            console.log(`Marked ${finalWrongIds.length} words as unmemorized`);
+            // Marked final wrong words as unmemorized
           },
           onError: (error) => {
             console.error("Error marking words as unmemorized:", error);
@@ -193,7 +202,6 @@ const WritingPracticeScreen = () => {
   };
 
   useEffect(() => {
-    // Process vocabulary data when it's loaded
     if (!vocabularyLoading && vocabularyData && vocabularyData.length > 0) {
       if (!user && !isGuest) return;
 
@@ -215,23 +223,19 @@ const WritingPracticeScreen = () => {
         setIsLoading(false);
       } catch (error) {
         console.error("Error:", error);
-        Alert.alert(
-          "Error",
-          "An error occurred while loading words.",
-          [
-            {
-              text: "OK",
-              onPress: () => router.back(),
-            },
-          ]
-        );
+        Alert.alert("Error", "An error occurred while loading words.", [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]);
       }
     } else if (
       !vocabularyLoading &&
       vocabularyData !== undefined &&
       vocabularyData.length === 0
     ) {
-      console.log("No vocabulary words found, showing alert");
+      // No vocabulary words found, showing alert
       Alert.alert(
         "No Words",
         "You have no saved words! Please add more words!",
@@ -245,7 +249,6 @@ const WritingPracticeScreen = () => {
     }
   }, [vocabularyLoading, vocabularyData, router, progress]);
 
-  // Cleanup animation on unmount
   useEffect(() => {
     return () => {
       try {
@@ -287,15 +290,11 @@ const WritingPracticeScreen = () => {
   const currentWord = vocabularyWords[currentQuestionIndex];
   const canSubmit = userInput.trim().length > 0 && !showFeedback;
 
-  // If currentWord is undefined, show loading or error state
   if (!currentWord) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <AppText
-            style={styles.loadingText}
-            text="Loading words..."
-          />
+          <AppText style={styles.loadingText} text="Loading words..." />
         </View>
       </SafeAreaView>
     );

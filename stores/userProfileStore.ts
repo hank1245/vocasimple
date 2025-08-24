@@ -1,9 +1,12 @@
-import { create } from 'zustand';
-import { nicknameService } from '@/utils/nicknameService';
-import { memorizedService, TierInfo } from '@/utils/memorizedService';
-import { learningStreakService } from '@/utils/learningStreak';
-import { leaderboardService, TierLeaderboard } from '@/utils/leaderboardService';
-import { getCurrentUser } from './authStore';
+import { create } from "zustand";
+import { nicknameService } from "@/utils/nicknameService";
+import { memorizedService, TierInfo } from "@/utils/memorizedService";
+import { learningStreakService } from "@/utils/learningStreak";
+import {
+  leaderboardService,
+  TierLeaderboard,
+} from "@/utils/leaderboardService";
+import { getCurrentUser } from "./authStore";
 
 interface StreakData {
   currentStreak: number;
@@ -22,26 +25,28 @@ interface UserProfileState {
   streakData: StreakData;
   leaderboardData: TierLeaderboard | null;
   selectedTier: "Sage" | "Knight" | "Apprentice";
-  
+
   // Loading states
   loading: boolean;
   nicknameLoading: boolean;
-  
+
   // Cache management
   lastFetch: number;
   cacheExpiry: number;
-  
+
   // Actions
   fetchAllData: () => Promise<void>;
   fetchNickname: () => Promise<void>;
   fetchTierInfo: () => Promise<void>;
   fetchStreakData: () => Promise<void>;
-  fetchLeaderboardData: (tier?: "Sage" | "Knight" | "Apprentice") => Promise<void>;
+  fetchLeaderboardData: (
+    tier?: "Sage" | "Knight" | "Apprentice"
+  ) => Promise<void>;
   updateNickname: (newNickname: string) => Promise<boolean>;
   setSelectedTier: (tier: "Sage" | "Knight" | "Apprentice") => void;
   shouldRefetch: () => boolean;
   clearCache: () => void;
-  
+
   // Optimistic updates
   optimisticUpdateMemorizedCount: (change: number) => void;
   optimisticUpdateTier: () => void;
@@ -49,7 +54,7 @@ interface UserProfileState {
 
 export const useUserProfileStore = create<UserProfileState>((set, get) => ({
   // Initial state
-  nickname: '',
+  nickname: "",
   tierInfo: null,
   memorizedCount: 0,
   totalWords: 0,
@@ -61,7 +66,7 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
     markedDates: {},
   },
   leaderboardData: null,
-  selectedTier: 'Sage',
+  selectedTier: "Sage",
   loading: false,
   nicknameLoading: false,
   lastFetch: 0,
@@ -85,12 +90,12 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
 
     // Check cache first
     if (!get().shouldRefetch() && get().lastFetch > 0) {
-      console.log('Using cached profile data');
+      // Using cached profile data
       return;
     }
 
     set({ loading: true });
-    
+
     try {
       // Fetch all data in parallel to minimize API calls
       const [
@@ -105,7 +110,9 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
         totalFireResult,
         markedDatesResult,
       ] = await Promise.all([
-        nicknameService.getUserNickname(user.id).catch(() => nicknameService.generateDefaultNickname(user.id)),
+        nicknameService
+          .getUserNickname(user.id)
+          .catch(() => nicknameService.generateDefaultNickname(user.id)),
         memorizedService.getUserTierInfo(user.id).catch(() => null),
         memorizedService.getMemorizedWordsCount(user.id).catch(() => 0),
         memorizedService.getTotalWordsCount(user.id).catch(() => 0),
@@ -118,9 +125,9 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
       ]);
 
       const finalTierInfo = tierInfoResult || {
-        currentTier: 'Apprentice',
+        currentTier: "Apprentice",
         memorizedCount: memorizedCountResult,
-        nextTier: 'Knight',
+        nextTier: "Knight",
         nextTierRequirement: 500,
         progressPercentage: 0,
       };
@@ -138,28 +145,30 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
           maxStreak: maxStreakResult,
           markedDates: markedDatesResult,
         },
-        selectedTier: finalTierInfo.currentTier as "Sage" | "Knight" | "Apprentice",
+        selectedTier: finalTierInfo.currentTier as
+          | "Sage"
+          | "Knight"
+          | "Apprentice",
         lastFetch: Date.now(),
         loading: false,
       });
 
       // Fetch leaderboard for selected tier
       await get().fetchLeaderboardData();
-
     } catch (error) {
-      console.error('Error fetching profile data:', error);
+      console.error("Error fetching profile data:", error);
       set({
         loading: false,
         // Set default values on error
         nickname: nicknameService.generateDefaultNickname(user.id),
         tierInfo: {
-          currentTier: 'Apprentice',
+          currentTier: "Apprentice",
           memorizedCount: 0,
-          nextTier: 'Knight',
+          nextTier: "Knight",
           nextTierRequirement: 500,
           progressPercentage: 0,
         },
-        selectedTier: 'Apprentice',
+        selectedTier: "Apprentice",
         memorizedCount: 0,
         totalWords: 0,
         streakData: {
@@ -179,15 +188,15 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
     if (!user) return;
 
     set({ nicknameLoading: true });
-    
+
     try {
       const nickname = await nicknameService.getUserNickname(user.id);
       set({ nickname, nicknameLoading: false });
     } catch (error) {
-      console.error('Error fetching nickname:', error);
-      set({ 
+      console.error("Error fetching nickname:", error);
+      set({
         nickname: nicknameService.generateDefaultNickname(user.id),
-        nicknameLoading: false 
+        nicknameLoading: false,
       });
     }
   },
@@ -205,21 +214,24 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
       ]);
 
       const finalTierInfo = tierInfo || {
-        currentTier: 'Apprentice',
+        currentTier: "Apprentice",
         memorizedCount: memorizedCount || 0,
-        nextTier: 'Knight',
+        nextTier: "Knight",
         nextTierRequirement: 500,
         progressPercentage: 0,
       };
 
       set({
         tierInfo: finalTierInfo,
-        selectedTier: finalTierInfo.currentTier as "Sage" | "Knight" | "Apprentice",
+        selectedTier: finalTierInfo.currentTier as
+          | "Sage"
+          | "Knight"
+          | "Apprentice",
         memorizedCount: memorizedCount || 0,
         totalWords: totalWords || 0,
       });
     } catch (error) {
-      console.error('Error fetching tier info:', error);
+      console.error("Error fetching tier info:", error);
     }
   },
 
@@ -229,13 +241,14 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
     if (!user) return;
 
     try {
-      const [maxStreak, currentStreak, monthCount, totalFire, markedDates] = await Promise.all([
-        learningStreakService.getMaxStreak(user.id),
-        learningStreakService.getCurrentStreak(user.id),
-        learningStreakService.getCurrentMonthCount(user.id),
-        learningStreakService.getTotalFireCount(user.id),
-        learningStreakService.getMarkedDates(user.id),
-      ]);
+      const [maxStreak, currentStreak, monthCount, totalFire, markedDates] =
+        await Promise.all([
+          learningStreakService.getMaxStreak(user.id),
+          learningStreakService.getCurrentStreak(user.id),
+          learningStreakService.getCurrentMonthCount(user.id),
+          learningStreakService.getTotalFireCount(user.id),
+          learningStreakService.getMarkedDates(user.id),
+        ]);
 
       set({
         streakData: {
@@ -247,7 +260,7 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
         },
       });
     } catch (error) {
-      console.error('Error fetching streak data:', error);
+      console.error("Error fetching streak data:", error);
     }
   },
 
@@ -257,12 +270,15 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
     if (!user) return;
 
     const targetTier = tier || get().selectedTier;
-    
+
     try {
-      const leaderboard = await leaderboardService.getTierLeaderboard(targetTier, user.id);
+      const leaderboard = await leaderboardService.getTierLeaderboard(
+        targetTier,
+        user.id
+      );
       set({ leaderboardData: leaderboard });
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      console.error("Error fetching leaderboard:", error);
       set({ leaderboardData: null });
     }
   },
@@ -273,7 +289,7 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
     if (!user) return false;
 
     set({ nicknameLoading: true });
-    
+
     try {
       const validation = nicknameService.validateNickname(newNickname);
       if (!validation.isValid) {
@@ -281,10 +297,14 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
         return false;
       }
 
-      const success = await nicknameService.updateNickname(user.id, newNickname);
-      
+      const success = await nicknameService.updateNickname(
+        user.id,
+        newNickname
+      );
+
       if (success) {
-        const formattedNickname = nicknameService.formatNicknameForDisplay(newNickname);
+        const formattedNickname =
+          nicknameService.formatNicknameForDisplay(newNickname);
         set({ nickname: formattedNickname, nicknameLoading: false });
         return true;
       } else {
@@ -292,7 +312,7 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
         return false;
       }
     } catch (error) {
-      console.error('Error updating nickname:', error);
+      console.error("Error updating nickname:", error);
       set({ nicknameLoading: false });
       return false;
     }
@@ -308,9 +328,9 @@ export const useUserProfileStore = create<UserProfileState>((set, get) => ({
   optimisticUpdateMemorizedCount: (change: number) => {
     const { memorizedCount, tierInfo } = get();
     const newCount = Math.max(0, memorizedCount + change);
-    
+
     set({ memorizedCount: newCount });
-    
+
     // Update tier info optimistically
     if (tierInfo) {
       const updatedTierInfo = { ...tierInfo, memorizedCount: newCount };

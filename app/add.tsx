@@ -31,7 +31,6 @@ const AddScreen = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const router = useRouter();
 
-  // TanStack Query hook for creating words
   const createWordMutation = useCreateWord();
 
   const onCreateExample = async () => {
@@ -49,7 +48,7 @@ const AddScreen = () => {
 
       if (result.success && result.example) {
         setExample(result.example);
-        console.log("AI example generated!");
+        // AI example generated
       } else {
         Alert.alert("Error", result.error || "Failed to generate example.");
       }
@@ -71,7 +70,6 @@ const AddScreen = () => {
       return;
     }
 
-    // 게스트 모드나 로그인 모드 모두 지원
     if (!user && !isGuest) {
       Alert.alert("오류", "로그인이 필요합니다.");
       return;
@@ -96,7 +94,6 @@ const AddScreen = () => {
   };
 
   const handleBackgroundPress = (event: any) => {
-    // Only dismiss keyboard if user taps on the background, not on input fields
     if (event.target === event.currentTarget) {
       Keyboard.dismiss();
     }

@@ -73,7 +73,7 @@ const QuizTab = () => {
       require("@/assets/images/knight.png"),
       require("@/assets/images/apprentice.png"),
     ]);
-    // Warm common screens
+
     Promise.allSettled([
       import("@/app/MultipleChoiceQuestions"),
       import("@/app/Flashcard"),
@@ -83,7 +83,6 @@ const QuizTab = () => {
     ]);
   }, [prefetchImages]);
 
-  // Cleanup animation on unmount
   useEffect(() => {
     return () => {
       try {
@@ -113,7 +112,6 @@ const QuizTab = () => {
   };
 
   const handleFireCalendarPress = () => {
-    // Add scale animation for press feedback
     animationRef.current = Animated.sequence([
       Animated.timing(scaleAnim, {
         toValue: 0.95,

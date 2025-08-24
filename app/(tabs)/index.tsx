@@ -32,10 +32,8 @@ const Index = () => {
     "all" | "memorized" | "unmemorized"
   >("all");
 
-  // Zustand stores
   const { user, isGuest } = useAuth();
 
-  // TanStack Query hooks
   const {
     data: vocabularyList = [],
     isLoading: loading,
@@ -46,18 +44,14 @@ const Index = () => {
   const { prefetchVocabulary } = usePrefetchVocabulary();
   const prefetchImages = useImagePrefetch();
 
-  // Handle filter selection
   const handleFilterSelect = (filter: "all" | "memorized" | "unmemorized") => {
     setCurrentFilter(filter);
     setShowFilterModal(false);
   };
 
-  // Prefetch other filter data when component mounts (only once)
   useFocusEffect(
     useCallback(() => {
-      // Only prefetch if not already cached and user is logged in or guest
       if (user || isGuest) {
-        // Prefetch only the filters that are likely to be used
         if (currentFilter !== "all") prefetchVocabulary("all");
         if (currentFilter !== "memorized") prefetchVocabulary("memorized");
         if (currentFilter !== "unmemorized") prefetchVocabulary("unmemorized");
@@ -65,9 +59,7 @@ const Index = () => {
     }, [prefetchVocabulary, user, isGuest, currentFilter])
   );
 
-  // Warm up next screens and images in the background
   useEffect(() => {
-    // Fire and forget dynamic imports to warm Metro cache
     Promise.allSettled([
       import("@/app/MultipleChoiceQuestions"),
       import("@/app/Flashcard"),
@@ -76,7 +68,7 @@ const Index = () => {
       import("@/app/EditVocabulary"),
       import("@/app/add"),
     ]);
-    // Prefetch commonly used images
+
     prefetchImages([
       require("@/assets/images/flame.png"),
       require("@/assets/images/sage.png"),
@@ -104,7 +96,7 @@ const Index = () => {
 
   const handleDeleteVocabulary = async (index: number) => {
     if (!user && !isGuest) {
-      console.log("사용자가 로그인되지 않았습니다.");
+      // user not logged in
       return;
     }
 

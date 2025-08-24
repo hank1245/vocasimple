@@ -92,7 +92,7 @@ const ProfileTab = () => {
       // Always fetch fresh data when screen comes into focus to ensure accuracy
       // This prevents stale data from showing after quiz completion
       if (user && !isGuest) {
-        console.log("Profile screen focused, refreshing data");
+        // Profile screen focused — refreshing data
         fetchAllData();
       }
     }, [user, isGuest, fetchAllData])

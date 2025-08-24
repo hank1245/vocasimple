@@ -1,6 +1,12 @@
 import { Colors } from "./../constants/Colors";
 import React, { useState, useEffect, useRef } from "react";
-import { View, TouchableOpacity, StyleSheet, Animated, Alert } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -22,12 +28,10 @@ const MultipleChoiceQuestionsScreen = () => {
     filter: "all" | "unmemorized";
   }>();
 
-  // TanStack Query hooks
   const filterType = filter === "unmemorized" ? "unmemorized" : "all";
   const { data: vocabularyData = [], isLoading: vocabularyLoading } =
     useVocabulary(filterType);
 
-  // TanStack Query hooks for memorization
   const markWordsAsMemorizedMutation = useMarkWordsAsMemorized();
   const markWordsAsUnmemorizedMutation = useMarkWordsAsUnmemorized();
 
@@ -102,7 +106,6 @@ const MultipleChoiceQuestionsScreen = () => {
       newCorrectAnswers = correctAnswers + 1;
       setCorrectAnswers(newCorrectAnswers);
 
-      // Add correct word ID to the list for later memorization
       const correctWord = vocabularyWords.find(
         (w) => w.word === currentQuestion.correctAnswer
       );
@@ -118,7 +121,6 @@ const MultipleChoiceQuestionsScreen = () => {
         newWrongAnswers = [...wrongAnswers, wrongWord];
         setWrongAnswers(newWrongAnswers);
 
-        // If this is "All Words" mode and the word was previously memorized, mark it as unmemorized
         if (filter === "all" && wrongWord.is_memorized && wrongWord.id) {
           newWrongWordsIds = [...wrongWordsIds, wrongWord.id];
           setWrongWordsIds(newWrongWordsIds);
@@ -156,20 +158,21 @@ const MultipleChoiceQuestionsScreen = () => {
       setSelectedAnswer(null);
       setShowFeedback(false);
     } else {
-      // Use passed arrays or fallback to component state
-      const correctIds = finalCorrectWordsIds !== undefined ? finalCorrectWordsIds : correctWordsIds;
-      const wrongIds = finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
+      const correctIds =
+        finalCorrectWordsIds !== undefined
+          ? finalCorrectWordsIds
+          : correctWordsIds;
+      const wrongIds =
+        finalWrongWordsIds !== undefined ? finalWrongWordsIds : wrongWordsIds;
 
-      // Award fire streak for logged-in users only
       if (user && !isGuest) {
         learningStreakService.addTodayCompletion(user.id);
       }
 
-      // Mark correct words as memorized (works for both guest and logged-in users)
       if (correctIds.length > 0) {
         markWordsAsMemorizedMutation.mutate(correctIds, {
           onSuccess: () => {
-            console.log(`Marked ${correctIds.length} words as memorized`);
+            // Marked correct words as memorized
           },
           onError: (error) => {
             console.error("Error marking words as memorized:", error);
@@ -177,11 +180,10 @@ const MultipleChoiceQuestionsScreen = () => {
         });
       }
 
-      // Mark wrong words as unmemorized (for "All Words" mode)
       if (wrongIds.length > 0) {
         markWordsAsUnmemorizedMutation.mutate(wrongIds, {
           onSuccess: () => {
-            console.log(`Marked ${wrongIds.length} words as unmemorized`);
+            // Marked wrong words as unmemorized
           },
           onError: (error) => {
             console.error("Error marking words as unmemorized:", error);
@@ -201,10 +203,12 @@ const MultipleChoiceQuestionsScreen = () => {
   };
 
   useEffect(() => {
-    // Process vocabulary data when it's loaded
-    // Only check on initial load, not when quiz is already in progress
-    if (!vocabularyLoading && vocabularyData !== undefined && quizQuestions.length === 0) {
-      console.log("Vocabulary data loaded:", vocabularyData.length, "words");
+    if (
+      !vocabularyLoading &&
+      vocabularyData !== undefined &&
+      quizQuestions.length === 0
+    ) {
+      // Vocabulary data loaded: ${vocabularyData.length} words
 
       if (vocabularyData.length >= 4) {
         setVocabularyWords(vocabularyData);
@@ -212,7 +216,7 @@ const MultipleChoiceQuestionsScreen = () => {
         setIsLoading(false);
       } else {
         // Not enough words for quiz
-        console.log("Not enough words for quiz, showing alert");
+        // Not enough words for quiz, showing alert
         Alert.alert(
           "Insufficient Words",
           "You need at least 4 words to start the quiz! Please add more words!",
@@ -244,10 +248,7 @@ const MultipleChoiceQuestionsScreen = () => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
-          <AppText
-            style={styles.loadingText}
-            text="Preparing the quiz..."
-          />
+          <AppText style={styles.loadingText} text="Preparing the quiz..." />
         </View>
       </SafeAreaView>
     );

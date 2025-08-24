@@ -117,13 +117,9 @@ const VocabularyCardComponent: React.FC<VocabularyCardProps> = ({
 
   const gestureHandler =
     useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
-      onStart: () => {
-        // Start gesture
-      },
+      onStart: () => {},
       onActive: (event) => {
-        // Allow both left and right swipes
         if (event.translationX < 0) {
-          // Left swipe for delete
           translateX.value = Math.max(event.translationX, -100);
           isEditVisible.value = false;
           runOnJS(hideEditIcon)();
@@ -135,7 +131,6 @@ const VocabularyCardComponent: React.FC<VocabularyCardProps> = ({
             }
           }
         } else if (event.translationX > 0) {
-          // Right swipe for edit
           translateX.value = Math.min(event.translationX, 100);
           isDeleteVisible.value = false;
           runOnJS(hideDeleteIcon)();
@@ -150,7 +145,6 @@ const VocabularyCardComponent: React.FC<VocabularyCardProps> = ({
       },
       onEnd: (event) => {
         if (event.translationX < -60) {
-          // Left swipe - show delete button
           translateX.value = withSpring(-80, {
             damping: 20,
             stiffness: 200,
@@ -158,7 +152,6 @@ const VocabularyCardComponent: React.FC<VocabularyCardProps> = ({
           isDeleteVisible.value = true;
           isEditVisible.value = false;
         } else if (event.translationX > 60) {
-          // Right swipe - show edit button
           translateX.value = withSpring(80, {
             damping: 20,
             stiffness: 200,
@@ -166,7 +159,6 @@ const VocabularyCardComponent: React.FC<VocabularyCardProps> = ({
           isEditVisible.value = true;
           isDeleteVisible.value = false;
         } else {
-          // Snap back to original position
           translateX.value = withSpring(0, {
             damping: 20,
             stiffness: 200,

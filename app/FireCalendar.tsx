@@ -54,7 +54,6 @@ const FireCalendar = () => {
       setTotalFireCount(totalFireCountData || 0);
     } catch (error) {
       console.error("Error fetching streak data:", error);
-      // Set default values on error
       setMarkedDates({});
       setMaxStreak(0);
       setCurrentStreak(0);
@@ -89,11 +88,11 @@ const FireCalendar = () => {
           markedDates={markedDates}
           current={new Date().toISOString().split("T")[0]}
           onDayPress={(day: any) => {
-            console.log("selected day", day);
+            // day selected handler
           }}
           monthFormat={"yyyy MM"}
           onMonthChange={(month: any) => {
-            console.log("month changed", month);
+            // month change handler
           }}
           hideDayNames={false}
           showWeekNumbers={false}

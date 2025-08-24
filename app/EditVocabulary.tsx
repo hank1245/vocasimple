@@ -57,7 +57,7 @@ const EditVocabularyScreen = () => {
 
       if (result.success && result.example) {
         setExample(result.example);
-        console.log("AI 예시가 생성되었습니다!");
+        // AI 예시가 생성되었습니다!
       } else {
         Alert.alert("오류", result.error || "예시 생성에 실패했습니다.");
       }
