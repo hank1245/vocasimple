@@ -1,15 +1,15 @@
 import { Colors } from "@/constants/Colors";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   SafeAreaView,
   View,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Modal,
   Alert,
   Animated,
 } from "react-native";
+import { Image } from "expo-image";
 import { useFocusEffect } from "@react-navigation/native";
 import AppText from "@/components/common/AppText";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,10 +19,12 @@ import { useRouter } from "expo-router";
 import { QuizMode } from "@/types/common";
 import { learningStreakService } from "@/utils/learningStreak";
 import { getCurrentUser, useAuth } from "@/stores/authStore";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import { useImagePrefetch } from "@/hooks/usePrefetch";
 
 const QuizTab = () => {
   const router = useRouter();
-  const { user, isGuest } = useAuth();
+  const { isGuest } = useAuth();
   const [currentMonthCount, setCurrentMonthCount] = useState(0);
   const [totalDaysInMonth, setTotalDaysInMonth] = useState(0);
   const [showQuizFilterModal, setShowQuizFilterModal] = useState(false);
@@ -30,7 +32,7 @@ const QuizTab = () => {
   const [scaleAnim] = useState(new Animated.Value(1));
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
-  const fetchFireCount = async () => {
+  const fetchFireCount = useCallback(async () => {
     if (isGuest) {
       // 게스트 모드에서는 기본값 설정
       setCurrentMonthCount(0);
@@ -55,13 +57,31 @@ const QuizTab = () => {
       setCurrentMonthCount(0);
       setTotalDaysInMonth(learningStreakService.getCurrentMonthTotalDays());
     }
-  };
+  }, [isGuest]);
 
   useFocusEffect(
     React.useCallback(() => {
       fetchFireCount();
-    }, [])
+    }, [fetchFireCount])
   );
+
+  const prefetchImages = useImagePrefetch();
+  useEffect(() => {
+    prefetchImages([
+      require("@/assets/images/flame.png"),
+      require("@/assets/images/sage.png"),
+      require("@/assets/images/knight.png"),
+      require("@/assets/images/apprentice.png"),
+    ]);
+    // Warm common screens
+    Promise.allSettled([
+      import("@/app/MultipleChoiceQuestions"),
+      import("@/app/Flashcard"),
+      import("@/app/WritingPractice"),
+      import("@/app/WritingPracticeResult"),
+      import("@/app/QuizResult"),
+    ]);
+  }, [prefetchImages]);
 
   // Cleanup animation on unmount
   useEffect(() => {
@@ -112,155 +132,161 @@ const QuizTab = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.padding}>
-        <AppText style={styles.title} text="Quiz" />
+    <ErrorBoundary>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.padding}>
+          <AppText style={styles.title} text="Quiz" />
 
-        <View style={styles.gridContainer}>
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => handleNavigateToMultipleChoiceQuestions("meaning")}
-          >
-            <Ionicons name="list" size={34} color="white" />
-            <AppText style={styles.cardText} text="Meaning Match" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => handleNavigateToMultipleChoiceQuestions("word")}
-          >
-            <Ionicons name="text" size={34} color="white" />
-            <AppText style={styles.cardText} text="Word Match" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => router.push("/Flashcard")}
-          >
-            <MaterialCommunityIcons
-              name="cards-outline"
-              size={34}
-              color="white"
-            />
-            <AppText style={styles.cardText} text="Flashcard" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => router.push("/WritingPractice")}
-          >
-            <Entypo name="pencil" size={34} color="white" />
-            <AppText style={styles.cardText} text="Writing Practice" />
-          </TouchableOpacity>
-        </View>
-
-        <Animated.View
-          style={[
-            styles.progressContainer,
-            {
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <TouchableOpacity
-            style={styles.progressTouchable}
-            onPress={isGuest ? undefined : handleFireCalendarPress}
-            activeOpacity={isGuest ? 1 : 0.8}
-          >
-            <View style={styles.progressHeader}>
-              <AppText
-                style={styles.progressText}
-                text={
-                  isGuest
-                    ? "Sign up and manage your learning records!"
-                    : "Complete daily quizzes and light up flames!"
-                }
-              />
-            </View>
-
-            <Image
-              source={require("@/assets/images/flame.png")}
-              style={styles.flameIcon}
-            />
-            <AppText
-              style={styles.progressSubText}
-              text={
-                isGuest
-                  ? "Guest Mode"
-                  : `Flames earned this month: ${currentMonthCount}/${totalDaysInMonth}`
-              }
-            />
-
-            {!isGuest && (
-              <View style={styles.clickHint}>
-                <AppText style={styles.clickHintText} text="View Calendar" />
-              </View>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-
-      {/* Quiz Filter Modal */}
-      <Modal
-        visible={showQuizFilterModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowQuizFilterModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <AppText style={styles.modalTitle} text="Quiz Settings" />
-
-            <AppText
-              style={styles.modalSubtitle}
-              text="Which words would you like to use for the quiz?"
-            />
-
+          <View style={styles.gridContainer}>
             <TouchableOpacity
-              style={styles.filterOption}
-              onPress={() => handleQuizFilterSelect("unmemorized")}
+              style={styles.card}
+              onPress={() => handleNavigateToMultipleChoiceQuestions("meaning")}
             >
-              <Ionicons name="book-outline" size={24} color={Colors.primary} />
-              <View style={styles.filterOptionText}>
-                <AppText
-                  style={styles.filterOptionTitle}
-                  text="Unmemorized Words Only"
-                />
-                <AppText
-                  style={styles.filterOptionSubtitle}
-                  text="Quiz with words you haven't memorized yet"
-                />
-              </View>
+              <Ionicons name="list" size={34} color="white" />
+              <AppText style={styles.cardText} text="Meaning Match" />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.filterOption}
-              onPress={() => handleQuizFilterSelect("all")}
+              style={styles.card}
+              onPress={() => handleNavigateToMultipleChoiceQuestions("word")}
             >
-              <Ionicons
-                name="library-outline"
-                size={24}
-                color={Colors.primary}
-              />
-              <View style={styles.filterOptionText}>
-                <AppText style={styles.filterOptionTitle} text="All Words" />
-                <AppText
-                  style={styles.filterOptionSubtitle}
-                  text="Quiz with all saved words"
-                />
-              </View>
+              <Ionicons name="text" size={34} color="white" />
+              <AppText style={styles.cardText} text="Word Match" />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.modalCancelButton}
-              onPress={() => setShowQuizFilterModal(false)}
+              style={styles.card}
+              onPress={() => router.push("/Flashcard")}
             >
-              <AppText style={styles.modalCancelText} text="Cancel" />
+              <MaterialCommunityIcons
+                name="cards-outline"
+                size={34}
+                color="white"
+              />
+              <AppText style={styles.cardText} text="Flashcard" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => router.push("/WritingPractice")}
+            >
+              <Entypo name="pencil" size={34} color="white" />
+              <AppText style={styles.cardText} text="Writing Practice" />
             </TouchableOpacity>
           </View>
+
+          <Animated.View
+            style={[
+              styles.progressContainer,
+              {
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.progressTouchable}
+              onPress={isGuest ? undefined : handleFireCalendarPress}
+              activeOpacity={isGuest ? 1 : 0.8}
+            >
+              <View style={styles.progressHeader}>
+                <AppText
+                  style={styles.progressText}
+                  text={
+                    isGuest
+                      ? "Sign up and manage your learning records!"
+                      : "Complete daily quizzes and light up flames!"
+                  }
+                />
+              </View>
+
+              <Image
+                source={require("@/assets/images/flame.png")}
+                style={styles.flameIcon}
+              />
+              <AppText
+                style={styles.progressSubText}
+                text={
+                  isGuest
+                    ? "Guest Mode"
+                    : `Flames earned this month: ${currentMonthCount}/${totalDaysInMonth}`
+                }
+              />
+
+              {!isGuest && (
+                <View style={styles.clickHint}>
+                  <AppText style={styles.clickHintText} text="View Calendar" />
+                </View>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
         </View>
-      </Modal>
-    </SafeAreaView>
+
+        {/* Quiz Filter Modal */}
+        <Modal
+          visible={showQuizFilterModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowQuizFilterModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <AppText style={styles.modalTitle} text="Quiz Settings" />
+
+              <AppText
+                style={styles.modalSubtitle}
+                text="Which words would you like to use for the quiz?"
+              />
+
+              <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() => handleQuizFilterSelect("unmemorized")}
+              >
+                <Ionicons
+                  name="book-outline"
+                  size={24}
+                  color={Colors.primary}
+                />
+                <View style={styles.filterOptionText}>
+                  <AppText
+                    style={styles.filterOptionTitle}
+                    text="Unmemorized Words Only"
+                  />
+                  <AppText
+                    style={styles.filterOptionSubtitle}
+                    text="Quiz with words you haven't memorized yet"
+                  />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.filterOption}
+                onPress={() => handleQuizFilterSelect("all")}
+              >
+                <Ionicons
+                  name="library-outline"
+                  size={24}
+                  color={Colors.primary}
+                />
+                <View style={styles.filterOptionText}>
+                  <AppText style={styles.filterOptionTitle} text="All Words" />
+                  <AppText
+                    style={styles.filterOptionSubtitle}
+                    text="Quiz with all saved words"
+                  />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowQuizFilterModal(false)}
+              >
+                <AppText style={styles.modalCancelText} text="Cancel" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </SafeAreaView>
+    </ErrorBoundary>
   );
 };
 

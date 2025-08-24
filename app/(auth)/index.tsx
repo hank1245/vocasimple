@@ -3,7 +3,6 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import React, { useMemo, useRef } from "react";
 import {
-  Image,
   SafeAreaView,
   StyleSheet,
   View,
@@ -11,6 +10,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
+import { Image } from "expo-image";
 import AppText from "@/components/common/AppText";
 import { Easing } from "react-native-reanimated";
 import Form from "@/components/auth/Form";
@@ -76,7 +76,10 @@ export default function Index() {
       >
         <SafeAreaView style={dynamicStyles.container}>
           <View style={dynamicStyles.banner}>
-            <AppText style={dynamicStyles.bannerText} text="Let's get Started!" />
+            <AppText
+              style={dynamicStyles.bannerText}
+              text="Let's get Started!"
+            />
           </View>
           <Image
             source={require("../../assets/images/get-started.png")}

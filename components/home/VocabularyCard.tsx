@@ -27,7 +27,7 @@ interface VocabularyCardProps {
   currentFilter?: "all" | "memorized" | "unmemorized";
 }
 
-const VocabularyCard: React.FC<VocabularyCardProps> = ({
+const VocabularyCardComponent: React.FC<VocabularyCardProps> = ({
   word,
   meaning,
   example,
@@ -60,7 +60,7 @@ const VocabularyCard: React.FC<VocabularyCardProps> = ({
     return () => {
       if (timeoutId.current) clearTimeout(timeoutId.current);
     };
-  }, [mode]);
+  }, [mode, wordOpacity, meaningOpacity]);
 
   const handlePress = () => {
     if (!mode) return;
@@ -350,5 +350,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+
+// Memoize to avoid unnecessary re-renders when list updates
+const VocabularyCard = React.memo(
+  VocabularyCardComponent,
+  (prev, next) =>
+    prev.word === next.word &&
+    prev.meaning === next.meaning &&
+    prev.example === next.example &&
+    prev.mode === next.mode &&
+    prev.isMemorized === next.isMemorized &&
+    prev.currentFilter === next.currentFilter
+);
 
 export default VocabularyCard;
