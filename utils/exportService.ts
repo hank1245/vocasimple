@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { convertToCSV, escapeCSVField, CsvVocabularyItem } from "./csv";
 
 export interface VocabularyItem {
   id: string;
@@ -30,40 +31,13 @@ export const exportService = {
     }
   },
 
-  // Convert vocabulary data to CSV format
+  // Convert vocabulary data to CSV format (re-exported for compatibility)
   convertToCSV(vocabularyData: VocabularyItem[]): string {
-    if (!vocabularyData || vocabularyData.length === 0) {
-      return "Word,Meaning,Example,Registration Date\n";
-    }
-
-    // CSV header
-    const header = "Word,Meaning,Example,Registration Date\n";
-    
-    // Convert each vocabulary item to CSV row
-    const rows = vocabularyData.map(item => {
-      const word = this.escapeCSVField(item.word);
-      const meaning = this.escapeCSVField(item.meaning);
-      const example = this.escapeCSVField(item.example || "");
-      const createdAt = this.escapeCSVField(
-        new Date(item.created_at).toLocaleDateString("ko-KR")
-      );
-      
-      return `${word},${meaning},${example},${createdAt}`;
-    }).join("\n");
-
-    return header + rows;
+    return convertToCSV(vocabularyData as CsvVocabularyItem[]);
   },
-
-  // Escape CSV fields (handle commas, quotes, line breaks)
+  // Escape CSV fields (re-exported)
   escapeCSVField(field: string): string {
-    if (!field) return "";
-    
-    // If field contains comma, quote, or line break, wrap in quotes and escape quotes
-    if (field.includes(",") || field.includes('"') || field.includes("\n")) {
-      return `"${field.replace(/"/g, '""')}"`;
-    }
-    
-    return field;
+    return escapeCSVField(field);
   },
 
   // Share CSV file using React Native Expo Sharing
@@ -74,14 +48,16 @@ export const exportService = {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // Import required modules
-      const FileSystem = await import('expo-file-system');
-      const Sharing = await import('expo-sharing');
-      
-      const fileName = `vocabulary_${new Date().toISOString().split('T')[0]}.csv`;
-      
+      const FileSystem = await import("expo-file-system");
+      const Sharing = await import("expo-sharing");
+
+      const fileName = `vocabulary_${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+
       // Create temporary file for sharing
       const fileUri = FileSystem.documentDirectory + fileName;
-      
+
       // Write CSV data to file
       await FileSystem.writeAsStringAsync(fileUri, csvData, {
         encoding: FileSystem.EncodingType.UTF8,
@@ -89,19 +65,19 @@ export const exportService = {
 
       // Check if sharing is available
       const isAvailable = await Sharing.isAvailableAsync();
-      
+
       if (!isAvailable) {
         // Clean up file if sharing is not available
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
         return {
           success: false,
-          error: "File sharing feature is not available."
+          error: "File sharing feature is not available.",
         };
       }
 
       // Share the file
       await Sharing.shareAsync(fileUri, {
-        mimeType: 'text/csv',
+        mimeType: "text/csv",
         dialogTitle: `Share Word List (${vocabularyCount} words)`,
       });
 
@@ -111,15 +87,18 @@ export const exportService = {
       return { success: true };
     } catch (error) {
       console.error("Error in sendVocabularyEmail:", error);
-      return { 
-        success: false, 
-        error: "An unexpected error occurred while sharing the file." 
+      return {
+        success: false,
+        error: "An unexpected error occurred while sharing the file.",
       };
     }
   },
 
   // Main export function
-  async exportVocabularyToEmail(userId: string, userEmail: string): Promise<{
+  async exportVocabularyToEmail(
+    userId: string,
+    userEmail: string
+  ): Promise<{
     success: boolean;
     error?: string;
     message?: string;
@@ -127,16 +106,16 @@ export const exportService = {
     try {
       // Get user's vocabulary
       const vocabulary = await this.getUserVocabulary(userId);
-      
+
       if (vocabulary.length === 0) {
         return {
           success: false,
-          error: "No saved words found."
+          error: "No saved words found.",
         };
       }
 
       // Convert to CSV
-      const csvData = this.convertToCSV(vocabulary);
+      const csvData = convertToCSV(vocabulary as CsvVocabularyItem[]);
 
       // Send email
       const emailResult = await this.sendVocabularyEmail(
@@ -148,26 +127,26 @@ export const exportService = {
       if (emailResult.success) {
         return {
           success: true,
-          message: `${vocabulary.length} words have been successfully shared.`
+          message: `${vocabulary.length} words have been successfully shared.`,
         };
       } else {
         return {
           success: false,
-          error: emailResult.error
+          error: emailResult.error,
         };
       }
     } catch (error) {
       console.error("Error in exportVocabularyToEmail:", error);
       return {
         success: false,
-        error: "An error occurred while exporting words."
+        error: "An error occurred while exporting words.",
       };
     }
   },
 
   // Generate preview of CSV data (for testing)
   generateCSVPreview(vocabularyData: VocabularyItem[]): string {
-    const previewData = vocabularyData.slice(0, 5); // Show first 5 items
-    return this.convertToCSV(previewData);
-  }
+    const previewData = vocabularyData.slice(0, 5);
+    return convertToCSV(previewData as CsvVocabularyItem[]);
+  },
 };
